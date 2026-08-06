@@ -41,16 +41,18 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   if (passwordError) return { error: passwordError };
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { error } = await supabase.auth.signUp({ email, password });
 
   if (error) return { error: error.message };
 
-  if (data.user && !data.session) {
-    return {
-      message: 'Check your email to confirm your account before signing in.',
-    };
-  }
-
   revalidatePath('/', 'layout');
   redirect('/dashboard');
+}
+
+export async function signOut(): Promise<void> {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+
+  revalidatePath('/', 'layout');
+  redirect('/sign-in');
 }

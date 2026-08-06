@@ -15,7 +15,8 @@ export default function CheckoutPage() {
         <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
           <h1 className="text-2xl font-semibold text-gray-900">Checkout</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Enrollment required — purchase a track to access lessons.
+            Your account is not enrolled in a training track yet. Contact your
+            administrator or complete checkout to get access.
           </p>
         </div>
       </main>

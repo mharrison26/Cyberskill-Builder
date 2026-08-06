@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import { LogOut, Menu, User } from 'lucide-react';
+import { useTransition } from 'react';
+
+import { signOut } from '@/app/(auth)/actions';
 
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -45,6 +48,8 @@ export function AppTopBar({
   activeTrackName,
   trackLessons = [],
 }: AppTopBarProps) {
+  const [isSigningOut, startSignOut] = useTransition();
+
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:px-6">
       <div className="flex items-center gap-3">
@@ -112,9 +117,12 @@ export function AppTopBar({
             My Portfolio
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem render={<Link href="/sign-in" />}>
+          <DropdownMenuItem
+            disabled={isSigningOut}
+            onClick={() => startSignOut(() => signOut())}
+          >
             <LogOut className="size-4" aria-hidden="true" />
-            Sign out
+            {isSigningOut ? 'Signing out…' : 'Sign out'}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
