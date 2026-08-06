@@ -2,7 +2,9 @@
 
 A Next.js 14 starter project with the App Router, TypeScript, Tailwind CSS, ESLint, and Prettier.
 
-**GitHub:** [mharrison26/Cyberskill-Builder](https://github.com/mharrison26/Cyberskill-Builder) — repo exists on GitHub; local folder is **not yet** a git repository (Xcode Command Line Tools required for `git`).
+**GitHub:** [mharrison26/Cyberskill-Builder](https://github.com/mharrison26/Cyberskill-Builder)
+
+**Production:** [cyberskill-builder.vercel.app](https://cyberskill-builder.vercel.app)
 
 ## Prerequisites
 
@@ -143,39 +145,57 @@ gh auth status
 
 ### 2. Vercel deployment
 
-Install and authenticate the Vercel CLI, then link and deploy:
+**Live URL:** [https://cyberskill-builder.vercel.app](https://cyberskill-builder.vercel.app)
+
+| Setting | Value |
+| ------- | ----- |
+| Vercel project | `cyberskill-builder` (team: CyberSkill Builder) |
+| Dashboard | [vercel.com/cyber-skill-builder/cyberskill-builder](https://vercel.com/cyber-skill-builder/cyberskill-builder) |
+| GitHub repo | [mharrison26/Cyberskill-Builder](https://github.com/mharrison26/Cyberskill-Builder) — connected; pushes to `main` auto-deploy |
+| Framework | Next.js 14 (auto-detected) |
+
+#### Environment variables on Vercel
+
+Both variables are set for **Production**, **Preview**, and **Development**:
+
+| Variable | Value source |
+| -------- | ------------ |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://oyexzmucngsoyxlxhofy.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (masked in dashboard; same as `.env.local`) |
+
+> These are `NEXT_PUBLIC_` vars — they are embedded in client bundles and are safe to expose (Supabase RLS protects data). Never add the **service role** key to Vercel.
+
+To redeploy manually:
 
 ```bash
-npm install -g vercel
-vercel login
-vercel link                  # link to your Vercel account/team
-vercel env add NEXT_PUBLIC_SUPABASE_URL
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
+export PATH="$HOME/.local/node/bin:$PATH"
 vercel --prod
 ```
 
-**Or via the Vercel dashboard:**
+To add or rotate env vars via CLI:
 
-1. Go to [vercel.com/new](https://vercel.com/new) and import your GitHub repo.
-2. Add environment variables under **Settings → Environment Variables**:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. Deploy. Future pushes to the default branch will auto-deploy.
+```bash
+vercel env add NEXT_PUBLIC_SUPABASE_URL production,preview,development --no-sensitive
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production,preview,development --no-sensitive
+```
 
 ### Status checklist
 
 | Step | Status |
 | ---- | ------ |
-| `.gitignore` excludes `.env*.local` | Done |
+| `.gitignore` excludes `.env*.local` and `.vercel` | Done |
 | Supabase SSR clients configured | Done |
 | Supabase project linked (`oyexzmucngsoyxlxhofy`) | Done |
 | `.env.local` with real keys | Done |
 | Foundation migration applied | Done |
 | `npm run build` passes | Done |
-| Git initialized locally | Pending — requires Xcode CLT |
-| GitHub remote connected & pushed | Pending — requires git (see steps above) |
-| `gh` CLI installed & authenticated | Pending — `brew install gh` + `gh auth login` |
-| Vercel project linked | Pending — push to GitHub first |
+| Git initialized locally | Done |
+| GitHub remote connected & pushed | Done |
+| Vercel project linked (`cyberskill-builder`) | Done |
+| Supabase env vars on Vercel (prod + preview) | Done |
+| Production deployed | Done — [cyberskill-builder.vercel.app](https://cyberskill-builder.vercel.app) |
+| GitHub → Vercel auto-deploy | Done |
+| `gh` CLI installed & authenticated | Optional — `brew install gh` + `gh auth login` |
 
 ## Learn more
 
