@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import type { ProgressStatus } from '@/types';
+import type { StatusKey } from '@/lib/status';
 
 export type AppShellUser = {
   id: string;
@@ -90,14 +90,16 @@ export async function getAppShellContext(): Promise<AppShellContext> {
 
 export function mapLessonProgressStatus(
   dbStatus: string | null | undefined
-): ProgressStatus {
+): StatusKey {
   switch (dbStatus) {
     case 'completed':
     case 'reviewed':
-      return 'satisfied';
+    case 'graded':
+      return 'graded';
     case 'submitted':
+      return 'submitted';
     case 'in_progress':
-      return 'insufficient_evidence';
+      return 'in_progress';
     case 'not_started':
     default:
       return 'not_started';

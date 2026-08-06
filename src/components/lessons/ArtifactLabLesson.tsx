@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { CCCERForm } from '@/components/CCCERForm';
 import { EvidenceCodeBlock } from '@/components/EvidenceCodeBlock';
 import { Badge } from '@/components/ui/badge';
@@ -10,11 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { Lesson } from '@/types';
+import type { CCCERValues, Lesson } from '@/types';
 import { cn } from '@/lib/utils';
 
 type ArtifactLabLessonProps = {
   lesson: Lesson;
+  evidenceArtifact?: string | null;
   className?: string;
 };
 
@@ -49,11 +52,55 @@ function parseObjectives(text: string | null): string[] {
     .filter(Boolean);
 }
 
+function resolveEvidenceArtifact(
+  evidenceArtifact: string | null | undefined
+): string {
+  if (evidenceArtifact?.trim()) {
+    return evidenceArtifact.trim();
+  }
+  return PLACEHOLDER_EVIDENCE;
+}
+
 export function ArtifactLabLesson({
   lesson,
+  evidenceArtifact,
   className,
 }: ArtifactLabLessonProps) {
   const objectives = parseObjectives(lesson.learning_objectives);
+  const evidenceCode = resolveEvidenceArtifact(evidenceArtifact);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  async function handleSubmit(values: CCCERValues) {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setSubmitSuccess(false);
+
+    try {
+      const response = await fetch(`/api/lessons/${lesson.id}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        success?: boolean;
+      };
+
+      if (!response.ok) {
+        setSubmitError(payload.error ?? 'Submission failed. Please try again.');
+        return;
+      }
+
+      setSubmitSuccess(true);
+    } catch {
+      setSubmitError('Network error. Check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <article className={cn('space-y-6', className)}>
@@ -97,7 +144,7 @@ export function ArtifactLabLesson({
 
       <div id="lesson-content" tabIndex={-1} className="space-y-6 outline-none">
         <EvidenceCodeBlock
-          code={PLACEHOLDER_EVIDENCE}
+          code={evidenceCode}
           language="json"
           title="Evidence artifact"
         />
@@ -111,7 +158,12 @@ export function ArtifactLabLesson({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <CCCERForm />
+            <CCCERForm
+              onSubmit={handleSubmit}
+              isSubmitting={isSubmitting}
+              submitError={submitError}
+              submitSuccess={submitSuccess}
+            />
           </CardContent>
         </Card>
       </div>

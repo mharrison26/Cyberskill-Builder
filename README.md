@@ -84,6 +84,18 @@ Foundation tables in `public`: `tenants`, `users`, `tracks`, `track_enrollments`
 
 4. Restart the dev server after changing env vars.
 
+### AI grading
+
+Artifact lab submissions are graded against NIST SP 800-53 control statement text via Claude. Add a server-side Anthropic key to `.env.local`:
+
+```
+ANTHROPIC_API_KEY=<your-anthropic-api-key>
+```
+
+Optional: set `ANTHROPIC_MODEL` to override the default (`claude-sonnet-4-20250514`).
+
+Grading runs automatically after `POST /api/lessons/[lessonId]/submit`, or can be invoked directly via `POST /api/lessons/[lessonId]/grade` (students grade their own submission; admins may pass `{ "studentId": "<uuid>" }`).
+
 > `.env.local` is gitignored — never commit it.
 
 ### Database migration
@@ -162,6 +174,7 @@ Both variables are set for **Production**, **Preview**, and **Development**:
 | ------------------------------- | ------------------------------------------------------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`      | `https://oyexzmucngsoyxlxhofy.supabase.co`                    |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (masked in dashboard; same as `.env.local`) |
+| `ANTHROPIC_API_KEY`             | Anthropic key for server-side AI grading (Production/Preview) |
 
 > These are `NEXT_PUBLIC_` vars — they are embedded in client bundles and are safe to expose (Supabase RLS protects data). Never add the **service role** key to Vercel.
 

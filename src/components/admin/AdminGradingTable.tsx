@@ -1,59 +1,113 @@
 'use client';
 
+import { GradingReviewForm } from '@/app/(app)/admin/grading/GradingReviewForm';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
-import { MOCK_GRADING_QUEUE } from '@/lib/mock-data';
-import type { MockGradingQueueItem } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import type { AdminGradingRow } from '@/types';
 
-const columns: DataTableColumn<MockGradingQueueItem>[] = [
-  { key: 'studentName', header: 'Student', sortable: true },
+const columns: DataTableColumn<AdminGradingRow>[] = [
+  { key: 'studentEmail', header: 'Student', sortable: true },
   { key: 'lessonTitle', header: 'Lesson', sortable: true },
-  { key: 'trackName', header: 'Track', sortable: true },
+  { key: 'controlId', header: 'Control ID', sortable: true },
   {
-    key: 'aiFindingState',
-    header: 'AI Finding',
+    key: 'findingState',
+    header: 'Finding',
     sortable: true,
-    render: (row) => <StatusBadge status={row.aiFindingState} />,
+    render: (row) => <StatusBadge status={row.findingState} />,
   },
   {
-    key: 'reviewed',
+    key: 'aiFeedbackPreview',
+    header: 'AI feedback',
+    render: (row) =>
+      row.aiFeedbackPreview ? (
+        <span className="text-sm text-muted-foreground">
+          {row.aiFeedbackPreview}
+        </span>
+      ) : (
+        <span className="text-sm text-muted-foreground">—</span>
+      ),
+  },
+  {
+    key: 'submissionPreview',
+    header: 'Submission',
+    render: (row) =>
+      row.submissionPreview ? (
+        <span className="text-sm">{row.submissionPreview}</span>
+      ) : (
+        <span className="text-sm text-muted-foreground">—</span>
+      ),
+  },
+  {
+    key: 'isReviewed',
     header: 'Reviewed',
     sortable: true,
     render: (row) => (
-      <span
+      <Badge
+        variant="outline"
         className={
-          row.reviewed
-            ? 'text-status-satisfied-foreground'
-            : 'text-status-insufficient-foreground'
+          row.isReviewed
+            ? 'border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground'
+            : 'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground'
         }
       >
-        {row.reviewed ? 'Yes' : 'Pending'}
-      </span>
+        {row.isReviewed ? 'Yes' : 'No'}
+      </Badge>
     ),
   },
 ];
 
-export function AdminGradingTable() {
+type AdminGradingTableProps = {
+  rows: AdminGradingRow[];
+};
+
+export function AdminGradingTable({ rows }: AdminGradingTableProps) {
   return (
     <DataTable
-      data={MOCK_GRADING_QUEUE}
+      data={rows}
       columns={columns}
-      searchKeys={['studentName', 'studentEmail', 'lessonTitle', 'trackName']}
-      searchPlaceholder="Search by student or lesson…"
+      searchKeys={[
+        'studentEmail',
+        'lessonTitle',
+        'trackName',
+        'controlId',
+        'findingState',
+      ]}
+      searchPlaceholder="Search by student, lesson, or control…"
       expandable
+      emptyMessage="No findings to review yet."
       renderExpanded={(row) => (
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="font-medium text-muted-foreground">Email</dt>
-            <dd>{row.studentEmail}</dd>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <dl className="space-y-4 text-sm">
+            <div>
+              <dt className="font-medium text-muted-foreground">Track</dt>
+              <dd>{row.trackName}</dd>
+            </div>
+            <div>
+              <dt className="font-medium text-muted-foreground">
+                Student submission
+              </dt>
+              <dd className="mt-1 whitespace-pre-wrap">
+                {row.submissionFull || 'No submission text recorded.'}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-medium text-muted-foreground">AI feedback</dt>
+              <dd className="mt-1 whitespace-pre-wrap">
+                {row.aiFeedback || 'No AI feedback yet.'}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="rounded-lg border border-border bg-muted/20 p-4">
+            <h3 className="mb-4 text-sm font-medium">Review finding</h3>
+            <GradingReviewForm
+              findingId={row.id}
+              findingState={row.findingState}
+              feedback={row.aiFeedback}
+            />
           </div>
-          <div>
-            <dt className="font-medium text-muted-foreground">AI assessment</dt>
-            <dd className="mt-1">
-              <StatusBadge status={row.aiFindingState} />
-            </dd>
-          </div>
-        </dl>
+        </div>
       )}
     />
   );

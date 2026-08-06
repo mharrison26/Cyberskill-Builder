@@ -11,14 +11,38 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  buildLessonSubmissionStoragePath,
+  LESSON_SUBMISSIONS_BUCKET,
+  TOOL_WALKTHROUGH_MIN_REFLECTION_LENGTH,
+} from '@/lib/lessons/toolWalkthroughValidation';
+import { createClient } from '@/lib/supabase/client';
 import type { Lesson } from '@/types';
 import { cn } from '@/lib/utils';
 
+const ACCEPTED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+] as const;
+
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
 type ToolWalkthroughLessonProps = {
   lesson: Lesson;
+  studentId: string;
+  tenantId: string;
   className?: string;
+};
+
+type FormErrors = {
+  file?: string;
+  externalReference?: string;
+  reflection?: string;
 };
 
 function parseObjectives(text: string | null): string[] {
@@ -29,24 +53,136 @@ function parseObjectives(text: string | null): string[] {
     .filter(Boolean);
 }
 
+function isAcceptedImage(file: File): boolean {
+  return ACCEPTED_IMAGE_TYPES.includes(
+    file.type as (typeof ACCEPTED_IMAGE_TYPES)[number]
+  );
+}
+
 export function ToolWalkthroughLesson({
   lesson,
+  studentId,
+  tenantId,
   className,
 }: ToolWalkthroughLessonProps) {
   const objectives = parseObjectives(lesson.learning_objectives);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [externalReference, setExternalReference] = useState('');
   const [reflection, setReflection] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function validate(): boolean {
+    const nextErrors: FormErrors = {};
+
+    if (!selectedFile) {
+      nextErrors.file = 'An image file is required.';
+    } else if (!isAcceptedImage(selectedFile)) {
+      nextErrors.file = 'File must be JPEG, PNG, WebP, or GIF.';
+    } else if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+      nextErrors.file = 'File must be 5 MB or smaller.';
+    }
+
+    const trimmedReference = externalReference.trim();
+    if (!trimmedReference) {
+      nextErrors.externalReference =
+        'External reference is required (e.g. risk register ID or URL).';
+    }
+
+    const trimmedReflection = reflection.trim();
+    if (!trimmedReflection) {
+      nextErrors.reflection = 'Reflection is required.';
+    } else if (
+      trimmedReflection.length < TOOL_WALKTHROUGH_MIN_REFLECTION_LENGTH
+    ) {
+      nextErrors.reflection = `Reflection must be at least ${TOOL_WALKTHROUGH_MIN_REFLECTION_LENGTH} characters.`;
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
     setSelectedFile(file);
-    setSubmitted(false);
+    setSubmitSuccess(false);
+    setSubmitError(null);
+    if (errors.file) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.file;
+        return next;
+      });
+    }
   }
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setSubmitted(true);
+    setSubmitError(null);
+    setSubmitSuccess(false);
+
+    if (!validate() || !selectedFile) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const supabase = createClient();
+      const storagePath = buildLessonSubmissionStoragePath(
+        tenantId,
+        studentId,
+        lesson.id,
+        selectedFile.name
+      );
+      const uploadedAt = new Date().toISOString();
+
+      const { error: uploadError } = await supabase.storage
+        .from(LESSON_SUBMISSIONS_BUCKET)
+        .upload(storagePath, selectedFile, {
+          upsert: true,
+          contentType: selectedFile.type,
+        });
+
+      if (uploadError) {
+        throw new Error(uploadError.message);
+      }
+
+      const response = await fetch(`/api/lessons/${lesson.id}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'tool_walkthrough',
+          storagePath,
+          externalReference: externalReference.trim(),
+          reflection: reflection.trim(),
+          uploadedAt,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        success?: boolean;
+      };
+
+      if (!response.ok) {
+        throw new Error(
+          payload.error ?? 'Failed to save walkthrough submission.'
+        );
+      }
+
+      setSubmitSuccess(true);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong while submitting your walkthrough.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -82,25 +218,42 @@ export function ToolWalkthroughLesson({
       ) : null}
 
       <div id="lesson-content" tabIndex={-1} className="outline-none">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} noValidate className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Upload evidence</CardTitle>
               <CardDescription>
-                Attach a screenshot or export from the tool you used during this
-                walkthrough.
+                Attach a screenshot from the tool you used during this
+                walkthrough (JPEG, PNG, WebP, or GIF, up to 5 MB).
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="walkthrough-upload">Evidence file</Label>
-                <input
+                <Label htmlFor="walkthrough-upload">Evidence image</Label>
+                <p
+                  id="walkthrough-upload-hint"
+                  className="text-xs text-muted-foreground"
+                >
+                  Upload a screenshot or export showing your work in the tool.
+                </p>
+                <Input
                   id="walkthrough-upload"
                   type="file"
-                  accept=".png,.jpg,.jpeg,.pdf,.csv,.json"
+                  accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
                   onChange={handleFileChange}
-                  className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+                  aria-describedby={`walkthrough-upload-hint${errors.file ? ' walkthrough-upload-error' : ''}`}
+                  aria-invalid={errors.file ? true : undefined}
+                  disabled={isSubmitting}
                 />
+                {errors.file ? (
+                  <p
+                    id="walkthrough-upload-error"
+                    role="alert"
+                    className="text-sm text-destructive"
+                  >
+                    {errors.file}
+                  </p>
+                ) : null}
               </div>
               {selectedFile ? (
                 <p className="text-sm text-muted-foreground">
@@ -116,6 +269,55 @@ export function ToolWalkthroughLesson({
 
           <Card>
             <CardHeader>
+              <CardTitle className="text-base">External reference</CardTitle>
+              <CardDescription>
+                Link or ID for the record you created (e.g. SimpleRisk risk
+                register entry or URL).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Label htmlFor="walkthrough-external-reference">
+                Reference ID or URL
+              </Label>
+              <Input
+                id="walkthrough-external-reference"
+                type="text"
+                value={externalReference}
+                onChange={(event) => {
+                  setExternalReference(event.target.value);
+                  setSubmitSuccess(false);
+                  setSubmitError(null);
+                  if (errors.externalReference) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.externalReference;
+                      return next;
+                    });
+                  }
+                }}
+                placeholder="RISK-123 or https://..."
+                aria-invalid={errors.externalReference ? true : undefined}
+                aria-describedby={
+                  errors.externalReference
+                    ? 'walkthrough-external-reference-error'
+                    : undefined
+                }
+                disabled={isSubmitting}
+              />
+              {errors.externalReference ? (
+                <p
+                  id="walkthrough-external-reference-error"
+                  role="alert"
+                  className="text-sm text-destructive"
+                >
+                  {errors.externalReference}
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-base">Reflection</CardTitle>
               <CardDescription>
                 Summarize what you completed in the tool and any challenges you
@@ -123,33 +325,64 @@ export function ToolWalkthroughLesson({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Label htmlFor="walkthrough-reflection" className="sr-only">
-                Reflection
-              </Label>
+              <Label htmlFor="walkthrough-reflection">Reflection</Label>
               <Textarea
                 id="walkthrough-reflection"
                 value={reflection}
                 onChange={(event) => {
                   setReflection(event.target.value);
-                  setSubmitted(false);
+                  setSubmitSuccess(false);
+                  setSubmitError(null);
+                  if (errors.reflection) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.reflection;
+                      return next;
+                    });
+                  }
                 }}
                 rows={6}
                 placeholder="Describe the steps you took and what you observed..."
+                aria-invalid={errors.reflection ? true : undefined}
+                aria-describedby={
+                  errors.reflection ? 'walkthrough-reflection-error' : undefined
+                }
+                disabled={isSubmitting}
               />
+              {errors.reflection ? (
+                <p
+                  id="walkthrough-reflection-error"
+                  role="alert"
+                  className="text-sm text-destructive"
+                >
+                  {errors.reflection}
+                </p>
+              ) : null}
             </CardContent>
           </Card>
 
-          {submitted ? (
+          {submitError ? (
+            <p
+              role="alert"
+              className="rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            >
+              {submitError}
+            </p>
+          ) : null}
+
+          {submitSuccess ? (
             <p
               role="status"
               className="rounded-md border border-status-satisfied-foreground/20 bg-status-satisfied px-4 py-3 text-sm text-status-satisfied-foreground"
             >
-              Walkthrough saved locally. Upload and reflection will sync when
-              backend submission is enabled.
+              Walkthrough submitted successfully. It will be reviewed by an
+              assessor.
             </p>
           ) : null}
 
-          <Button type="submit">Save walkthrough</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit walkthrough'}
+          </Button>
         </form>
       </div>
     </article>

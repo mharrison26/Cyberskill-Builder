@@ -73,6 +73,20 @@ export interface MockGradingQueueItem {
   reviewed: boolean;
 }
 
+export interface AdminGradingRow {
+  id: string;
+  studentEmail: string;
+  lessonTitle: string;
+  trackName: string;
+  controlId: string;
+  findingState: string;
+  aiFeedback: string;
+  aiFeedbackPreview: string;
+  submissionPreview: string;
+  submissionFull: string;
+  isReviewed: boolean;
+}
+
 export interface CCCERValues {
   condition: string;
   criteria: string;

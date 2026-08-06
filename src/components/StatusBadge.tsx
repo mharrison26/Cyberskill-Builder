@@ -3,6 +3,8 @@ import {
   CheckCircle2,
   CircleDashed,
   AlertTriangle,
+  Clock3,
+  LoaderCircle,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -21,6 +23,9 @@ const STATUS_ICONS: Record<StatusKey, LucideIcon> = {
   insufficient_evidence: AlertTriangle,
   not_satisfied: Ban,
   not_started: CircleDashed,
+  submitted: Clock3,
+  graded: CheckCircle2,
+  in_progress: LoaderCircle,
 };
 
 type StatusBadgeProps = {

@@ -143,6 +143,9 @@ export default async function DashboardPage() {
                 <h2 id={`track-${track.id}`} className="text-lg font-semibold">
                   {track.name}
                 </h2>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  /tracks/{track.slug}
+                </p>
               </div>
 
               {lessons.length === 0 ? (

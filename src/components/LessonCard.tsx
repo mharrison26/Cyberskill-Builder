@@ -9,7 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { LessonType, ProgressStatus } from '@/types';
+import type { StatusKey } from '@/lib/status';
+import type { LessonType } from '@/types';
 import { cn } from '@/lib/utils';
 
 const LESSON_TYPE_CONFIG: Record<
@@ -25,7 +26,7 @@ const LESSON_TYPE_CONFIG: Record<
 type LessonCardProps = {
   id: string;
   title: string;
-  status: ProgressStatus;
+  status: StatusKey;
   lessonType: LessonType;
   tier: string;
   href: string;

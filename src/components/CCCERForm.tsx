@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { CCCER_MIN_LENGTH } from '@/lib/lessons/cccerValidation';
 import type { CCCERValues } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -36,17 +37,23 @@ const FIELDS: { key: keyof CCCERValues; label: string; hint: string }[] = [
   },
 ];
 
-const MIN_LENGTH = 20;
-
 type CCCERFormProps = {
   initialValues?: Partial<CCCERValues>;
-  onSubmit?: (values: CCCERValues) => void;
+  onSubmit?: (values: CCCERValues) => void | Promise<void>;
+  isSubmitting?: boolean;
+  submitError?: string | null;
+  submitSuccess?: boolean;
+  submitLabel?: string;
   className?: string;
 };
 
 export function CCCERForm({
   initialValues = {},
   onSubmit,
+  isSubmitting = false,
+  submitError = null,
+  submitSuccess = false,
+  submitLabel = 'Submit finding',
   className,
 }: CCCERFormProps) {
   const [values, setValues] = useState<CCCERValues>({
@@ -59,7 +66,6 @@ export function CCCERForm({
   const [errors, setErrors] = useState<
     Partial<Record<keyof CCCERValues, string>>
   >({});
-  const [submitted, setSubmitted] = useState(false);
 
   function validate(): boolean {
     const nextErrors: Partial<Record<keyof CCCERValues, string>> = {};
@@ -67,9 +73,9 @@ export function CCCERForm({
       const value = values[field.key].trim();
       if (!value) {
         nextErrors[field.key] = `${field.label} is required.`;
-      } else if (value.length < MIN_LENGTH) {
+      } else if (value.length < CCCER_MIN_LENGTH) {
         nextErrors[field.key] =
-          `${field.label} must be at least ${MIN_LENGTH} characters.`;
+          `${field.label} must be at least ${CCCER_MIN_LENGTH} characters.`;
       }
     }
     setErrors(nextErrors);
@@ -87,11 +93,10 @@ export function CCCERForm({
     }
   }
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setSubmitted(true);
     if (!validate()) return;
-    onSubmit?.(values);
+    await onSubmit?.(values);
   }
 
   return (
@@ -130,6 +135,7 @@ export function CCCERForm({
               aria-describedby={`${fieldId}-hint${hasError ? ` ${errorId}` : ''}`}
               aria-invalid={hasError}
               rows={3}
+              disabled={isSubmitting}
               className={cn(hasError && 'border-destructive')}
             />
             {hasError ? (
@@ -141,17 +147,27 @@ export function CCCERForm({
         );
       })}
 
-      {submitted && Object.keys(errors).length === 0 ? (
+      {submitError ? (
+        <p
+          role="alert"
+          className="rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          {submitError}
+        </p>
+      ) : null}
+
+      {submitSuccess ? (
         <p
           role="status"
           className="rounded-md border border-status-satisfied-foreground/20 bg-status-satisfied px-4 py-3 text-sm text-status-satisfied-foreground"
         >
-          Finding saved locally (mock). In production, this would submit for
-          assessor review.
+          Finding submitted successfully. It will be reviewed by an assessor.
         </p>
       ) : null}
 
-      <Button type="submit">Save finding</Button>
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Submitting…' : submitLabel}
+      </Button>
     </form>
   );
 }

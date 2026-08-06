@@ -92,10 +92,10 @@ export default function LandingPage() {
             View how completed assessments appear in a shareable portfolio.
           </p>
           <Link
-            href="/portfolio/alex-rivera"
+            href="/portfolio/mharrison26"
             className="mt-4 inline-block text-sm font-medium text-primary hover:underline focus:outline-none focus-visible:underline"
           >
-            View Alex Rivera&apos;s portfolio →
+            View sample portfolio →
           </Link>
         </div>
       </section>
