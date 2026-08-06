@@ -67,21 +67,26 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const isSubmitted = progressStatus === 'submitted';
 
   let finding: {
+    id: string;
     finding_state: string;
     observation: {
       feedback?: string;
       strengths?: string;
       gaps?: string;
     } | null;
-    control_id?: string;
+    control_id: string;
+    student_narrative: string | null;
     dcwf_code?: string | null;
     created_at?: string;
+    is_public: boolean;
   } | null = null;
 
   if (isGraded) {
     const { data: latestFinding } = await supabase
       .from('oscal_findings')
-      .select('finding_state, observation, control_id, dcwf_code, created_at')
+      .select(
+        'id, finding_state, observation, control_id, student_narrative, dcwf_code, created_at, is_public'
+      )
       .eq('student_id', user.id)
       .eq('lesson_id', lessonId)
       .order('created_at', { ascending: false })
@@ -120,7 +125,12 @@ export default async function LessonPage({ params }: LessonPageProps) {
             Grading Results
           </h2>
           {finding ? (
-            <GradingResult finding={finding} />
+            <GradingResult
+              finding={finding}
+              findingId={finding.id}
+              isPublic={finding.is_public}
+              canToggle
+            />
           ) : (
             <div
               role="status"

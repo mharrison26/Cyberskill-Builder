@@ -96,6 +96,13 @@ export default async function PublicPortfolioPage({
                 findingState={toFindingStateDisplay(finding.findingState)}
                 dcwfCode={finding.dcwfCode}
                 narrative={finding.narrative}
+                oscalFinding={{
+                  id: finding.id,
+                  control_id: finding.controlId,
+                  finding_state: finding.findingState,
+                  student_narrative: finding.studentNarrative,
+                  observation: finding.observation,
+                }}
               />
             ))}
           </div>

@@ -1,3 +1,5 @@
+import { DownloadOscalJsonButton } from '@/components/DownloadOscalJsonButton';
+import { PublicPortfolioToggle } from '@/components/grading/PublicPortfolioToggle';
 import { StatusBadge } from '@/components/StatusBadge';
 import {
   Card,
@@ -7,20 +9,22 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { normalizeFindingState } from '@/lib/status';
+import type { OscalObservation } from '@/lib/oscal/toAssessmentFinding';
 import { cn } from '@/lib/utils';
 
 export type GradingResultProps = {
   finding: {
+    id: string;
     finding_state: string;
-    observation: {
-      feedback?: string;
-      strengths?: string;
-      gaps?: string;
-    } | null;
-    control_id?: string;
+    observation: OscalObservation | null;
+    control_id: string;
+    student_narrative?: string | null;
     dcwf_code?: string | null;
     created_at?: string;
   };
+  findingId?: string;
+  isPublic?: boolean;
+  canToggle?: boolean;
   className?: string;
 };
 
@@ -45,7 +49,13 @@ function GradingSection({ title, content }: GradingSectionProps) {
   );
 }
 
-export function GradingResult({ finding, className }: GradingResultProps) {
+export function GradingResult({
+  finding,
+  findingId,
+  isPublic = false,
+  canToggle = false,
+  className,
+}: GradingResultProps) {
   const badgeStatus = normalizeFindingState(finding.finding_state);
   const observation = finding.observation ?? {};
 
@@ -100,9 +110,25 @@ export function GradingResult({ finding, className }: GradingResultProps) {
         )}
       </CardHeader>
       <CardContent className="space-y-5">
+        {findingId ? (
+          <PublicPortfolioToggle
+            findingId={findingId}
+            isPublic={isPublic}
+            canToggle={canToggle}
+          />
+        ) : null}
         <GradingSection title="Feedback" content={observation.feedback} />
         <GradingSection title="Strengths" content={observation.strengths} />
         <GradingSection title="Gaps" content={observation.gaps} />
+        <DownloadOscalJsonButton
+          finding={{
+            id: finding.id,
+            control_id: finding.control_id,
+            finding_state: finding.finding_state,
+            student_narrative: finding.student_narrative,
+            observation: finding.observation,
+          }}
+        />
       </CardContent>
     </Card>
   );

@@ -1,4 +1,5 @@
 import { createPublicClient } from '@/lib/supabase/public';
+import type { OscalObservation } from '@/lib/oscal/toAssessmentFinding';
 import type { FindingState } from '@/types';
 
 export type PublicTrackEnrollment = {
@@ -14,10 +15,8 @@ export type PublicFinding = {
   dcwfCode: string;
   narrative: string;
   createdAt: string;
-};
-
-type ObservationJson = {
-  feedback?: string;
+  studentNarrative: string | null;
+  observation: OscalObservation | null;
 };
 
 export async function getStudentActiveTracks(
@@ -69,12 +68,14 @@ export async function getPublicFindings(
     dcwfCode: row.dcwf_code ?? '',
     narrative: extractNarrative(row.student_narrative, row.observation),
     createdAt: row.created_at,
+    studentNarrative: row.student_narrative,
+    observation: (row.observation as OscalObservation | null) ?? null,
   }));
 }
 
 function extractNarrative(
   studentNarrative: string | null,
-  observation: ObservationJson | null
+  observation: OscalObservation | null
 ): string {
   if (studentNarrative?.trim()) {
     return studentNarrative.trim();
