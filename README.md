@@ -36,6 +36,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `npm run lint`         | Run ESLint                               |
 | `npm run format`       | Format files with Prettier               |
 | `npm run format:check` | Check formatting without writing changes |
+| `npm run test:rls`     | Verify RLS + FORCE RLS on all public tables (requires `DATABASE_URL`) |
 
 ## Project structure
 
@@ -98,6 +99,20 @@ Grading runs automatically after `POST /api/lessons/[lessonId]/submit`, or can b
 
 > `.env.local` is gitignored — never commit it.
 
+### RLS coverage test
+
+`npm run test:rls` connects directly to Postgres (admin role) and fails if any `public` table other than `lessons` and `tracks` is missing RLS or FORCE RLS.
+
+**Local:** add a direct connection string to `.env.local` (not the anon key):
+
+```
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@...
+```
+
+Supabase → **Settings** → **Database** → **Connection string** → URI (`postgres` role).
+
+**CI:** add the same URI as a repository secret named `DATABASE_URL` (GitHub → repo **Settings** → **Secrets and variables** → **Actions**). The CI workflow runs `npm run test:rls` when that secret is set; otherwise it prints a skip note.
+
 ### Database migration
 
 Migration `0001_foundation` was applied remotely via Supabase MCP (recorded as version `20260806130830`).
@@ -114,6 +129,64 @@ supabase login
 supabase link --project-ref oyexzmucngsoyxlxhofy
 supabase db push
 ```
+
+## Deploying to Vercel
+
+**Production:** [cyberskill-builder.vercel.app](https://cyberskill-builder.vercel.app)
+
+This project deploys as a standard Next.js 14 App Router app. Vercel auto-detects the framework — no `vercel.json` is required (and none is checked in, to avoid overriding the working production deployment).
+
+### Connect repo to Vercel
+
+1. Go to [vercel.com/new](https://vercel.com/new).
+2. Import the GitHub repository **mharrison26/Cyberskill-Builder**.
+3. **Framework preset:** Next.js (auto-detected).
+4. **Root directory:** `.` (repository root).
+5. Click **Deploy**.
+
+The GitHub integration is already connected for this project; new clones only need the steps above if you create a separate Vercel project.
+
+### Automatic deployments
+
+- **Preview:** Every pull request gets a unique preview deployment URL automatically.
+- **Production:** Merging or pushing to `main` triggers a production deployment.
+
+### Environment variables
+
+In the Vercel project → **Settings** → **Environment Variables**, set the variables from [`.env.local.example`](.env.local.example). Apply each to **Production**, **Preview**, and **Development**.
+
+| Variable | Required | Description |
+| -------- | -------- | ----------- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL (`https://oyexzmucngsoyxlxhofy.supabase.co`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon/public key (Settings → API) |
+| `ANTHROPIC_API_KEY` | Yes | Server-side Anthropic key for AI lesson grading |
+| `ANTHROPIC_MODEL` | No | Override Claude model (default: `claude-sonnet-4-20250514`) |
+
+> `NEXT_PUBLIC_*` variables are embedded in client bundles. They are safe to expose — Supabase Row Level Security protects data. Never add the **service role** key to Vercel.
+
+**Stripe:** Not configured yet — no Stripe keys appear in `.env.local.example`.
+
+**`DATABASE_URL` (optional, CI only):** Not needed for Vercel runtime. If you add RLS integration tests in GitHub Actions that connect directly to Postgres, store `DATABASE_URL` as a GitHub Actions secret, not a Vercel env var.
+
+To add or rotate vars via CLI:
+
+```bash
+vercel env add NEXT_PUBLIC_SUPABASE_URL production,preview,development --no-sensitive
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production,preview,development --no-sensitive
+vercel env add ANTHROPIC_API_KEY production,preview,development
+```
+
+Manual production redeploy:
+
+```bash
+vercel --prod
+```
+
+| Setting | Value |
+| ------- | ----- |
+| Vercel project | `cyberskill-builder` (team: CyberSkill Builder) |
+| Dashboard | [vercel.com/cyber-skill-builder/cyberskill-builder](https://vercel.com/cyber-skill-builder/cyberskill-builder) |
+| GitHub repo | [mharrison26/Cyberskill-Builder](https://github.com/mharrison26/Cyberskill-Builder) |
 
 ## Connecting services
 
@@ -157,40 +230,7 @@ gh auth status
 
 ### 2. Vercel deployment
 
-**Live URL:** [https://cyberskill-builder.vercel.app](https://cyberskill-builder.vercel.app)
-
-| Setting        | Value                                                                                                                         |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Vercel project | `cyberskill-builder` (team: CyberSkill Builder)                                                                               |
-| Dashboard      | [vercel.com/cyber-skill-builder/cyberskill-builder](https://vercel.com/cyber-skill-builder/cyberskill-builder)                |
-| GitHub repo    | [mharrison26/Cyberskill-Builder](https://github.com/mharrison26/Cyberskill-Builder) — connected; pushes to `main` auto-deploy |
-| Framework      | Next.js 14 (auto-detected)                                                                                                    |
-
-#### Environment variables on Vercel
-
-Both variables are set for **Production**, **Preview**, and **Development**:
-
-| Variable                        | Value source                                                  |
-| ------------------------------- | ------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | `https://oyexzmucngsoyxlxhofy.supabase.co`                    |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (masked in dashboard; same as `.env.local`) |
-| `ANTHROPIC_API_KEY`             | Anthropic key for server-side AI grading (Production/Preview) |
-
-> These are `NEXT_PUBLIC_` vars — they are embedded in client bundles and are safe to expose (Supabase RLS protects data). Never add the **service role** key to Vercel.
-
-To redeploy manually:
-
-```bash
-export PATH="$HOME/.local/node/bin:$PATH"
-vercel --prod
-```
-
-To add or rotate env vars via CLI:
-
-```bash
-vercel env add NEXT_PUBLIC_SUPABASE_URL production,preview,development --no-sensitive
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production,preview,development --no-sensitive
-```
+See **[Deploying to Vercel](#deploying-to-vercel)** for connect steps, automatic deployments, and environment variables. Production is live at [cyberskill-builder.vercel.app](https://cyberskill-builder.vercel.app).
 
 ### Status checklist
 
