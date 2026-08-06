@@ -11,6 +11,7 @@ export const OSCAL_CATALOG_PATH = 'data/oscal/NIST_SP-800-53_rev5_catalog.json';
 export type ControlText = {
   controlId: string;
   title: string;
+  family: string;
   statement: string;
 };
 
@@ -41,6 +42,7 @@ function loadControlIndex(): Map<string, ControlIndexEntry> {
       oscalId: entry.id,
       controlId: entry.control_id,
       title: entry.title,
+      family: entry.family,
       statement: entry.statement,
     };
 
@@ -61,6 +63,7 @@ export function getControlText(controlId: string): ControlText {
   return {
     controlId: entry.controlId,
     title: entry.title,
+    family: entry.family,
     statement: entry.statement,
   };
 }
