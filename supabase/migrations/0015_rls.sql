@@ -1,8 +1,7 @@
 -- Tenant-scoped RLS for users, track_enrollments, lesson_progress, oscal_findings.
 --
--- Filename note: requested as 0002_rls.sql, but 0002_handle_new_user.sql already
--- exists in this repo. Supabase applies migrations by unique filename; using 0013
--- keeps chronological order after 0012_grant_authenticated_table_access.sql.
+-- Prerequisite: 0013_custom_access_token_hook.sql injects tenant_id into JWT claims.
+-- Apply that hook in the Supabase Dashboard before relying on these policies.
 --
 -- Why auth.uid() / JWT claims instead of SET LOCAL session variables:
 -- Supabase routes client queries through PgBouncer transaction pooling, which
@@ -44,6 +43,7 @@ DROP POLICY IF EXISTS "Students update own progress" ON public.lesson_progress;
 
 DROP POLICY IF EXISTS "Students read own findings" ON public.oscal_findings;
 DROP POLICY IF EXISTS "Students insert own findings" ON public.oscal_findings;
+DROP POLICY IF EXISTS "Students update own findings" ON public.oscal_findings;
 DROP POLICY IF EXISTS "Admins manage findings" ON public.oscal_findings;
 -- Keep "Public read public findings" (0011) for anon portfolio reads.
 
