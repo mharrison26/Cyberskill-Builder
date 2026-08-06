@@ -32,3 +32,13 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: RLS coverage
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run test:rls
+        if: ${{ secrets.DATABASE_URL != '' }}
+
+      - name: RLS coverage (skipped)
+        run: echo "Skipping RLS coverage — set DATABASE_URL GitHub secret to enable"
+        if: ${{ secrets.DATABASE_URL == '' }}
