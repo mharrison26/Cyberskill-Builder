@@ -30,6 +30,13 @@ export default function MyPortfolioPage() {
               findingState={finding.findingState}
               dcwfCode={finding.dcwfCode}
               narrative={finding.narrative}
+              oscalFinding={{
+                id: finding.id,
+                control_id: finding.controlId,
+                finding_state: finding.findingState,
+                student_narrative: finding.narrative,
+                observation: { feedback: finding.narrative },
+              }}
             />
           ))}
         </div>

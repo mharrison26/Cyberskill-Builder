@@ -1,3 +1,4 @@
+import { DownloadOscalJsonButton } from '@/components/DownloadOscalJsonButton';
 import { StatusBadge } from '@/components/StatusBadge';
 import {
   Card,
@@ -6,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import type { OscalFindingRow } from '@/lib/oscal/toAssessmentFinding';
 import type { FindingState } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -14,6 +16,7 @@ type FindingCardProps = {
   findingState: FindingState;
   dcwfCode: string;
   narrative: string;
+  oscalFinding?: OscalFindingRow;
   className?: string;
 };
 
@@ -22,6 +25,7 @@ export function FindingCard({
   findingState,
   dcwfCode,
   narrative,
+  oscalFinding,
   className,
 }: FindingCardProps) {
   const truncated =
@@ -38,10 +42,13 @@ export function FindingCard({
           DCWF: {dcwfCode}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <p className="text-sm leading-relaxed text-muted-foreground">
           {truncated}
         </p>
+        {oscalFinding ? (
+          <DownloadOscalJsonButton finding={oscalFinding} />
+        ) : null}
       </CardContent>
     </Card>
   );
