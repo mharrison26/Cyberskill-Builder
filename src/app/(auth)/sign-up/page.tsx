@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
 
 import { SignUpForm } from '@/components/auth/SignUpForm';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 export const metadata: Metadata = {
   title: 'Sign up',
@@ -9,14 +16,14 @@ export const metadata: Metadata = {
 
 export default function SignUpPage() {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-      <h1 className="text-2xl font-semibold text-gray-900">Create account</h1>
-      <p className="mt-2 text-sm text-gray-600">
-        Enter your details to get started.
-      </p>
-      <div className="mt-8">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-2xl">Create account</CardTitle>
+        <CardDescription>Enter your details to get started.</CardDescription>
+      </CardHeader>
+      <CardContent>
         <SignUpForm />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

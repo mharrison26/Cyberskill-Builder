@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
 
 import { SignInForm } from '@/components/auth/SignInForm';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 export const metadata: Metadata = {
   title: 'Sign in',
@@ -9,14 +16,16 @@ export const metadata: Metadata = {
 
 export default function SignInPage() {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-      <h1 className="text-2xl font-semibold text-gray-900">Sign in</h1>
-      <p className="mt-2 text-sm text-gray-600">
-        Welcome back. Enter your credentials to continue.
-      </p>
-      <div className="mt-8">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-2xl">Sign in</CardTitle>
+        <CardDescription>
+          Welcome back. Enter your credentials to continue.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
         <SignInForm />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

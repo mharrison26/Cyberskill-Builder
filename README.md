@@ -53,14 +53,14 @@ This project includes Supabase SSR clients in `src/lib/supabase/`. Local develop
 
 ### Connected project
 
-| Setting | Value |
-| ------- | ----- |
-| Project name | CyberSkills Builder |
-| Project ref | `oyexzmucngsoyxlxhofy` |
-| Dashboard | [supabase.com/dashboard/project/oyexzmucngsoyxlxhofy](https://supabase.com/dashboard/project/oyexzmucngsoyxlxhofy) |
-| API URL | `https://oyexzmucngsoyxlxhofy.supabase.co` |
-| Region | us-west-2 |
-| Status | **Connected** — `.env.local` configured, foundation migration applied |
+| Setting      | Value                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Project name | CyberSkills Builder                                                                                                |
+| Project ref  | `oyexzmucngsoyxlxhofy`                                                                                             |
+| Dashboard    | [supabase.com/dashboard/project/oyexzmucngsoyxlxhofy](https://supabase.com/dashboard/project/oyexzmucngsoyxlxhofy) |
+| API URL      | `https://oyexzmucngsoyxlxhofy.supabase.co`                                                                         |
+| Region       | us-west-2                                                                                                          |
+| Status       | **Connected** — `.env.local` configured, foundation migration applied                                              |
 
 Foundation tables in `public`: `tenants`, `users`, `tracks`, `track_enrollments`, `lessons`, `lesson_progress`, `oscal_findings` (plus pre-existing `profiles`, `portfolios`, `student_scenarios`).
 
@@ -147,20 +147,20 @@ gh auth status
 
 **Live URL:** [https://cyberskill-builder.vercel.app](https://cyberskill-builder.vercel.app)
 
-| Setting | Value |
-| ------- | ----- |
-| Vercel project | `cyberskill-builder` (team: CyberSkill Builder) |
-| Dashboard | [vercel.com/cyber-skill-builder/cyberskill-builder](https://vercel.com/cyber-skill-builder/cyberskill-builder) |
-| GitHub repo | [mharrison26/Cyberskill-Builder](https://github.com/mharrison26/Cyberskill-Builder) — connected; pushes to `main` auto-deploy |
-| Framework | Next.js 14 (auto-detected) |
+| Setting        | Value                                                                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Vercel project | `cyberskill-builder` (team: CyberSkill Builder)                                                                               |
+| Dashboard      | [vercel.com/cyber-skill-builder/cyberskill-builder](https://vercel.com/cyber-skill-builder/cyberskill-builder)                |
+| GitHub repo    | [mharrison26/Cyberskill-Builder](https://github.com/mharrison26/Cyberskill-Builder) — connected; pushes to `main` auto-deploy |
+| Framework      | Next.js 14 (auto-detected)                                                                                                    |
 
 #### Environment variables on Vercel
 
 Both variables are set for **Production**, **Preview**, and **Development**:
 
-| Variable | Value source |
-| -------- | ------------ |
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://oyexzmucngsoyxlxhofy.supabase.co` |
+| Variable                        | Value source                                                  |
+| ------------------------------- | ------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | `https://oyexzmucngsoyxlxhofy.supabase.co`                    |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (masked in dashboard; same as `.env.local`) |
 
 > These are `NEXT_PUBLIC_` vars — they are embedded in client bundles and are safe to expose (Supabase RLS protects data). Never add the **service role** key to Vercel.
@@ -181,21 +181,21 @@ vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production,preview,development --no
 
 ### Status checklist
 
-| Step | Status |
-| ---- | ------ |
-| `.gitignore` excludes `.env*.local` and `.vercel` | Done |
-| Supabase SSR clients configured | Done |
-| Supabase project linked (`oyexzmucngsoyxlxhofy`) | Done |
-| `.env.local` with real keys | Done |
-| Foundation migration applied | Done |
-| `npm run build` passes | Done |
-| Git initialized locally | Done |
-| GitHub remote connected & pushed | Done |
-| Vercel project linked (`cyberskill-builder`) | Done |
-| Supabase env vars on Vercel (prod + preview) | Done |
-| Production deployed | Done — [cyberskill-builder.vercel.app](https://cyberskill-builder.vercel.app) |
-| GitHub → Vercel auto-deploy | Done |
-| `gh` CLI installed & authenticated | Optional — `brew install gh` + `gh auth login` |
+| Step                                              | Status                                                                        |
+| ------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `.gitignore` excludes `.env*.local` and `.vercel` | Done                                                                          |
+| Supabase SSR clients configured                   | Done                                                                          |
+| Supabase project linked (`oyexzmucngsoyxlxhofy`)  | Done                                                                          |
+| `.env.local` with real keys                       | Done                                                                          |
+| Foundation migration applied                      | Done                                                                          |
+| `npm run build` passes                            | Done                                                                          |
+| Git initialized locally                           | Done                                                                          |
+| GitHub remote connected & pushed                  | Done                                                                          |
+| Vercel project linked (`cyberskill-builder`)      | Done                                                                          |
+| Supabase env vars on Vercel (prod + preview)      | Done                                                                          |
+| Production deployed                               | Done — [cyberskill-builder.vercel.app](https://cyberskill-builder.vercel.app) |
+| GitHub → Vercel auto-deploy                       | Done                                                                          |
+| `gh` CLI installed & authenticated                | Optional — `brew install gh` + `gh auth login`                                |
 
 ## Learn more
 

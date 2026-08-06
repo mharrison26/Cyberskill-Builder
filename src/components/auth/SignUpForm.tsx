@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { useState, useTransition } from 'react';
 
 import { signUp } from '@/app/(auth)/actions';
+import { AuthField } from '@/components/auth/AuthField';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   validateConfirmPassword,
   validateEmail,
   validatePassword,
 } from '@/lib/auth/validation';
-import { cn } from '@/lib/utils';
-
-import { AuthField } from './AuthField';
 
 export function SignUpForm() {
   const [email, setEmail] = useState('');
@@ -71,21 +71,15 @@ export function SignUpForm() {
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5">
       {authError ? (
-        <div
-          role="alert"
-          className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-          {authError}
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{authError}</AlertDescription>
+        </Alert>
       ) : null}
 
       {successMessage ? (
-        <div
-          role="status"
-          className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
-        >
-          {successMessage}
-        </div>
+        <Alert className="border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground">
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
       ) : null}
 
       <AuthField
@@ -124,24 +118,15 @@ export function SignUpForm() {
         disabled={isPending}
       />
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className={cn(
-          'w-full rounded-md bg-gray-900 px-4 py-2.5 text-sm font-medium text-white',
-          'transition-colors hover:bg-gray-800',
-          'focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2',
-          'disabled:cursor-not-allowed disabled:opacity-60'
-        )}
-      >
+      <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? 'Creating account…' : 'Create account'}
-      </button>
+      </Button>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
         <Link
           href="/sign-in"
-          className="font-medium text-gray-900 underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+          className="font-medium text-primary underline-offset-4 hover:underline focus:outline-none focus-visible:underline"
         >
           Sign in
         </Link>

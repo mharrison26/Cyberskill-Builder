@@ -1,4 +1,6 @@
-import { Header } from '@/components/Header';
+import { PublicFooter } from '@/components/layout/PublicFooter';
+import { PublicHeader } from '@/components/layout/PublicHeader';
+import { SkipLink } from '@/components/SkipLink';
 
 export default function AuthLayout({
   children,
@@ -6,11 +8,16 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-geist-sans)]">
-      <Header />
-      <main className="mx-auto flex w-full max-w-md flex-col px-6 py-12">
+    <div className="flex min-h-screen flex-col">
+      <SkipLink />
+      <PublicHeader />
+      <main
+        id="content"
+        className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 py-12"
+      >
         {children}
       </main>
+      <PublicFooter />
     </div>
   );
 }

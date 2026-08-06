@@ -142,9 +142,7 @@
           "uuid": "41a93829-b76b-43ec-b9e7-250553511549",
           "type": "organization",
           "name": "Joint Task Force, Interagency Working Group",
-          "email-addresses": [
-            "sec-cert@nist.gov"
-          ],
+          "email-addresses": ["sec-cert@nist.gov"],
           "addresses": [
             {
               "addr-lines": [
@@ -164,9 +162,7 @@
           "type": "organization",
           "name": "OSCAL Program",
           "short-name": "NIST",
-          "email-addresses": [
-            "oscal@nist.gov"
-          ],
+          "email-addresses": ["oscal@nist.gov"],
           "addresses": [
             {
               "addr-lines": [
@@ -185,27 +181,19 @@
       "responsible-parties": [
         {
           "role-id": "publisher",
-          "party-uuids": [
-            "41a93829-b76b-43ec-b9e7-250553511549"
-          ]
+          "party-uuids": ["41a93829-b76b-43ec-b9e7-250553511549"]
         },
         {
           "role-id": "contact-publisher",
-          "party-uuids": [
-            "41a93829-b76b-43ec-b9e7-250553511549"
-          ]
+          "party-uuids": ["41a93829-b76b-43ec-b9e7-250553511549"]
         },
         {
           "role-id": "creator",
-          "party-uuids": [
-            "98c78f9b-5d50-4b01-b47f-d16801e8d0ab"
-          ]
+          "party-uuids": ["98c78f9b-5d50-4b01-b47f-d16801e8d0ab"]
         },
         {
           "role-id": "contact-creator",
-          "party-uuids": [
-            "98c78f9b-5d50-4b01-b47f-d16801e8d0ab"
-          ]
+          "party-uuids": ["98c78f9b-5d50-4b01-b47f-d16801e8d0ab"]
         }
       ]
     },
@@ -2561,10 +2549,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "remove",
-                        "disable"
-                      ]
+                      "choice": ["remove", "disable"]
                     }
                   },
                   {
@@ -10327,12 +10312,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "block",
-                        "strip",
-                        "modify",
-                        "quarantine"
-                      ]
+                      "choice": ["block", "strip", "modify", "quarantine"]
                     }
                   },
                   {
@@ -26519,10 +26499,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "users",
-                        "devices"
-                      ]
+                      "choice": ["users", "devices"]
                     }
                   }
                 ],
@@ -30603,10 +30580,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "establish procedures",
-                    "implement mechanisms"
-                  ]
+                  "choice": ["establish procedures", "implement mechanisms"]
                 }
               },
               {
@@ -38972,10 +38946,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "reject",
-                        "delay"
-                      ]
+                      "choice": ["reject", "delay"]
                     }
                   }
                 ],
@@ -40724,11 +40695,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "system process",
-                        "role",
-                        "user"
-                      ]
+                      "choice": ["system process", "role", "user"]
                     }
                   }
                 ],
@@ -42949,10 +42916,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "movement",
-                        "deletion"
-                      ]
+                      "choice": ["movement", "deletion"]
                     }
                   },
                   {
@@ -46831,12 +46795,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "record",
-                    "view",
-                    "hear",
-                    "log"
-                  ]
+                  "choice": ["record", "view", "hear", "log"]
                 }
               },
               {
@@ -49886,10 +49845,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "announced",
-                        "unannounced"
-                      ]
+                      "choice": ["announced", "unannounced"]
                     }
                   },
                   {
@@ -54782,10 +54738,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "announced",
-                        "unannounced"
-                      ]
+                      "choice": ["announced", "unannounced"]
                     }
                   }
                 ],
@@ -67581,11 +67534,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "name",
-                        "position",
-                        "role"
-                      ]
+                      "choice": ["name", "position", "role"]
                     }
                   }
                 ],
@@ -73619,10 +73568,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "all",
-                        "essential"
-                      ]
+                      "choice": ["all", "essential"]
                     }
                   },
                   {
@@ -73828,10 +73774,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "all",
-                        "essential"
-                      ]
+                      "choice": ["all", "essential"]
                     }
                   }
                 ],
@@ -74019,10 +73962,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "all",
-                        "essential"
-                      ]
+                      "choice": ["all", "essential"]
                     }
                   }
                 ],
@@ -74324,10 +74264,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "all",
-                        "essential"
-                      ]
+                      "choice": ["all", "essential"]
                     }
                   }
                 ],
@@ -84146,11 +84083,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "local",
-                        "network",
-                        "remote"
-                      ]
+                      "choice": ["local", "network", "remote"]
                     }
                   },
                   {
@@ -85162,11 +85095,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "local",
-                    "remote",
-                    "network"
-                  ]
+                  "choice": ["local", "remote", "network"]
                 }
               }
             ],
@@ -85382,11 +85311,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "local",
-                        "remote",
-                        "network"
-                      ]
+                      "choice": ["local", "remote", "network"]
                     }
                   }
                 ],
@@ -90344,10 +90269,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "in person",
-                        "by a trusted external party"
-                      ]
+                      "choice": ["in person", "by a trusted external party"]
                     }
                   },
                   {
@@ -93848,10 +93770,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "registration code",
-                        "notice of proofing"
-                      ]
+                      "choice": ["registration code", "notice of proofing"]
                     }
                   }
                 ],
@@ -116600,10 +116519,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "restrict",
-                    "prohibit"
-                  ]
+                  "choice": ["restrict", "prohibit"]
                 }
               },
               {
@@ -119942,10 +119858,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "{{ insert: param, pe-03_odp.03 }} ",
-                    "guards"
-                  ]
+                  "choice": ["{{ insert: param, pe-03_odp.03 }} ", "guards"]
                 }
               },
               {
@@ -121460,10 +121373,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "detect",
-                        "prevent"
-                      ]
+                      "choice": ["detect", "prevent"]
                     }
                   },
                   {
@@ -125478,10 +125388,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "manually",
-                        "automatically"
-                      ]
+                      "choice": ["manually", "automatically"]
                     }
                   }
                 ],
@@ -125669,10 +125576,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "manually",
-                        "automatically"
-                      ]
+                      "choice": ["manually", "automatically"]
                     }
                   },
                   {
@@ -181994,12 +181898,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "unit",
-                    "integration",
-                    "system",
-                    "regression"
-                  ]
+                  "choice": ["unit", "integration", "system", "regression"]
                 }
               },
               {
@@ -195550,10 +195449,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "protect against",
-                    "limit"
-                  ]
+                  "choice": ["protect against", "limit"]
                 }
               },
               {
@@ -196543,10 +196439,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "physically",
-                    "logically"
-                  ]
+                  "choice": ["physically", "logically"]
                 }
               }
             ],
@@ -201826,10 +201719,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "physically",
-                        "logically"
-                      ]
+                      "choice": ["physically", "logically"]
                     }
                   },
                   {
@@ -202003,10 +201893,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "confidentiality",
-                    "integrity"
-                  ]
+                  "choice": ["confidentiality", "integrity"]
                 }
               }
             ],
@@ -202409,10 +202296,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "confidentiality",
-                        "integrity"
-                      ]
+                      "choice": ["confidentiality", "integrity"]
                     }
                   }
                 ],
@@ -203294,10 +203178,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "physically",
-                    "logically"
-                  ]
+                  "choice": ["physically", "logically"]
                 }
               },
               {
@@ -204220,10 +204101,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "NIST FIPS-validated",
-                        "NSA-approved"
-                      ]
+                      "choice": ["NIST FIPS-validated", "NSA-approved"]
                     }
                   }
                 ],
@@ -205643,10 +205521,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "physical",
-                        "logical"
-                      ]
+                      "choice": ["physical", "logical"]
                     }
                   }
                 ],
@@ -211026,10 +210901,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "confidentiality",
-                    "integrity"
-                  ]
+                  "choice": ["confidentiality", "integrity"]
                 }
               },
               {
@@ -213200,10 +213072,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "storage",
-                    "timing"
-                  ]
+                  "choice": ["storage", "timing"]
                 }
               }
             ],
@@ -213569,10 +213438,7 @@
                     ],
                     "select": {
                       "how-many": "one-or-more",
-                      "choice": [
-                        "storage",
-                        "timing"
-                      ]
+                      "choice": ["storage", "timing"]
                     }
                   },
                   {
@@ -213929,10 +213795,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "physical",
-                    "logical"
-                  ]
+                  "choice": ["physical", "logical"]
                 }
               },
               {
@@ -215136,10 +214999,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "physical locations",
-                    "logical domains"
-                  ]
+                  "choice": ["physical locations", "logical domains"]
                 }
               },
               {
@@ -215184,10 +215044,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "physical locations",
-                    "logical domains"
-                  ]
+                  "choice": ["physical locations", "logical domains"]
                 }
               },
               {
@@ -215216,10 +215073,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "physical locations",
-                    "logical domains"
-                  ]
+                  "choice": ["physical locations", "logical domains"]
                 }
               }
             ],
@@ -217885,10 +217739,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "physically",
-                    "logically"
-                  ]
+                  "choice": ["physically", "logically"]
                 }
               },
               {
@@ -220165,10 +220016,7 @@
                   }
                 ],
                 "select": {
-                  "choice": [
-                    "physically",
-                    "logically"
-                  ]
+                  "choice": ["physically", "logically"]
                 }
               }
             ],
@@ -224230,10 +224078,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "signature-based",
-                    "non-signature-based"
-                  ]
+                  "choice": ["signature-based", "non-signature-based"]
                 }
               },
               {
@@ -224271,10 +224116,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "endpoint",
-                    "network entry and exit points"
-                  ]
+                  "choice": ["endpoint", "network entry and exit points"]
                 }
               },
               {
@@ -226082,10 +225924,7 @@
                 ],
                 "select": {
                   "how-many": "one-or-more",
-                  "choice": [
-                    "as needed",
-                    "{{ insert: param, si-04_odp.06 }} "
-                  ]
+                  "choice": ["as needed", "{{ insert: param, si-04_odp.06 }} "]
                 }
               },
               {
@@ -240552,10 +240391,7 @@
                       }
                     ],
                     "select": {
-                      "choice": [
-                        "real-time",
-                        "near real-time"
-                      ]
+                      "choice": ["real-time", "near real-time"]
                     }
                   },
                   {
