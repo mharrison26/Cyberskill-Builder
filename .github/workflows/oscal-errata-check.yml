@@ -1,0 +1,137 @@
+name: OSCAL Catalog Errata Check
+
+on:
+  schedule:
+    # Every Monday at 09:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-oscal-errata:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download live NIST SP 800-53 Rev 5 catalog
+        run: |
+          curl -fsSL -o /tmp/live-catalog.json \
+            "https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json"
+
+      - name: Compare with pinned catalog
+        id: compare
+        run: |
+          PINNED="data/oscal/NIST_SP-800-53_rev5_catalog.json"
+          LIVE="/tmp/live-catalog.json"
+
+          if cmp -s "$PINNED" "$LIVE"; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected in NIST SP 800-53 Rev 5 catalog."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+
+            PINNED_SIZE=$(wc -c < "$PINNED" | tr -d ' ')
+            LIVE_SIZE=$(wc -c < "$LIVE" | tr -d ' ')
+            PINNED_LINES=$(wc -l < "$PINNED" | tr -d ' ')
+            LIVE_LINES=$(wc -l < "$LIVE" | tr -d ' ')
+
+            echo "pinned_size=$PINNED_SIZE" >> "$GITHUB_OUTPUT"
+            echo "live_size=$LIVE_SIZE" >> "$GITHUB_OUTPUT"
+            echo "pinned_lines=$PINNED_LINES" >> "$GITHUB_OUTPUT"
+            echo "live_lines=$LIVE_LINES" >> "$GITHUB_OUTPUT"
+            echo "size_diff=$((LIVE_SIZE - PINNED_SIZE))" >> "$GITHUB_OUTPUT"
+            echo "line_diff=$((LIVE_LINES - PINNED_LINES))" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open issue for catalog change
+        if: steps.compare.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ISSUE_TITLE = 'NIST SP 800-53 catalog changed';
+            const ISSUE_LABEL = 'oscal-errata';
+            const SOURCE_URL =
+              'https://raw.githubusercontent.com/usnistgov/oscal-content/main/nist.gov/SP800-53/rev5/json/NIST_SP-800-53_rev5_catalog.json';
+
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+
+            const duplicate = existingIssues.find((issue) =>
+              issue.title.startsWith(ISSUE_TITLE)
+            );
+            if (duplicate) {
+              core.info(`Open issue already exists: #${duplicate.number}`);
+              return;
+            }
+
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: ISSUE_LABEL,
+                color: 'f29513',
+                description: 'NIST OSCAL catalog errata detected by automated check',
+              });
+            } catch (error) {
+              if (error.status !== 422) throw error;
+            }
+
+            const detectedDate = new Date().toISOString().split('T')[0];
+            const pinnedSize = '${{ steps.compare.outputs.pinned_size }}';
+            const liveSize = '${{ steps.compare.outputs.live_size }}';
+            const pinnedLines = '${{ steps.compare.outputs.pinned_lines }}';
+            const liveLines = '${{ steps.compare.outputs.live_lines }}';
+            const sizeDiff = '${{ steps.compare.outputs.size_diff }}';
+            const lineDiff = '${{ steps.compare.outputs.line_diff }}';
+
+            const formatDiff = (value) => {
+              const n = Number(value);
+              return n >= 0 ? `+${n}` : String(n);
+            };
+
+            const workflowUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/workflows/oscal-errata-check.yml`;
+
+            const body = [
+              '## NIST SP 800-53 Rev 5 OSCAL Catalog Change Detected',
+              '',
+              `**Date detected:** ${detectedDate}`,
+              '',
+              `**Source:** ${SOURCE_URL}`,
+              '',
+              'The live NIST SP 800-53 Rev 5 OSCAL catalog differs from the pinned copy at `data/oscal/NIST_SP-800-53_rev5_catalog.json`.',
+              '',
+              '> **Note:** This workflow did **not** auto-update the pinned file. Manual review is required before updating.',
+              '',
+              '### Diff stats',
+              '',
+              '| Metric | Pinned | Live | Change |',
+              '|--------|--------|------|--------|',
+              `| File size (bytes) | ${pinnedSize} | ${liveSize} | ${formatDiff(sizeDiff)} |`,
+              `| Line count | ${pinnedLines} | ${liveLines} | ${formatDiff(lineDiff)} |`,
+              '',
+              '### Next steps',
+              '',
+              '1. Review the upstream catalog changes',
+              '2. Update `data/oscal/NIST_SP-800-53_rev5_catalog.json` if appropriate',
+              '3. Close this issue after the pinned copy is updated',
+              '',
+              '---',
+              `*Automated detection by [OSCAL Errata Check workflow](${workflowUrl})*`,
+            ].join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: ISSUE_TITLE,
+              body,
+              labels: [ISSUE_LABEL],
+            });
+
+            core.info(`Created issue #${issue.data.number}`);
