@@ -13,7 +13,9 @@ export default function PrivacyPage() {
       <LegalDraftBanner />
 
       <header className="mt-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Privacy Policy</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Privacy Policy
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Last updated: August 6, 2026 (draft)
         </p>
@@ -58,7 +60,9 @@ export default function PrivacyPage() {
             <li>Provide, maintain, and improve the training platform.</li>
             <li>Authenticate users and manage enrollments.</li>
             <li>Grade assessments and generate portfolio artifacts.</li>
-            <li>Communicate service updates and respond to support requests.</li>
+            <li>
+              Communicate service updates and respond to support requests.
+            </li>
             <li>Detect fraud, abuse, and security incidents.</li>
           </ul>
         </section>
@@ -87,8 +91,8 @@ export default function PrivacyPage() {
           <h2>Data Retention</h2>
           <p>
             We retain account and training data for as long as your account is
-            active or as needed to provide services. Assessment artifacts may
-            be retained to support portfolio and audit trail features unless
+            active or as needed to provide services. Assessment artifacts may be
+            retained to support portfolio and audit trail features unless
             deletion is requested.
           </p>
         </section>

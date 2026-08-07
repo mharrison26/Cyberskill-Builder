@@ -31,7 +31,10 @@ export async function POST(request: Request) {
   const file = formData.get('file');
 
   if (typeof lessonId !== 'string' || !lessonId.trim()) {
-    return NextResponse.json({ error: 'lessonId is required' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'lessonId is required' },
+      { status: 400 }
+    );
   }
 
   if (!(file instanceof File)) {

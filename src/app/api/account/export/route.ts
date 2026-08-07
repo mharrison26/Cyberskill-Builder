@@ -23,10 +23,7 @@ export async function GET() {
     { data: oscal_findings, error: findingsError },
   ] = await Promise.all([
     supabase.from('users').select('*').eq('id', userId),
-    supabase
-      .from('track_enrollments')
-      .select('*')
-      .eq('student_id', userId),
+    supabase.from('track_enrollments').select('*').eq('student_id', userId),
     supabase.from('lesson_progress').select('*').eq('student_id', userId),
     supabase.from('oscal_findings').select('*').eq('student_id', userId),
   ]);

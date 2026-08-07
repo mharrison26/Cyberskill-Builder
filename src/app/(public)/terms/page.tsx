@@ -26,8 +26,8 @@ export default function TermsPage() {
           <h2>Acceptance of Terms</h2>
           <p>
             By accessing or using CyberSkill Builder (&ldquo;the
-            Platform&rdquo;), you agree to these Terms of Service. If you do
-            not agree, do not use the Platform.
+            Platform&rdquo;), you agree to these Terms of Service. If you do not
+            agree, do not use the Platform.
           </p>
         </section>
 
@@ -49,8 +49,8 @@ export default function TermsPage() {
             <li>Maintaining the confidentiality of your login credentials.</li>
             <li>All activity that occurs under your account.</li>
             <li>
-              Providing accurate registration information and keeping it
-              up to date.
+              Providing accurate registration information and keeping it up to
+              date.
             </li>
           </ul>
         </section>

@@ -45,9 +45,7 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: cohortCode
-      ? { data: { cohort_code: cohortCode } }
-      : undefined,
+    options: cohortCode ? { data: { cohort_code: cohortCode } } : undefined,
   });
 
   if (error) return { error: error.message };

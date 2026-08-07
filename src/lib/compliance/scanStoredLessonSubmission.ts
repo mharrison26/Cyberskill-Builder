@@ -29,7 +29,9 @@ export async function scanStoredLessonSubmission(
   });
 
   if (!scanResult.ok) {
-    await supabase.storage.from(LESSON_SUBMISSIONS_BUCKET).remove([storagePath]);
+    await supabase.storage
+      .from(LESSON_SUBMISSIONS_BUCKET)
+      .remove([storagePath]);
     return { ok: false, error: scanResult.error };
   }
 

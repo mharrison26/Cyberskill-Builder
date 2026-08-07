@@ -137,8 +137,8 @@ export default async function TrackCheckoutPage({ params }: CheckoutPageProps) {
 
           {atEnrollmentLimit ? (
             <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-              You already have {MAX_ACTIVE_TRACK_ENROLLMENTS} active tracks. Complete
-              or cancel an enrollment before adding another.
+              You already have {MAX_ACTIVE_TRACK_ENROLLMENTS} active tracks.
+              Complete or cancel an enrollment before adding another.
             </p>
           ) : null}
 

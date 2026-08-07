@@ -16,8 +16,7 @@ export type ScanUploadInput = {
 };
 
 export type ScanUploadResult =
-  | { ok: true }
-  | { ok: false; error: string; matchedPattern: string };
+  { ok: true } | { ok: false; error: string; matchedPattern: string };
 
 function extensionOf(filename: string): string {
   const base = filename.split(/[/\\]/).pop() ?? filename;
@@ -85,9 +84,7 @@ function scanTextBuffer(buffer: Buffer): ScanUploadResult {
  * lightweight fallback; compressed image payloads usually require OCR (e.g. tesseract.js).
  */
 function scanImageBuffer(buffer: Buffer): ScanUploadResult {
-  const asciiRuns = buffer
-    .toString('latin1')
-    .match(/[\x20-\x7E]{8,}/g);
+  const asciiRuns = buffer.toString('latin1').match(/[\x20-\x7E]{8,}/g);
 
   if (!asciiRuns) {
     return { ok: true };
