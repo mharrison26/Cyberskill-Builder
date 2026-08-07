@@ -13,10 +13,15 @@ import {
   validatePassword,
 } from '@/lib/auth/validation';
 
-export function SignUpForm() {
+type SignUpFormProps = {
+  initialCohortCode?: string;
+};
+
+export function SignUpForm({ initialCohortCode = '' }: SignUpFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [cohortCode, setCohortCode] = useState(initialCohortCode);
   const [fieldErrors, setFieldErrors] = useState<{
     email?: string;
     password?: string;
@@ -57,6 +62,9 @@ export function SignUpForm() {
     const formData = new FormData();
     formData.set('email', email.trim());
     formData.set('password', password);
+    if (cohortCode.trim()) {
+      formData.set('cohortCode', cohortCode.trim());
+    }
 
     startTransition(async () => {
       const result = await signUp(formData);
@@ -115,6 +123,17 @@ export function SignUpForm() {
         onChange={setConfirmPassword}
         error={fieldErrors.confirmPassword}
         autoComplete="new-password"
+        disabled={isPending}
+      />
+
+      <AuthField
+        id="sign-up-cohort-code"
+        label="Cohort or invite code (optional)"
+        type="text"
+        name="cohortCode"
+        value={cohortCode}
+        onChange={setCohortCode}
+        autoComplete="off"
         disabled={isPending}
       />
 

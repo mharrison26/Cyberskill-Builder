@@ -1,5 +1,6 @@
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { AppTopBar } from '@/components/layout/AppTopBar';
+import { PublicFooter } from '@/components/layout/PublicFooter';
 import { SkipLink } from '@/components/SkipLink';
 import { getAppShellContext } from '@/lib/auth/appShell';
 
@@ -34,6 +35,7 @@ export default async function AppLayout({
         <div className="flex-1 space-y-4 p-4 md:p-6">
           <main id="content">{children}</main>
         </div>
+        <PublicFooter />
       </div>
     </div>
   );

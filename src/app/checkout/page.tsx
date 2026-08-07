@@ -1,25 +1,77 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
-import { Header } from '@/components/Header';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { formatTrackPrice } from '@/lib/enrollment/pricing';
+import { getTrackDescription } from '@/lib/enrollment/trackDescriptions';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'Checkout',
-  description: 'Complete enrollment to access track content',
+  description: 'Choose a training track to enroll',
 };
 
-export default function CheckoutPage() {
+export default async function CheckoutIndexPage() {
+  const supabase = await createClient();
+  const { data: tracks, error } = await supabase
+    .from('tracks')
+    .select('slug, name, full_price')
+    .order('name', { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to load tracks: ${error.message}`);
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 font-[family-name:var(--font-geist-sans)]">
-      <Header />
-      <main className="mx-auto flex w-full max-w-2xl flex-col px-6 py-12">
-        <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-semibold text-gray-900">Checkout</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Your account is not enrolled in a training track yet. Contact your
-            administrator or complete checkout to get access.
-          </p>
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold">Choose a track</h1>
+        <p className="mt-1 text-muted-foreground">
+          Select a training track to review pricing and enroll.
+        </p>
+      </header>
+
+      {tracks && tracks.length > 0 ? (
+        <div className="grid gap-4">
+          {tracks.map((track) => (
+            <Link
+              key={track.slug}
+              href={`/checkout/${track.slug}`}
+              className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Card className="transition-colors hover:border-primary/40">
+                <CardHeader>
+                  <CardTitle className="text-base">{track.name}</CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    {getTrackDescription(track.slug, track.name)}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm font-medium text-primary">
+                    From {formatTrackPrice(Number(track.full_price))} →
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
-      </main>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">No tracks available</CardTitle>
+            <CardDescription>
+              Training tracks have not been published yet. Check back later or
+              contact your administrator.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
     </div>
   );
 }

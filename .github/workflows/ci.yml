@@ -42,3 +42,42 @@ jobs:
       - name: RLS coverage (skipped)
         run: echo "Skipping RLS coverage — set DATABASE_URL GitHub secret to enable"
         if: ${{ secrets.DATABASE_URL == '' }}
+
+  accessibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build and run accessibility checks (WCAG 2.2 AA)
+        env:
+          A11Y_SKIP_BUILD: '1'
+          A11Y_TEST_EMAIL: ${{ secrets.A11Y_TEST_EMAIL }}
+          A11Y_TEST_PASSWORD: ${{ secrets.A11Y_TEST_PASSWORD }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          npm run build
+          npm run a11y-check
+        if: ${{ secrets.A11Y_TEST_EMAIL != '' && secrets.A11Y_TEST_PASSWORD != '' && secrets.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' }}
+
+      - name: Accessibility (skipped)
+        run: echo "Skipping accessibility checks — set A11Y_TEST_EMAIL, A11Y_TEST_PASSWORD, NEXT_PUBLIC_SUPABASE_URL, and NEXT_PUBLIC_SUPABASE_ANON_KEY GitHub secrets to enable"
+        if: ${{ secrets.A11Y_TEST_EMAIL == '' || secrets.A11Y_TEST_PASSWORD == '' || secrets.NEXT_PUBLIC_SUPABASE_URL == '' || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY == '' }}

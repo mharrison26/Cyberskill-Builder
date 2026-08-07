@@ -33,6 +33,7 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
 export async function signUp(formData: FormData): Promise<AuthActionResult> {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
+  const cohortCode = String(formData.get('cohortCode') ?? '').trim();
 
   const emailError = validateEmail(email);
   if (emailError) return { error: emailError };
@@ -41,7 +42,13 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   if (passwordError) return { error: passwordError };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({ email, password });
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: cohortCode
+      ? { data: { cohort_code: cohortCode } }
+      : undefined,
+  });
 
   if (error) return { error: error.message };
 

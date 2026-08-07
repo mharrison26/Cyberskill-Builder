@@ -70,7 +70,7 @@ export async function requireEnrollment(
     .maybeSingle();
 
   if (userError || !appUser) {
-    redirect('/checkout');
+    redirect(`/checkout/${trackSlug}`);
   }
 
   const { data: enrollment, error: enrollmentError } = await supabase
@@ -84,7 +84,7 @@ export async function requireEnrollment(
     .maybeSingle();
 
   if (enrollmentError || !enrollment) {
-    redirect('/checkout');
+    redirect(`/checkout/${trackSlug}`);
   }
 
   return {

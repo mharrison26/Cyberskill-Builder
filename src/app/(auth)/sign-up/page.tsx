@@ -14,7 +14,14 @@ export const metadata: Metadata = {
   description: 'Create a new account',
 };
 
-export default function SignUpPage() {
+type SignUpPageProps = {
+  searchParams: Promise<{ code?: string; cohort?: string }>;
+};
+
+export default async function SignUpPage({ searchParams }: SignUpPageProps) {
+  const params = await searchParams;
+  const initialCohortCode = (params.code ?? params.cohort ?? '').trim();
+
   return (
     <Card>
       <CardHeader>
@@ -22,7 +29,7 @@ export default function SignUpPage() {
         <CardDescription>Enter your details to get started.</CardDescription>
       </CardHeader>
       <CardContent>
-        <SignUpForm />
+        <SignUpForm initialCohortCode={initialCohortCode} />
       </CardContent>
     </Card>
   );

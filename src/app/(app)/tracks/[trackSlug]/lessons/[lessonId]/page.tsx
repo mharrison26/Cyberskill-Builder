@@ -6,7 +6,9 @@ import { GradingResult } from '@/components/GradingResult';
 import { ArtifactLabLesson } from '@/components/lessons/ArtifactLabLesson';
 import { ConceptualLesson } from '@/components/lessons/ConceptualLesson';
 import { ToolWalkthroughLesson } from '@/components/lessons/ToolWalkthroughLesson';
+import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
 import { requireEnrollment } from '@/lib/auth/requireEnrollment';
+import { isDodAdjacentTenant } from '@/lib/tenants/isDodAdjacentTenant';
 import { isLessonGradedStatus } from '@/lib/status';
 import { createClient } from '@/lib/supabase/server';
 import type { Lesson, LessonType } from '@/types';
@@ -39,6 +41,11 @@ export default async function LessonPage({ params }: LessonPageProps) {
     supabase,
     trackSlug,
     returnTo
+  );
+
+  const showSimulatedDataBanner = await isDodAdjacentTenant(
+    supabase,
+    user.tenant_id
   );
 
   const { data: lesson, error: lessonError } = await supabase
@@ -98,6 +105,8 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      {showSimulatedDataBanner ? <SimulatedDataBanner /> : null}
+
       <p className="text-sm font-medium text-muted-foreground">{track.name}</p>
 
       {isSubmitted ? (
@@ -163,11 +172,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
       ) : null}
 
       {lessonType === 'tool_walkthrough' ? (
-        <ToolWalkthroughLesson
-          lesson={lesson}
-          studentId={user.id}
-          tenantId={user.tenant_id}
-        />
+        <ToolWalkthroughLesson lesson={lesson} />
       ) : null}
     </div>
   );

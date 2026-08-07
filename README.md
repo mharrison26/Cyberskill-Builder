@@ -37,6 +37,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `npm run format`       | Format files with Prettier               |
 | `npm run format:check` | Check formatting without writing changes |
 | `npm run test:rls`     | Verify RLS + FORCE RLS on all public tables (requires `DATABASE_URL`) |
+| `npm run a11y-check`   | WCAG 2.2 AA scan of `/`, `/dashboard`, and a GRC lesson page (see below) |
 
 ## Project structure
 
@@ -112,6 +113,43 @@ DATABASE_URL=postgresql://postgres.[project-ref]:[password]@...
 Supabase → **Settings** → **Database** → **Connection string** → URI (`postgres` role).
 
 **CI:** add the same URI as a repository secret named `DATABASE_URL` (GitHub → repo **Settings** → **Secrets and variables** → **Actions**). The CI workflow runs `npm run test:rls` when that secret is set; otherwise it prints a skip note.
+
+### Accessibility (WCAG 2.2 AA)
+
+`npm run a11y-check` builds the app, starts the production server, and runs [axe-core](https://github.com/dequelabs/axe-core) (via `@axe-core/playwright`) against:
+
+- `/` — landing page (no auth)
+- `/dashboard` — authenticated dashboard
+- A GRC lesson page — first `/lessons/` link on the dashboard, or `A11Y_LESSON_URL`
+
+The check fails on any WCAG 2.2 AA violation (tags: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`).
+
+**Local:**
+
+```bash
+A11Y_TEST_EMAIL=your-test-user@example.com \
+A11Y_TEST_PASSWORD='your-password' \
+npm run a11y-check
+```
+
+Skip rebuild when `.next` is already present:
+
+```bash
+A11Y_SKIP_BUILD=1 A11Y_TEST_EMAIL=... A11Y_TEST_PASSWORD=... npm run a11y-check
+```
+
+The test user must exist in Supabase Auth, have a row in `public.users`, and an **active GRC track enrollment** so dashboard and lesson pages render real content.
+
+**CI:** configure these GitHub Actions secrets (repo **Settings** → **Secrets and variables** → **Actions**):
+
+| Secret | Purpose |
+| ------ | ------- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Required for `next build` and auth |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Required for `next build` and auth |
+| `A11Y_TEST_EMAIL` | Dedicated test account email |
+| `A11Y_TEST_PASSWORD` | Test account password |
+
+The `accessibility` job runs when all four secrets are set; otherwise it prints a skip note (same pattern as RLS coverage).
 
 ### Database migration
 

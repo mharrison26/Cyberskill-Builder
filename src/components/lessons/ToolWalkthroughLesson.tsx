@@ -14,12 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  buildLessonSubmissionStoragePath,
-  LESSON_SUBMISSIONS_BUCKET,
-  TOOL_WALKTHROUGH_MIN_REFLECTION_LENGTH,
-} from '@/lib/lessons/toolWalkthroughValidation';
-import { createClient } from '@/lib/supabase/client';
+import { TOOL_WALKTHROUGH_MIN_REFLECTION_LENGTH } from '@/lib/lessons/toolWalkthroughValidation';
 import type { Lesson } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -34,8 +29,6 @@ const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 type ToolWalkthroughLessonProps = {
   lesson: Lesson;
-  studentId: string;
-  tenantId: string;
   className?: string;
 };
 
@@ -61,8 +54,6 @@ function isAcceptedImage(file: File): boolean {
 
 export function ToolWalkthroughLesson({
   lesson,
-  studentId,
-  tenantId,
   className,
 }: ToolWalkthroughLessonProps) {
   const objectives = parseObjectives(lesson.learning_objectives);
@@ -130,24 +121,32 @@ export function ToolWalkthroughLesson({
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
-      const storagePath = buildLessonSubmissionStoragePath(
-        tenantId,
-        studentId,
-        lesson.id,
-        selectedFile.name
-      );
-      const uploadedAt = new Date().toISOString();
+      const uploadFormData = new FormData();
+      uploadFormData.append('lessonId', lesson.id);
+      uploadFormData.append('file', selectedFile);
 
-      const { error: uploadError } = await supabase.storage
-        .from(LESSON_SUBMISSIONS_BUCKET)
-        .upload(storagePath, selectedFile, {
-          upsert: true,
-          contentType: selectedFile.type,
-        });
+      const uploadResponse = await fetch('/api/lessons/upload', {
+        method: 'POST',
+        body: uploadFormData,
+      });
 
-      if (uploadError) {
-        throw new Error(uploadError.message);
+      const uploadPayload = (await uploadResponse.json()) as {
+        error?: string;
+        storagePath?: string;
+        uploadedAt?: string;
+      };
+
+      if (!uploadResponse.ok) {
+        throw new Error(
+          uploadPayload.error ?? 'Failed to upload evidence file.'
+        );
+      }
+
+      const storagePath = uploadPayload.storagePath;
+      const uploadedAt = uploadPayload.uploadedAt ?? new Date().toISOString();
+
+      if (!storagePath) {
+        throw new Error('Upload succeeded but storage path was missing.');
       }
 
       const response = await fetch(`/api/lessons/${lesson.id}/submit`, {

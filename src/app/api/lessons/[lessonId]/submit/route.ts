@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { scanStoredLessonSubmission } from '@/lib/compliance/scanStoredLessonSubmission';
 import { triggerGrading } from '@/lib/grading/triggerGrading';
 import { validateCCCER } from '@/lib/lessons/cccerValidation';
 import {
@@ -50,6 +51,15 @@ export async function POST(request: Request, { params }: RouteContext) {
 
     if (!validation.ok) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const scanResult = await scanStoredLessonSubmission(
+      context.supabase,
+      validation.data.storagePath
+    );
+
+    if (!scanResult.ok) {
+      return NextResponse.json({ error: scanResult.error }, { status: 422 });
     }
 
     const { data: progress, error: progressError } =
