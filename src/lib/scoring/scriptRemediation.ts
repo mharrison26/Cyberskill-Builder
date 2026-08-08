@@ -19,14 +19,17 @@ import type {
 } from '@/lib/scoring/index';
 
 /**
- * Script remediation scoring (WebContainer / PI-04 sandbox + PI-06 config-diff).
+ * Script remediation / scripting_lab scoring (WebContainer + PI-06 config-diff).
  *
  * Students write a short Bash or PowerShell script, run it in the CodeSandbox
- * WebContainer so the filesystem reaches the expected fix, then submit.
+ * WebContainer so the filesystem reaches the expected fix (or per-fixture
+ * outputs), then submit.
  *
  * Composition:
  *   1. Deterministic config-diff (evaluateConfigDiff) gates pass/fail
- *   2. RAG grades script quality / side effects against a pinned rubric only
+ *      — for scripting_lab / script_fixtures, use one file_equals (or similar)
+ *        rule per fixture output
+ *   2. RAG grades script quality / clarity against a pinned rubric only
  *      (F26 anti-hallucination) — advisory feedback, does not override state checks
  *
  * expected_state:
@@ -172,9 +175,11 @@ function resolveScript(
 
   const candidates = Object.keys(files).filter(looksLikeScriptPath).sort();
 
-  // Prefer remediation-ish names.
+  // Prefer remediation / lab-script names.
   const preferred = candidates.find((p) =>
-    /fix|remediat|spooler|restart|clear/i.test(p)
+    /fix|remediat|spooler|restart|clear|stale|report|login|inactive/i.test(
+      p
+    )
   );
   const path = preferred ?? candidates[0] ?? null;
   if (!path) return { path: null, content: '', expectedMissing: false };
@@ -265,7 +270,10 @@ export function isScriptRemediationTicketType(ticketType: string): boolean {
     base === 'script_remediation' ||
     base === 'spooler_fix' ||
     base === 'sandbox_script' ||
-    base === 'service_restart'
+    base === 'service_restart' ||
+    // Fixture-based scripting lab (Bash/PowerShell + per-fixture config-diff)
+    base === 'scripting_lab' ||
+    base === 'script_fixtures'
   );
 }
 

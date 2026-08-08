@@ -75,6 +75,8 @@ describe('isScriptRemediationTicketType', () => {
     expect(isScriptRemediationTicketType('spooler_fix')).toBe(true);
     expect(isScriptRemediationTicketType('sandbox_script')).toBe(true);
     expect(isScriptRemediationTicketType('service_restart')).toBe(true);
+    expect(isScriptRemediationTicketType('scripting_lab')).toBe(true);
+    expect(isScriptRemediationTicketType('script_fixtures')).toBe(true);
     expect(isScriptRemediationTicketType('helpdesk.script_remediation')).toBe(
       true
     );
@@ -89,6 +91,8 @@ describe('scriptRemediationTicketScorer', () => {
     expect(registered).toContain('spooler_fix');
     expect(registered).toContain('sandbox_script');
     expect(registered).toContain('service_restart');
+    expect(registered).toContain('scripting_lab');
+    expect(registered).toContain('script_fixtures');
     expect(getTicketScorer('script_remediation')).toBe(
       scriptRemediationTicketScorer
     );

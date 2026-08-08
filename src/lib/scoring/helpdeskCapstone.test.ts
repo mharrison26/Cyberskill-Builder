@@ -92,6 +92,7 @@ describe('helpdesk capstone ticket codes', () => {
     expect(isHelpdeskCapstoneTicketType('kb_writeup')).toBe(false);
     expect(isFlagshipEligibleTicketType('ao_review')).toBe(true);
     expect(isFlagshipEligibleTicketType('helpdesk_capstone')).toBe(true);
+    expect(isFlagshipEligibleTicketType('infra_design_capstone')).toBe(true);
     expect(isFlagshipEligibleTicketType('triage')).toBe(false);
   });
 });

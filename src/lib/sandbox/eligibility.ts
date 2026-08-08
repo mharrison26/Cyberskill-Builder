@@ -20,6 +20,14 @@ const SHELL_TICKET_TYPE_BASES = new Set([
   'linux',
   'incident',
   'incident_response',
+  // CIS Benchmark hardening lab (Fly shell + config-diff).
+  'cis_hardening',
+  'linux_hardening',
+  'sysadmin_hardening',
+  // Outage / IR capstone (Fly shell + config-diff + incident report).
+  'outage_capstone',
+  'incident_response_capstone',
+  'sysadmin_outage_capstone',
 ]);
 
 export function ticketTypeBase(ticketType: string): string {
@@ -36,7 +44,11 @@ export function isShellSandboxTicketType(ticketType: string): boolean {
   return (
     normalized.includes('sysadmin') ||
     normalized.includes('helpdesk') ||
-    normalized.includes('linux_admin')
+    normalized.includes('linux_admin') ||
+    normalized.includes('cis_hardening') ||
+    normalized.includes('linux_hardening') ||
+    normalized.includes('outage_capstone') ||
+    normalized.includes('incident_response')
   );
 }
 

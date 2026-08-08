@@ -7,6 +7,11 @@ import type { Terminal } from '@xterm/xterm';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  buildModesJson,
+  PERMISSIONS_JSHRC,
+  PERMISSIONS_LS_JS,
+} from '@/lib/sandbox/permissionsLs';
 import { cn } from '@/lib/utils';
 
 import '@xterm/xterm/css/xterm.css';
@@ -15,6 +20,12 @@ export type CodeSandboxProps = {
   ticketId: string;
   /** Flat path → file contents map used to seed the WebContainer FS. */
   initialState: Record<string, string>;
+  /** Optional path → octal mode map. Injects a mode-aware `ls` helper. */
+  fileModes?: Record<string, string>;
+  /** Hide the file browser + editor (terminal-only explore labs). */
+  showFileBrowser?: boolean;
+  /** Show the "Submit lab" button that posts filesystem snapshots. */
+  showSubmit?: boolean;
   readOnly?: boolean;
   className?: string;
   onSubmitComplete?: (result: {
@@ -108,6 +119,72 @@ async function collectFilesFromFs(
   return files;
 }
 
+/**
+ * WebContainer's FileSystemAPI has no chmod/stat. Collect modes via Node in the
+ * sandbox so config-diff `file_permission` rules can score directory/file modes
+ * after students run `chmod` in the terminal.
+ */
+async function collectFileModesFromFs(
+  container: WebContainer
+): Promise<Record<string, string>> {
+  const script = [
+    "const fs=require('fs');",
+    "const path=require('path');",
+    "const SKIP=new Set(['node_modules','.git','.cache']);",
+    'const modes={};',
+    'function walk(dir){',
+    '  let entries;',
+    '  try{entries=fs.readdirSync(dir,{withFileTypes:true});}catch{return;}',
+    '  for(const entry of entries){',
+    '    if(SKIP.has(entry.name)) continue;',
+    "    const p=dir==='.'?entry.name:path.join(dir,entry.name);",
+    '    try{',
+    '      const st=fs.statSync(p);',
+    "      modes[p.replace(/\\\\/g,'/')]=(st.mode&0o7777).toString(8);",
+    '    }catch{}',
+    '    if(entry.isDirectory()) walk(p);',
+    '  }',
+    '}',
+    "walk('.');",
+    'process.stdout.write(JSON.stringify(modes));',
+  ].join('');
+
+  try {
+    const process = await container.spawn('node', ['-e', script], {
+      output: true,
+    });
+    const reader = process.output.getReader();
+    const chunks: string[] = [];
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (value) chunks.push(value);
+    }
+    const exitCode = await process.exit;
+    if (exitCode !== 0) return {};
+
+    const raw = chunks.join('').trim();
+    // Node may echo jsh noise; take the last JSON object in the stream.
+    const start = raw.lastIndexOf('{');
+    const end = raw.lastIndexOf('}');
+    if (start < 0 || end <= start) return {};
+    const parsed: unknown = JSON.parse(raw.slice(start, end + 1));
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+
+    const modes: Record<string, string> = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (typeof value === 'string' || typeof value === 'number') {
+        modes[normalizePath(key)] = String(value);
+      }
+    }
+    return modes;
+  } catch {
+    return {};
+  }
+}
+
 async function ensureParentDirs(
   container: WebContainer,
   filePath: string
@@ -118,9 +195,25 @@ async function ensureParentDirs(
   await container.fs.mkdir(dir, { recursive: true });
 }
 
+function mergeSeedFiles(
+  initialState: Record<string, string>,
+  fileModes?: Record<string, string>
+): Record<string, string> {
+  const files = { ...initialState };
+  if (fileModes && Object.keys(fileModes).length > 0) {
+    files['.lab/modes.json'] = buildModesJson(fileModes);
+    files['.lab/ls.js'] = PERMISSIONS_LS_JS;
+    files['.jshrc'] = PERMISSIONS_JSHRC;
+  }
+  return files;
+}
+
 export function CodeSandbox({
   ticketId,
   initialState,
+  fileModes,
+  showFileBrowser = true,
+  showSubmit = true,
   readOnly = false,
   className,
   onSubmitComplete,
@@ -134,13 +227,16 @@ export function CodeSandbox({
   );
   const bootingRef = useRef(false);
 
-  const filePaths = Object.keys(initialState).sort();
+  const seedFiles = mergeSeedFiles(initialState, fileModes);
+  const filePaths = Object.keys(seedFiles)
+    .filter((p) => !p.startsWith('.lab/') && p !== '.jshrc')
+    .sort();
   const [paths, setPaths] = useState<string[]>(filePaths);
   const [activePath, setActivePath] = useState<string | null>(
     filePaths[0] ?? null
   );
   const [editorValue, setEditorValue] = useState(
-    filePaths[0] ? (initialState[filePaths[0]] ?? '') : ''
+    filePaths[0] ? (seedFiles[filePaths[0]] ?? '') : ''
   );
   const [dirty, setDirty] = useState(false);
   const [bootStatus, setBootStatus] = useState<BootStatus>('idle');
@@ -203,9 +299,26 @@ export function CodeSandbox({
 
         containerRef.current = container;
 
-        const tree = filesToTree(initialState);
+        const tree = filesToTree(seedFiles);
         if (Object.keys(tree).length > 0) {
           await container.mount(tree);
+        }
+
+        // Best-effort chmod so native tools agree with seeded modes when supported.
+        if (fileModes) {
+          for (const [filePath, mode] of Object.entries(fileModes)) {
+            const octal = mode.trim().replace(/^0+/, '') || '0';
+            if (!/^[0-7]{3,4}$/.test(octal)) continue;
+            try {
+              const chmodProc = await container.spawn('chmod', [
+                octal,
+                normalizePath(filePath),
+              ]);
+              await chmodProc.exit;
+            } catch {
+              // jsh / FS may lack chmod; the .lab/ls.js alias still applies modes.
+            }
+          }
         }
 
         const process = await container.spawn('jsh');
@@ -230,10 +343,17 @@ export function CodeSandbox({
         });
         resizeObserver.observe(terminalHostRef.current);
 
-        const seededPaths = Object.keys(initialState).sort();
+        const seededPaths = Object.keys(seedFiles)
+          .filter((p) => !p.startsWith('.lab/') && p !== '.jshrc')
+          .sort();
         setPaths(seededPaths);
         if (!cancelled) {
           setBootStatus('ready');
+          if (fileModes && Object.keys(fileModes).length > 0) {
+            terminal.writeln(
+              '\r\n[sandbox] Tip: run `ls -l` (mode-aware lab helper) after `cd` into a directory.'
+            );
+          }
         }
       } catch (error) {
         if (cancelled) return;
@@ -295,7 +415,7 @@ export function CodeSandbox({
         // Fall through to local seed.
       }
     }
-    setEditorValue(initialState[path] ?? '');
+    setEditorValue(seedFiles[path] ?? initialState[path] ?? '');
     setDirty(false);
   }
 
@@ -335,11 +455,13 @@ export function CodeSandbox({
         files = await collectFilesFromFs(container);
       }
 
+      const fileModes = await collectFileModesFromFs(container);
+
       // Body is the TicketSubmission itself (see POST /api/tickets/[ticketId]/submit).
       const response = await fetch(`/api/tickets/${ticketId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files }),
+        body: JSON.stringify({ files, fileModes }),
       });
 
       let body: unknown;
@@ -389,106 +511,121 @@ export function CodeSandbox({
           <p className="text-sm text-muted-foreground">
             {bootStatus === 'booting' && 'Booting in-browser runtime…'}
             {bootStatus === 'ready' &&
-              'Edit files and use the terminal. Submit when ready.'}
+              (showFileBrowser
+                ? 'Edit files and use the terminal. Submit when ready.'
+                : 'Use the terminal to explore the seeded filesystem.')}
             {bootStatus === 'error' &&
               (bootError ?? 'Sandbox failed to start.')}
             {bootStatus === 'idle' && 'Preparing sandbox…'}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={bootStatus !== 'ready' || readOnly}
-            onClick={() => void refreshFileList()}
-          >
-            Refresh files
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={
-              bootStatus !== 'ready' || readOnly || !activePath || !dirty
-            }
-            onClick={() => void persistActiveFile()}
-          >
-            Save file
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            disabled={bootStatus !== 'ready' || readOnly || isSubmitting}
-            onClick={() => void handleSubmit()}
-          >
-            {isSubmitting ? 'Submitting…' : 'Submit lab'}
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid min-h-[28rem] grid-cols-1 md:grid-cols-[12rem_1fr]">
-        <aside className="border-b border-border md:border-b-0 md:border-r">
-          <p className="border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Files
-          </p>
-          <ul className="max-h-48 overflow-y-auto p-1 md:max-h-none md:min-h-[12rem]">
-            {paths.length === 0 ? (
-              <li className="px-2 py-2 text-sm text-muted-foreground">
-                No files seeded
-              </li>
-            ) : (
-              paths.map((path) => (
-                <li key={path}>
-                  <button
-                    type="button"
-                    className={cn(
-                      'w-full rounded-md px-2 py-1.5 text-left font-mono text-xs transition-colors',
-                      path === activePath
-                        ? 'bg-secondary text-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    )}
-                    onClick={() => void selectFile(path)}
-                  >
-                    {path}
-                  </button>
-                </li>
-              ))
-            )}
-          </ul>
-        </aside>
-
-        <div className="flex min-h-[12rem] flex-col">
-          <div className="border-b border-border px-3 py-2 text-xs text-muted-foreground">
-            {activePath ?? 'No file selected'}
-            {dirty ? ' · unsaved' : null}
+        {(showFileBrowser || showSubmit) && (
+          <div className="flex flex-wrap items-center gap-2">
+            {showFileBrowser ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={bootStatus !== 'ready' || readOnly}
+                  onClick={() => void refreshFileList()}
+                >
+                  Refresh files
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    bootStatus !== 'ready' || readOnly || !activePath || !dirty
+                  }
+                  onClick={() => void persistActiveFile()}
+                >
+                  Save file
+                </Button>
+              </>
+            ) : null}
+            {showSubmit ? (
+              <Button
+                type="button"
+                size="sm"
+                disabled={bootStatus !== 'ready' || readOnly || isSubmitting}
+                onClick={() => void handleSubmit()}
+              >
+                {isSubmitting ? 'Submitting…' : 'Submit lab'}
+              </Button>
+            ) : null}
           </div>
-          <Textarea
-            aria-label={
-              activePath ? `Edit ${activePath}` : 'File editor (empty)'
-            }
-            value={editorValue}
-            disabled={!activePath || readOnly || bootStatus === 'booting'}
-            spellCheck={false}
-            className="min-h-[12rem] flex-1 resize-none rounded-none border-0 bg-background font-mono text-xs focus-visible:ring-0 md:text-xs"
-            onChange={(event) => {
-              setEditorValue(event.target.value);
-              setDirty(true);
-            }}
-            onBlur={() => {
-              if (dirty) void persistActiveFile();
-            }}
-          />
-        </div>
+        )}
       </div>
 
-      <div className="border-t border-border">
+      {showFileBrowser ? (
+        <div className="grid min-h-[28rem] grid-cols-1 md:grid-cols-[12rem_1fr]">
+          <aside className="border-b border-border md:border-b-0 md:border-r">
+            <p className="border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Files
+            </p>
+            <ul className="max-h-48 overflow-y-auto p-1 md:max-h-none md:min-h-[12rem]">
+              {paths.length === 0 ? (
+                <li className="px-2 py-2 text-sm text-muted-foreground">
+                  No files seeded
+                </li>
+              ) : (
+                paths.map((path) => (
+                  <li key={path}>
+                    <button
+                      type="button"
+                      className={cn(
+                        'w-full rounded-md px-2 py-1.5 text-left font-mono text-xs transition-colors',
+                        path === activePath
+                          ? 'bg-secondary text-foreground'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                      onClick={() => void selectFile(path)}
+                    >
+                      {path}
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          </aside>
+
+          <div className="flex min-h-[12rem] flex-col">
+            <div className="border-b border-border px-3 py-2 text-xs text-muted-foreground">
+              {activePath ?? 'No file selected'}
+              {dirty ? ' · unsaved' : null}
+            </div>
+            <Textarea
+              aria-label={
+                activePath ? `Edit ${activePath}` : 'File editor (empty)'
+              }
+              value={editorValue}
+              disabled={!activePath || readOnly || bootStatus === 'booting'}
+              spellCheck={false}
+              className="min-h-[12rem] flex-1 resize-none rounded-none border-0 bg-background font-mono text-xs focus-visible:ring-0 md:text-xs"
+              onChange={(event) => {
+                setEditorValue(event.target.value);
+                setDirty(true);
+              }}
+              onBlur={() => {
+                if (dirty) void persistActiveFile();
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <div className={showFileBrowser ? 'border-t border-border' : undefined}>
         <p className="border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Terminal
         </p>
         <div
           ref={terminalHostRef}
-          className="h-52 w-full bg-slate-900 px-1 py-1 [&_.xterm]:h-full [&_.xterm-viewport]:overflow-auto"
+          className={cn(
+            'w-full bg-slate-900 px-1 py-1 [&_.xterm]:h-full [&_.xterm-viewport]:overflow-auto',
+            showFileBrowser ? 'h-52' : 'h-[28rem]'
+          )}
           aria-label="Interactive lab terminal"
         />
       </div>

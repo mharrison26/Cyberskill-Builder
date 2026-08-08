@@ -1,0 +1,83 @@
+{
+  "document": "Incident Report Quality Rubric — Sysadmin Capstone",
+  "title": "Pinned rubric for post-incident reports (educational)",
+  "source_url": "internal://incident-report-quality-rubric",
+  "notes": "Pinned educational rubric for RAG-style grading of student post-incident reports. Graders must use only retrieved section text (F26 anti-hallucination), not parametric knowledge of ITIL/NIST IR frameworks beyond this file.",
+  "disclaimer": "Educational rubric only. Not a substitute for your organization's incident management or after-action standards.",
+  "sections": [
+    {
+      "id": "timeline",
+      "title": "Timeline completeness",
+      "topics": ["timeline", "chronology", "detection", "escalation", "recovery"],
+      "keywords": [
+        "timeline",
+        "chronology",
+        "when",
+        "detected",
+        "escalated",
+        "mitigated",
+        "recovered",
+        "sequence",
+        "timestamps",
+        "order"
+      ],
+      "text": "A strong incident report includes a clear chronological timeline covering detection, triage/diagnosis, remediation actions, and recovery verification. Prefer ordered events with approximate times or relative order (for example: alerts observed → disk/service checks → config fix → fill file removed → service confirmed healthy). Vague summaries without a sequence of what happened when fail this criterion. The timeline should let a peer reconstruct the incident path without asking for missing steps."
+    },
+    {
+      "id": "root-cause",
+      "title": "Root cause analysis",
+      "topics": ["root cause", "cause", "misconfiguration", "capacity", "why"],
+      "keywords": [
+        "root cause",
+        "cause",
+        "misconfigured",
+        "misconfiguration",
+        "disk",
+        "full",
+        "listen",
+        "port",
+        "capacity",
+        "why",
+        "underlying"
+      ],
+      "text": "Root cause must explain the underlying failure mode, not only the user-facing symptom. For this lab family, that typically means identifying a misconfigured service (for example wrong nginx listen port) and/or a capacity issue (disk fill / full filesystem) that kept the app unhealthy. Restating \"the API was down\" without naming the technical causes is insufficient. Distinguish contributing factors when both config and disk pressure applied. Prefer concrete evidence from diagnosis (paths, config keys, status flags) over speculation."
+    },
+    {
+      "id": "remediation",
+      "title": "Remediation actions taken",
+      "topics": ["remediation", "fix", "actions", "verification", "restore"],
+      "keywords": [
+        "remediation",
+        "remediated",
+        "fixed",
+        "actions",
+        "changed",
+        "removed",
+        "restart",
+        "verified",
+        "verification",
+        "restore"
+      ],
+      "text": "Document the remediation steps actually performed in order another operator could follow: which files were edited or removed, what correct values were set, and how service health was verified afterward. Include verification (status shows running / disk ok, config contains the corrected listen directive). \"Fixed nginx\" without paths or checks is weak. Do not invent steps that contradict the ticket scenario; stay grounded in the lab environment."
+    },
+    {
+      "id": "prevention",
+      "title": "Prevention and follow-up",
+      "topics": ["prevention", "monitor", "alert", "follow-up", "recurrence"],
+      "keywords": [
+        "prevention",
+        "prevent",
+        "monitor",
+        "monitoring",
+        "alert",
+        "alerting",
+        "capacity",
+        "runbook",
+        "follow-up",
+        "recurrence",
+        "disk"
+      ],
+      "text": "Prevention should propose practical follow-ups that reduce recurrence: monitoring or alerts for disk usage and service health, config review / change control for listen ports and reverse-proxy settings, capacity planning, or runbook updates. Prefer actionable controls over vague advice like \"be more careful.\" Tie prevention to the root causes identified (config drift and disk pressure). A blank or purely aspirational prevention section fails this criterion."
+    }
+  ]
+}

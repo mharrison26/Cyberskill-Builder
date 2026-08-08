@@ -149,4 +149,123 @@ describe('evaluateConfigDiff', () => {
     );
     expect(result.rules[0]?.passed).toBe(false);
   });
+
+  it('scores file_permission with 4-digit modes (setgid preserved)', () => {
+    const result = evaluateConfigDiff(
+      {
+        files: {
+          'srv/projects/shared/README': 'ok\n',
+        },
+        fileModes: {
+          'srv/projects/shared': '2770',
+        },
+      },
+      ticket({
+        expected_state: {
+          rules: [
+            {
+              id: 'mode_ok',
+              type: 'file_permission',
+              path: 'srv/projects/shared',
+              mode: '2770',
+            },
+          ],
+        },
+      })
+    );
+    expect(result.rules[0]?.passed).toBe(true);
+
+    const wrong = evaluateConfigDiff(
+      {
+        files: { 'srv/projects/shared/README': 'ok\n' },
+        fileModes: { 'srv/projects/shared': '770' },
+      },
+      ticket({
+        expected_state: {
+          rules: [
+            {
+              id: 'mode_ok',
+              type: 'file_permission',
+              path: 'srv/projects/shared',
+              mode: '2770',
+            },
+          ],
+        },
+      })
+    );
+    expect(wrong.rules[0]?.passed).toBe(false);
+  });
+
+  it('passes the user/group/permissions lab submission shape (PI-06)', () => {
+    const expected_state = {
+      passThresholdPercent: 100,
+      rules: [
+        {
+          id: 'user_created',
+          type: 'file_contains',
+          path: 'etc/passwd',
+          pattern:
+            'arivera:x:1005:1005:Alex Rivera:/home/arivera:/bin/bash',
+        },
+        {
+          id: 'group_membership',
+          type: 'file_contains',
+          path: 'etc/group',
+          pattern: 'developers:x:2001:[^\\n]*\\barivera\\b',
+          regex: true,
+        },
+        {
+          id: 'shared_dir_mode',
+          type: 'file_permission',
+          path: 'srv/projects/shared',
+          mode: '2770',
+        },
+      ],
+    };
+
+    const pass = evaluateConfigDiff(
+      {
+        files: {
+          'etc/passwd':
+            'root:x:0:0:root:/root:/bin/bash\n' +
+            'arivera:x:1005:1005:Alex Rivera:/home/arivera:/bin/bash\n',
+          'etc/group':
+            'root:x:0:\ndevelopers:x:2001:jsmith,mchen,arivera\n',
+          'srv/projects/shared/README': 'Shared engineering project tree\n',
+        },
+        fileModes: {
+          'srv/projects/shared': '2770',
+        },
+      },
+      ticket({
+        ticket_type: 'config_remediation',
+        scenario_brief:
+          'Sysadmin provisioning: Create arivera, add to developers, chmod shared project dir',
+        expected_state,
+      })
+    );
+
+    expect(pass.totalCount).toBe(3);
+    expect(pass.passedCount).toBe(3);
+    expect(pass.percentage).toBe(100);
+    expect(pass.percentage >= pass.passThresholdPercent).toBe(true);
+
+    const fail = evaluateConfigDiff(
+      {
+        files: {
+          'etc/passwd':
+            'root:x:0:0:root:/root:/bin/bash\njsmith:x:1001:1001:Jordan Smith:/home/jsmith:/bin/bash\n',
+          'etc/group': 'developers:x:2001:jsmith,mchen\n',
+          'srv/projects/shared/README': 'Shared engineering project tree\n',
+        },
+        fileModes: {
+          'srv/projects/shared': '755',
+        },
+      },
+      ticket({ ticket_type: 'config_remediation', expected_state })
+    );
+
+    expect(fail.passedCount).toBe(0);
+    expect(fail.percentage).toBe(0);
+  });
 });

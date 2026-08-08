@@ -2,27 +2,36 @@ import type { CCCERValues, Ticket } from '@/types';
 import { aoReviewTicketScorer } from '@/lib/scoring/aoReview';
 import { assessmentProceduresTicketScorer } from '@/lib/scoring/assessmentProcedures';
 import { authorizationPackageTicketScorer } from '@/lib/scoring/authorizationPackage';
+import { backupDrPlanTicketScorer } from '@/lib/scoring/backupDrPlan';
 import { cmmcGapAnalysisTicketScorer } from '@/lib/scoring/cmmcGapAnalysis';
 import { configDiffTicketScorer } from '@/lib/scoring/configDiff';
+import { configFaultDiagnosisTicketScorer } from '@/lib/scoring/configFaultDiagnosis';
 import { conmonStrategyTicketScorer } from '@/lib/scoring/conmonStrategy';
 import { controlMappingTicketScorer } from '@/lib/scoring/controlMapping';
 import { coachingFeedbackTicketScorer } from '@/lib/scoring/coachingFeedback';
 import { customerReplyTicketScorer } from '@/lib/scoring/customerReply';
 import { helpdeskCapstoneTicketScorer } from '@/lib/scoring/helpdeskCapstone';
+import { infraDesignCapstoneTicketScorer } from '@/lib/scoring/infraDesignCapstone';
 import { kbWriteupTicketScorer } from '@/lib/scoring/kbWriteup';
 import { kpiReportTicketScorer } from '@/lib/scoring/kpiReport';
 import { mockDirectoryTicketScorer } from '@/lib/scoring/mockDirectory';
+import { monitoringConfigTicketScorer } from '@/lib/scoring/monitoringConfig';
+import { fsPermissionsLabTicketScorer } from '@/lib/scoring/fsPermissionsLab';
 import { networkDiagnosticsTicketScorer } from '@/lib/scoring/networkDiagnostics';
+import { networkTopologyFaultTicketScorer } from '@/lib/scoring/networkTopologyFault';
 import { oscalGeneratorTicketScorer } from '@/lib/scoring/oscalGenerator';
 import { oscalSspTicketScorer } from '@/lib/scoring/oscalSsp';
 import { p1StatusUpdatesTicketScorer } from '@/lib/scoring/p1StatusUpdates';
 import { poamTicketScorer } from '@/lib/scoring/poam';
 import { secMaterialityTicketScorer } from '@/lib/scoring/secMateriality';
+import { iacLabTicketScorer } from '@/lib/scoring/iacLab';
+import { outageCapstoneTicketScorer } from '@/lib/scoring/outageCapstone';
 import { scriptRemediationTicketScorer } from '@/lib/scoring/scriptRemediation';
 import { slaEscalationTicketScorer } from '@/lib/scoring/slaEscalation';
 import { slaQueueSimTicketScorer } from '@/lib/scoring/slaQueueSim';
 import { toolWalkthroughTicketScorer } from '@/lib/scoring/toolWalkthrough';
 import { triageTicketScorer } from '@/lib/scoring/triage';
+import { vulnPrioritizationTicketScorer } from '@/lib/scoring/vulnPrioritization';
 
 /**
  * Pluggable ticket scoring.
@@ -33,11 +42,14 @@ import { triageTicketScorer } from '@/lib/scoring/triage';
  *   registerTicketScorer('my_track.config_diff', myScorer);
  *
  * Builtin scorers (config_remediation / config_diff, cccer, hybrid,
- * tool_walkthrough, assessment_procedures, poam, sec_materiality,
- * conmon_strategy, cmmc_gap_analysis, authorization_package, ao_review,
- * triage, mock_directory, kb_writeup, customer_reply, network_diagnostics,
- * sla_escalation, script_remediation, sla_queue_sim, coaching_feedback,
- * p1_status_updates, kpi_report, helpdesk_capstone)
+ * tool_walkthrough, assessment_procedures, poam, vuln_prioritization /
+ * patch_schedule, sec_materiality, conmon_strategy, backup_dr_plan,
+ * cmmc_gap_analysis, authorization_package, ao_review, triage,
+ * mock_directory, kb_writeup, customer_reply, network_diagnostics,
+ * network_topology_fault, config_fault_diagnosis, monitoring_config,
+ * sla_escalation, script_remediation, scripting_lab, script_fixtures,
+ * ansible_playbook / iac_lab, sla_queue_sim, coaching_feedback,
+ * p1_status_updates, kpi_report, helpdesk_capstone, infra_design_capstone)
  * register at module load. Unregistered types fall back to `defaultTicketScorer`.
  */
 
@@ -63,6 +75,12 @@ export type {
   ConMonStrategyStructuredResult,
   ConMonStrategySubmission,
 } from '@/lib/scoring/conmonStrategy';
+export { backupDrPlanTicketScorer } from '@/lib/scoring/backupDrPlan';
+export type {
+  BackupDrPlanExpectedState,
+  BackupDrPlanStructuredResult,
+  BackupDrPlanSubmission,
+} from '@/lib/scoring/backupDrPlan';
 export { toolWalkthroughTicketScorer } from '@/lib/scoring/toolWalkthrough';
 export type {
   ToolWalkthroughExpectedState,
@@ -127,6 +145,20 @@ export type {
   TriageSubmission,
 } from '@/lib/scoring/triage';
 export {
+  computeVulnPriorityScore,
+  deriveExpectedOrder,
+  evaluateVulnPrioritization,
+  isVulnPrioritizationTicketType,
+  scoreOrderPairwise,
+  vulnPrioritizationTicketScorer,
+} from '@/lib/scoring/vulnPrioritization';
+export type {
+  VulnPrioritizationExpectedState,
+  VulnPrioritizationStructuredResult,
+  VulnPrioritizationSubmission,
+  VulnerabilityItem,
+} from '@/lib/scoring/vulnPrioritization';
+export {
   evaluateMockDirectoryDeterministic,
   mockDirectoryTicketScorer,
   parseMockDirectoryUsers,
@@ -157,6 +189,17 @@ export type {
   HelpdeskCapstoneSubmission,
   HelpdeskProcessDocument,
 } from '@/lib/scoring/helpdeskCapstone';
+export {
+  createInfraDesignCapstoneTicketScorer,
+  evaluateInfraDesignCapstoneDeterministic,
+  extractInfraDesignDocument,
+  infraDesignCapstoneTicketScorer,
+} from '@/lib/scoring/infraDesignCapstone';
+export type {
+  InfraDesignCapstoneExpectedState,
+  InfraDesignCapstoneStructuredResult,
+  InfraDesignCapstoneSubmission,
+} from '@/lib/scoring/infraDesignCapstone';
 export {
   evaluateKpiReportDeterministic,
   isKpiReportTicketType,
@@ -195,6 +238,26 @@ export type {
   ScriptRemediationStructuredResult,
 } from '@/lib/scoring/scriptRemediation';
 export {
+  extractOutageIncidentReport,
+  isOutageCapstoneTicketType,
+  outageCapstoneTicketScorer,
+} from '@/lib/scoring/outageCapstone';
+export type {
+  OutageCapstoneExpectedState,
+  OutageCapstoneStructuredResult,
+  OutageIncidentReport,
+} from '@/lib/scoring/outageCapstone';
+export {
+  evaluateIacLab,
+  iacLabTicketScorer,
+  isIacLabTicketType,
+} from '@/lib/scoring/iacLab';
+export type {
+  IacDeclaration,
+  IacLabExpectedState,
+  IacLabStructuredResult,
+} from '@/lib/scoring/iacLab';
+export {
   evaluateSlaEscalationDeterministic,
   slaEscalationTicketScorer,
 } from '@/lib/scoring/slaEscalation';
@@ -212,6 +275,37 @@ export type {
   NetworkDiagnosticsStructuredResult,
   NetworkDiagnosticsSubmission,
 } from '@/lib/scoring/networkDiagnostics';
+export {
+  evaluateNetworkTopologyFaultDeterministic,
+  networkTopologyFaultTicketScorer,
+} from '@/lib/scoring/networkTopologyFault';
+export type {
+  NetworkTopologyFaultExpectedState,
+  NetworkTopologyFaultStructuredResult,
+  NetworkTopologyFaultSubmission,
+} from '@/lib/scoring/networkTopologyFault';
+export {
+  evaluateFsPermissionsLab,
+  fsPermissionsLabTicketScorer,
+  normalizeFsAnswer,
+  parseFsPermissionsLabExpectedState,
+  parseFsPermissionsLabQuestions,
+} from '@/lib/scoring/fsPermissionsLab';
+export type {
+  FsPermissionsLabExpectedState,
+  FsPermissionsLabQuestion,
+  FsPermissionsLabStructuredResult,
+  FsPermissionsLabSubmission,
+} from '@/lib/scoring/fsPermissionsLab';
+export {
+  configFaultDiagnosisTicketScorer,
+  evaluateConfigFaultDiagnosis,
+} from '@/lib/scoring/configFaultDiagnosis';
+export type {
+  ConfigFaultDiagnosisExpectedState,
+  ConfigFaultDiagnosisStructuredResult,
+  ConfigFaultDiagnosisSubmission,
+} from '@/lib/scoring/configFaultDiagnosis';
 export {
   customerReplyTicketScorer,
   evaluateCustomerReplyDeterministic,
@@ -232,6 +326,17 @@ export type {
   SlaQueueSimStructuredResult,
   SlaQueueSimSubmission,
 } from '@/lib/scoring/slaQueueSim';
+export {
+  evaluateMonitoringConfig,
+  monitoringConfigTicketScorer,
+  parseMonitoringConfigExpectedState,
+} from '@/lib/scoring/monitoringConfig';
+export type {
+  MonitoringConfigExpectedState,
+  MonitoringConfigStructuredResult,
+  MonitoringConfigSubmission,
+  RequiredMonitoringAlert,
+} from '@/lib/scoring/monitoringConfig';
 
 /** Outcome of scoring — maps onto ticket_progress in the submit route. */
 export type TicketScoreStatus = 'resolved' | 'needs_revision';
@@ -482,10 +587,14 @@ registerTicketScorer('sp800_53a', assessmentProceduresTicketScorer);
 registerTicketScorer('sp_800_53a', assessmentProceduresTicketScorer);
 registerTicketScorer('poam', poamTicketScorer);
 registerTicketScorer('poam_draft', poamTicketScorer);
+registerTicketScorer('vuln_prioritization', vulnPrioritizationTicketScorer);
+registerTicketScorer('patch_schedule', vulnPrioritizationTicketScorer);
 registerTicketScorer('sec_materiality', secMaterialityTicketScorer);
 registerTicketScorer('sec_cyber_materiality', secMaterialityTicketScorer);
 registerTicketScorer('conmon_strategy', conmonStrategyTicketScorer);
 registerTicketScorer('continuous_monitoring', conmonStrategyTicketScorer);
+registerTicketScorer('backup_dr_plan', backupDrPlanTicketScorer);
+registerTicketScorer('disaster_recovery', backupDrPlanTicketScorer);
 registerTicketScorer('oscal_generator', oscalGeneratorTicketScorer);
 registerTicketScorer('capstone_oscal', oscalGeneratorTicketScorer);
 registerTicketScorer('cmmc_gap_analysis', cmmcGapAnalysisTicketScorer);
@@ -507,6 +616,8 @@ registerTicketScorer(
   'onboarding_process_capstone',
   helpdeskCapstoneTicketScorer
 );
+registerTicketScorer('infra_design_capstone', infraDesignCapstoneTicketScorer);
+registerTicketScorer('architecture_decision', infraDesignCapstoneTicketScorer);
 registerTicketScorer('kpi_report', kpiReportTicketScorer);
 registerTicketScorer('ticket_metrics', kpiReportTicketScorer);
 registerTicketScorer('helpdesk_kpis', kpiReportTicketScorer);
@@ -524,6 +635,12 @@ registerTicketScorer('script_remediation', scriptRemediationTicketScorer);
 registerTicketScorer('spooler_fix', scriptRemediationTicketScorer);
 registerTicketScorer('sandbox_script', scriptRemediationTicketScorer);
 registerTicketScorer('service_restart', scriptRemediationTicketScorer);
+registerTicketScorer('scripting_lab', scriptRemediationTicketScorer);
+registerTicketScorer('script_fixtures', scriptRemediationTicketScorer);
+registerTicketScorer('ansible_playbook', iacLabTicketScorer);
+registerTicketScorer('iac_lab', iacLabTicketScorer);
+registerTicketScorer('ansible_lab', iacLabTicketScorer);
+registerTicketScorer('terraform_lab', iacLabTicketScorer);
 registerTicketScorer('network_diagnostics', networkDiagnosticsTicketScorer);
 registerTicketScorer('pi04', networkDiagnosticsTicketScorer);
 registerTicketScorer('traceroute_fault', networkDiagnosticsTicketScorer);
@@ -531,6 +648,39 @@ registerTicketScorer(
   'command_output_diagnosis',
   networkDiagnosticsTicketScorer
 );
+registerTicketScorer(
+  'network_topology_fault',
+  networkTopologyFaultTicketScorer
+);
+registerTicketScorer(
+  'subnet_fault_diagnosis',
+  networkTopologyFaultTicketScorer
+);
+registerTicketScorer('topology_misconfig', networkTopologyFaultTicketScorer);
+registerTicketScorer(
+  'network_fault_location',
+  networkTopologyFaultTicketScorer
+);
+registerTicketScorer('fs_permissions_lab', fsPermissionsLabTicketScorer);
+registerTicketScorer('sandbox_permissions', fsPermissionsLabTicketScorer);
+registerTicketScorer('ls_permissions', fsPermissionsLabTicketScorer);
+registerTicketScorer('permissions_explore', fsPermissionsLabTicketScorer);
+registerTicketScorer(
+  'config_fault_diagnosis',
+  configFaultDiagnosisTicketScorer
+);
+registerTicketScorer('named_conf_fault', configFaultDiagnosisTicketScorer);
+registerTicketScorer('dns_config_fault', configFaultDiagnosisTicketScorer);
+registerTicketScorer('config_line_diagnosis', configFaultDiagnosisTicketScorer);
+registerTicketScorer('cis_hardening', configDiffTicketScorer);
+registerTicketScorer('linux_hardening', configDiffTicketScorer);
+registerTicketScorer('sysadmin_hardening', configDiffTicketScorer);
+registerTicketScorer('outage_capstone', outageCapstoneTicketScorer);
+registerTicketScorer(
+  'incident_response_capstone',
+  outageCapstoneTicketScorer
+);
+registerTicketScorer('sysadmin_outage_capstone', outageCapstoneTicketScorer);
 registerTicketScorer('sla_queue_sim', slaQueueSimTicketScorer);
 registerTicketScorer('queue_simulation', slaQueueSimTicketScorer);
 registerTicketScorer('timed_queue', slaQueueSimTicketScorer);
@@ -539,3 +689,6 @@ registerTicketScorer('p1_status_updates', p1StatusUpdatesTicketScorer);
 registerTicketScorer('incident_status_cadence', p1StatusUpdatesTicketScorer);
 registerTicketScorer('stakeholder_updates', p1StatusUpdatesTicketScorer);
 registerTicketScorer('outage_comms', p1StatusUpdatesTicketScorer);
+registerTicketScorer('monitoring_config', monitoringConfigTicketScorer);
+registerTicketScorer('alert_config', monitoringConfigTicketScorer);
+registerTicketScorer('monitoring_alerts', monitoringConfigTicketScorer);

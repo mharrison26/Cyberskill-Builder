@@ -119,9 +119,10 @@ function normalizePath(path: string): string {
 
 function normalizeMode(mode: string): string {
   const trimmed = mode.trim();
-  // Accept "644", "0644", or "rw-r--r--" — compare digit forms when both numeric.
+  // Accept "644", "0644", "2770", or "rw-r--r--" — pad numeric forms to 4 digits
+  // so setuid/setgid/sticky bits are preserved (2770 ≠ 0770).
   if (/^[0-7]{3,4}$/.test(trimmed)) {
-    return trimmed.slice(-3);
+    return trimmed.padStart(4, '0');
   }
   return trimmed;
 }

@@ -1,0 +1,121 @@
+{
+  "document": "Architecture Decision Tradeoff Rubric",
+  "title": "Infrastructure design decision / ADR tradeoff rubric (educational)",
+  "source_url": "internal://architecture-decision-tradeoff-rubric",
+  "notes": "Pinned educational rubric for generating follow-up questions and grading student infrastructure design decisions. Graders and question generators must use only retrieved rubric section text plus the student's own design document excerpts.",
+  "disclaimer": "Educational rubric only. Not a substitute for organizational architecture governance or vendor-specific sizing guidance.",
+  "sections": [
+    {
+      "id": "decision-clarity",
+      "title": "Clear decision statement",
+      "topics": ["decision", "choice", "topology", "clarity"],
+      "keywords": [
+        "decision",
+        "chose",
+        "topology",
+        "architecture",
+        "backup topology",
+        "3-2-1",
+        "ADR",
+        "recommendation"
+      ],
+      "text": "A strong design decision names a concrete option (for example 3-2-1 with local NAS plus immutable cloud copies, cloud-only SaaS backup, or dual-site replication) rather than listing technologies without a recommendation. The decision should be specific enough that another engineer could implement it without guessing the primary topology."
+    },
+    {
+      "id": "constraints-fit",
+      "title": "Constraints and requirements fit",
+      "topics": ["constraints", "budget", "staffing", "rpo", "rto"],
+      "keywords": [
+        "constraint",
+        "budget",
+        "staffing",
+        "RPO",
+        "RTO",
+        "bandwidth",
+        "compliance",
+        "ransomware",
+        "no dedicated IT"
+      ],
+      "text": "Tradeoff answers should connect the chosen design to stated constraints: budget ceiling, limited staffing, recovery objectives, ransomware resilience, bandwidth, and any regulatory or operational limits. Vague claims that ignore budget or staffing are weak; strong answers show why the design is feasible for the given organization."
+    },
+    {
+      "id": "alternatives-rejected",
+      "title": "Alternatives considered and rejected",
+      "topics": ["alternatives", "rejected", "options", "comparison"],
+      "keywords": [
+        "alternative",
+        "rejected",
+        "compared",
+        "instead",
+        "cloud-only",
+        "tape",
+        "replication",
+        "NAS only",
+        "tradeoff"
+      ],
+      "text": "Mature architecture decisions briefly compare at least one credible alternative and explain why it was rejected for this context. Rejecting an option solely as 'not best practice' without tying to constraints is insufficient. Prefer comparisons on cost, complexity, recovery speed, and failure isolation."
+    },
+    {
+      "id": "tradeoffs-explicit",
+      "title": "Explicit tradeoffs",
+      "topics": ["tradeoff", "cost", "complexity", "risk"],
+      "keywords": [
+        "tradeoff",
+        "cost",
+        "complexity",
+        "operational burden",
+        "restore time",
+        "immutability",
+        "latency",
+        "single point of failure"
+      ],
+      "text": "Students should name what they gain and what they give up. Examples: immutable cloud copies improve ransomware resilience but raise monthly cost and restore latency; a local NAS speeds restores but is a single site of failure if not paired with offsite copies. Good answers quantify or qualitatively rank these effects rather than claiming the design has no downsides."
+    },
+    {
+      "id": "failure-modes",
+      "title": "Failure modes and residual risk",
+      "topics": ["failure", "ransomware", "site loss", "residual risk"],
+      "keywords": [
+        "failure mode",
+        "ransomware",
+        "site loss",
+        "corruption",
+        "credential compromise",
+        "residual risk",
+        "blast radius",
+        "immutable"
+      ],
+      "text": "Probe whether the design survives plausible failures: ransomware encrypting the primary server and reachable backups, loss of the office site, accidental deletion, or compromised backup credentials. Strong answers identify residual risks that remain after the design and any compensating controls (offline/immutable copies, separate cloud account, MFA on backup console)."
+    },
+    {
+      "id": "operability",
+      "title": "Operability and restore realism",
+      "topics": ["operations", "restore", "testing", "runbook"],
+      "keywords": [
+        "restore",
+        "runbook",
+        "testing",
+        "who restores",
+        "operational",
+        "monitoring",
+        "alert",
+        "drill"
+      ],
+      "text": "A topology is incomplete without who operates it, how restores are tested, and what 'recovered' means. Follow-up answers should address restore testing cadence, alerting on backup job failure, and whether a non-specialist can execute the runbook under the stated staffing constraints."
+    },
+    {
+      "id": "evidence-grounding",
+      "title": "Grounding answers in the submitted design",
+      "topics": ["evidence", "consistency", "design doc"],
+      "keywords": [
+        "design document",
+        "consistent",
+        "cited",
+        "as written",
+        "contradiction",
+        "grounded"
+      ],
+      "text": "Follow-up answers must stay consistent with the student's own design document. Inventing a different topology, ignoring constraints they already accepted, or contradicting stated RPO/RTO without explanation should be treated as gaps. Prefer citations back to decisions and tradeoffs already written in the design doc."
+    }
+  ]
+}
