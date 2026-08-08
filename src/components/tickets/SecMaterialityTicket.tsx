@@ -20,12 +20,15 @@ import {
   SEC_MATERIALITY_MIN_RATIONALE_LENGTH,
   type SecMaterialityDetermination,
   type SecMaterialityFactorKey,
-} from '@/lib/scoring/secMateriality';
+} from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
 
 type SecMaterialityTicketProps = {
-  ticket: Pick<Ticket, 'id' | 'ticket_type' | 'initial_state' | 'expected_state'>;
+  ticket: Pick<
+    Ticket,
+    'id' | 'ticket_type' | 'initial_state' | 'expected_state'
+  >;
   readOnly?: boolean;
   className?: string;
 };
@@ -104,8 +107,9 @@ export function SecMaterialityTicket({
     };
   }, [initialState]);
 
-  const [determination, setDetermination] =
-    useState<SecMaterialityDetermination | ''>('');
+  const [determination, setDetermination] = useState<
+    SecMaterialityDetermination | ''
+  >('');
   const [rationale, setRationale] = useState('');
   const [factors, setFactors] =
     useState<Record<SecMaterialityFactorKey, string>>(emptyFactors);

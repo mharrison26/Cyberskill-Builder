@@ -6,8 +6,7 @@ import path from 'node:path';
  * Graders must use retrieved practice text only — not model memory of CMMC.
  */
 
-export const CMMC_L2_PRACTICES_PATH =
-  'data/cmmc/cmmc-l2-practices-subset.json';
+export const CMMC_L2_PRACTICES_PATH = 'data/cmmc/cmmc-l2-practices-subset.json';
 
 export type CmmcPractice = {
   id: string;
@@ -119,7 +118,10 @@ function scorePractice(
   }
 
   // Match practice id fragments like "3.1.1" or "ac.l2"
-  const idParts = practice.id.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const idParts = practice.id
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
   for (const part of idParts) {
     if (part.length >= 3 && queryTokens.has(part)) {
       score += 2;
@@ -181,8 +183,7 @@ export function retrieveCmmcPractices(
     }))
     .filter((entry) => entry.score > 0)
     .sort(
-      (a, b) =>
-        b.score - a.score || a.practice.id.localeCompare(b.practice.id)
+      (a, b) => b.score - a.score || a.practice.id.localeCompare(b.practice.id)
     );
 
   for (const entry of ranked) {

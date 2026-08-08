@@ -1,9 +1,5 @@
 /** Framework keys stored in public.control_mappings. */
-export const CONTROL_FRAMEWORKS = [
-  'nist_800_53',
-  'soc2',
-  'iso27001',
-] as const;
+export const CONTROL_FRAMEWORKS = ['nist_800_53', 'soc2', 'iso27001'] as const;
 
 export type ControlFramework = (typeof CONTROL_FRAMEWORKS)[number];
 

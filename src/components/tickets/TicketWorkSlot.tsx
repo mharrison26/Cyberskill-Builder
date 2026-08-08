@@ -13,7 +13,7 @@ import {
   isAoReviewTicketType,
   isAuthorizationPackageTicketType,
 } from '@/lib/capstone/ticketCodes';
-import { isPoamTicketType } from '@/lib/scoring/poam';
+import { isPoamTicketType } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -178,11 +178,7 @@ export function TicketWorkSlot({
 
   if (isOscalSspTicketType(ticket.ticket_type)) {
     return (
-      <OscalSspForm
-        ticket={ticket}
-        readOnly={readOnly}
-        className={className}
-      />
+      <OscalSspForm ticket={ticket} readOnly={readOnly} className={className} />
     );
   }
 

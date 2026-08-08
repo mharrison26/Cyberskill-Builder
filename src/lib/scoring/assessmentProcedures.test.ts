@@ -37,7 +37,9 @@ describe('assessmentProcedures scorer shape', () => {
     expect(registered).toContain('sp800_53a');
     expect(registered).toContain('sp_800_53a');
     expect(getTicketScorer('assessment_procedures')).toBeTruthy();
-    expect(getTicketScorer('sp800_53a')).toBe(getTicketScorer('assessment_procedures'));
+    expect(getTicketScorer('sp800_53a')).toBe(
+      getTicketScorer('assessment_procedures')
+    );
   });
 
   it('resolves control_id from expected_state then initial_state', () => {

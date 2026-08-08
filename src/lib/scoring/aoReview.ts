@@ -13,9 +13,7 @@ import {
   MissingAnthropicApiKeyError,
   type ClaudeGradingResult,
 } from '@/lib/grading/callClaudeGrading';
-import {
-  retrieveRiskAcceptanceGuidance,
-} from '@/lib/nist/getRiskAcceptanceGuidance';
+import { retrieveRiskAcceptanceGuidance } from '@/lib/nist/getRiskAcceptanceGuidance';
 import { captureFeatureException } from '@/lib/observability/sentry';
 import type { PackageCompileFn } from '@/lib/scoring/authorizationPackage';
 import { createClient } from '@/lib/supabase/server';
@@ -26,7 +24,8 @@ import type {
   TicketSubmission,
 } from '@/lib/scoring/index';
 
-export const AO_REVIEW_MIN_ANSWER_LENGTH = 40;
+export { AO_REVIEW_MIN_ANSWER_LENGTH } from '@/lib/scoring/ticketUi';
+import { AO_REVIEW_MIN_ANSWER_LENGTH } from '@/lib/scoring/ticketUi';
 
 export type AoReviewStructuredResult = {
   style: 'ao_review';
@@ -50,9 +49,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export function extractAoQuestions(
-  submission: TicketSubmission
-): AoQuestion[] {
+export function extractAoQuestions(submission: TicketSubmission): AoQuestion[] {
   const raw = submission.questions;
   if (!Array.isArray(raw)) return [];
 

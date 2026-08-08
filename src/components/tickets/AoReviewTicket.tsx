@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { AO_REVIEW_MIN_ANSWER_LENGTH } from '@/lib/scoring/aoReview';
+import { AO_REVIEW_MIN_ANSWER_LENGTH } from '@/lib/scoring/ticketUi';
 import { cn } from '@/lib/utils';
 import type { Ticket } from '@/types';
 
@@ -30,7 +30,10 @@ type SubmitResponse = {
 };
 
 type AoReviewTicketProps = {
-  ticket: Pick<Ticket, 'id' | 'ticket_type' | 'initial_state' | 'expected_state'>;
+  ticket: Pick<
+    Ticket,
+    'id' | 'ticket_type' | 'initial_state' | 'expected_state'
+  >;
   readOnly?: boolean;
   className?: string;
 };
@@ -152,9 +155,7 @@ export function AoReviewTicket({
           authorization package. Questions are generated once and stored so they
           do not change on every visit.
         </p>
-        {meta ? (
-          <p className="text-xs text-muted-foreground">{meta}</p>
-        ) : null}
+        {meta ? <p className="text-xs text-muted-foreground">{meta}</p> : null}
       </div>
 
       {loading ? (
@@ -172,7 +173,10 @@ export function AoReviewTicket({
       <ol className="space-y-5">
         {questions.map((question, index) => (
           <li key={question.id} className="space-y-2">
-            <Label htmlFor={`ao-${question.id}`} className="text-sm leading-snug">
+            <Label
+              htmlFor={`ao-${question.id}`}
+              className="text-sm leading-snug"
+            >
               {index + 1}. {question.prompt}
             </Label>
             <Textarea

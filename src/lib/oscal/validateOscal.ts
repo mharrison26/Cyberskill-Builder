@@ -93,7 +93,9 @@ export function validateOscalDocument(
 export function validateOscal(
   document: unknown,
   preferred: OscalDocumentKind | 'either' = 'either'
-): OscalValidationResult | { valid: false; errors: OscalSchemaError[]; kind: null } {
+):
+  | OscalValidationResult
+  | { valid: false; errors: OscalSchemaError[]; kind: null } {
   const kind =
     preferred === 'either' ? detectOscalDocumentKind(document) : preferred;
 

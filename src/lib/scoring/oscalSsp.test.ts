@@ -15,7 +15,8 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
     ticket_type: 'oscal_ssp',
     difficulty: 'medium',
     sla_minutes: 60,
-    scenario_brief: 'Author an OSCAL SSP fragment for selected 800-171 requirements.',
+    scenario_brief:
+      'Author an OSCAL SSP fragment for selected 800-171 requirements.',
     initial_state: {
       requirements: NIST_800_171_REV3_SUBSET.map((req) => ({ ...req })),
     },
@@ -129,9 +130,8 @@ describe('oscalSspTicketScorer', () => {
       };
     });
 
-    const { oscalSspTicketScorer: mockedScorer } = await import(
-      '@/lib/scoring/oscalSsp'
-    );
+    const { oscalSspTicketScorer: mockedScorer } =
+      await import('@/lib/scoring/oscalSsp');
     const result = await mockedScorer.score(
       { answers: completeAnswers() },
       ticket()

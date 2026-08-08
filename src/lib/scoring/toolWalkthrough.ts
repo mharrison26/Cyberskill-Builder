@@ -25,7 +25,8 @@ import type {
  *   - grade justification against retrieved text only
  */
 
-export const TOOL_WALKTHROUGH_MIN_JUSTIFICATION_LENGTH = 80;
+export { TOOL_WALKTHROUGH_MIN_JUSTIFICATION_LENGTH } from '@/lib/scoring/ticketUi';
+import { TOOL_WALKTHROUGH_MIN_JUSTIFICATION_LENGTH } from '@/lib/scoring/ticketUi';
 
 /** Default SimpleRisk-style numeric (or RISK-n) register IDs. */
 export const DEFAULT_RISK_ID_PATTERN = /^(?:RISK[-_:]?)?\d{1,10}$/i;

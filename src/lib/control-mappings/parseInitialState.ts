@@ -31,12 +31,19 @@ function parseTarget(raw: unknown): ControlMappingTargetPrompt | null {
 export function parseControlMappingInitialState(
   initialState: unknown
 ): ControlMappingInitialState | null {
-  if (!initialState || typeof initialState !== 'object' || Array.isArray(initialState)) {
+  if (
+    !initialState ||
+    typeof initialState !== 'object' ||
+    Array.isArray(initialState)
+  ) {
     return null;
   }
   const obj = initialState as Record<string, unknown>;
   if (!isControlFramework(obj.source_framework)) return null;
-  if (typeof obj.source_control_id !== 'string' || !obj.source_control_id.trim()) {
+  if (
+    typeof obj.source_control_id !== 'string' ||
+    !obj.source_control_id.trim()
+  ) {
     return null;
   }
   if (!Array.isArray(obj.targets) || obj.targets.length === 0) return null;

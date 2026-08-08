@@ -86,7 +86,7 @@ export function parseSourceArtifactsFromTicketState(
     const label =
       typeof entry.label === 'string' && entry.label.trim()
         ? entry.label.trim()
-        : code ?? 'Artifact';
+        : (code ?? 'Artifact');
     if (!code || ticketTypes.length === 0) continue;
     const table = entry.table === 'poam_items' ? 'poam_items' : undefined;
     parsed.push({ code, ticketTypes, label, table });

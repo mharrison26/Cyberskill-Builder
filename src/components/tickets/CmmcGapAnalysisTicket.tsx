@@ -18,7 +18,7 @@ import {
   CMMC_GAP_ANALYSIS_MIN_LENGTH,
   CMMC_PRACTICE_SCORE_VALUES,
   type CmmcPracticeScoreValue,
-} from '@/lib/scoring/cmmcGapAnalysis';
+} from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -99,7 +99,9 @@ function parsePracticePrompts(
   const ids = initialState.practiceIds;
   if (Array.isArray(ids)) {
     return ids
-      .filter((id): id is string => typeof id === 'string' && Boolean(id.trim()))
+      .filter(
+        (id): id is string => typeof id === 'string' && Boolean(id.trim())
+      )
       .map((id) => ({ id: id.trim() }));
   }
 
@@ -126,7 +128,8 @@ export function CmmcGapAnalysisTicket({
   const minGapAnalysisLength = resolveMinGapAnalysisLength(expectedState);
 
   const companyName =
-    typeof initialState.companyName === 'string' && initialState.companyName.trim()
+    typeof initialState.companyName === 'string' &&
+    initialState.companyName.trim()
       ? initialState.companyName.trim()
       : 'Fictional company';
   const companySummary =

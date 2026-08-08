@@ -11,7 +11,7 @@ import {
   parsePriorFindings,
   type PoamPriorFinding,
   type PoamStatus,
-} from '@/lib/scoring/poam';
+} from '@/lib/scoring/ticketUi';
 import { cn } from '@/lib/utils';
 
 type EntryDraft = {
@@ -190,7 +190,11 @@ export function PoamTicketWork({
         </p>
       </div>
 
-      <form onSubmit={(event) => void handleSubmit(event)} noValidate className="space-y-8">
+      <form
+        onSubmit={(event) => void handleSubmit(event)}
+        noValidate
+        className="space-y-8"
+      >
         {priorFindings.map((finding, index) => {
           const draft = drafts[finding.id] ?? emptyEntry();
           const prefix = `poam-${finding.id}`;
@@ -207,7 +211,9 @@ export function PoamTicketWork({
               <div className="rounded-md bg-muted/40 px-3 py-3 text-sm">
                 <p className="font-medium text-foreground">{finding.id}</p>
                 {finding.summary ? (
-                  <p className="mt-1 text-muted-foreground">{finding.summary}</p>
+                  <p className="mt-1 text-muted-foreground">
+                    {finding.summary}
+                  </p>
                 ) : (
                   <p className="mt-1 text-muted-foreground">
                     No finding summary provided.
@@ -216,7 +222,9 @@ export function PoamTicketWork({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={`${prefix}-weakness`}>Weakness description</Label>
+                <Label htmlFor={`${prefix}-weakness`}>
+                  Weakness description
+                </Label>
                 <Textarea
                   id={`${prefix}-weakness`}
                   value={draft.weaknessDescription}

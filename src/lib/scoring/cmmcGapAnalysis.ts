@@ -30,16 +30,16 @@ import type {
  *   - grade gap analysis against retrieved text only
  */
 
-export const CMMC_GAP_ANALYSIS_MIN_LENGTH = 120;
-
-export const CMMC_PRACTICE_SCORE_VALUES = [
-  'met',
-  'partial',
-  'not_met',
-] as const;
-
-export type CmmcPracticeScoreValue =
-  (typeof CMMC_PRACTICE_SCORE_VALUES)[number];
+export {
+  CMMC_GAP_ANALYSIS_MIN_LENGTH,
+  CMMC_PRACTICE_SCORE_VALUES,
+  type CmmcPracticeScoreValue,
+} from '@/lib/scoring/ticketUi';
+import {
+  CMMC_GAP_ANALYSIS_MIN_LENGTH,
+  CMMC_PRACTICE_SCORE_VALUES,
+  type CmmcPracticeScoreValue,
+} from '@/lib/scoring/ticketUi';
 
 export type CmmcGapAnalysisExpectedState = {
   minGapAnalysisLength?: number;
@@ -117,9 +117,7 @@ export function parseCmmcGapAnalysisInitialState(
   return initialState as CmmcGapAnalysisInitialState;
 }
 
-export function resolveCmmcPracticeIds(
-  ticket: ScorableTicket
-): string[] {
+export function resolveCmmcPracticeIds(ticket: ScorableTicket): string[] {
   const expected = parseCmmcGapAnalysisExpectedState(ticket.expected_state);
   const initial = parseCmmcGapAnalysisInitialState(ticket.initial_state);
 
@@ -130,9 +128,9 @@ export function resolveCmmcPracticeIds(
     ? initial.practiceIds.filter((id): id is string => typeof id === 'string')
     : [];
 
-  const selected = (fromExpected.length > 0 ? fromExpected : fromInitial).map(
-    (id) => id.trim()
-  ).filter(Boolean);
+  const selected = (fromExpected.length > 0 ? fromExpected : fromInitial)
+    .map((id) => id.trim())
+    .filter(Boolean);
 
   if (selected.length > 0) {
     return selected;

@@ -180,7 +180,11 @@ export function OscalSspForm({
 
       let nextFeedback = payload.feedback ?? 'Submission recorded.';
       const schemaErrors = payload.structuredResult?.schemaErrors;
-      if (schemaErrors && schemaErrors.length > 0 && payload.status !== 'resolved') {
+      if (
+        schemaErrors &&
+        schemaErrors.length > 0 &&
+        payload.status !== 'resolved'
+      ) {
         // Feedback already includes schema errors from the scorer; keep as-is.
         nextFeedback = payload.feedback ?? nextFeedback;
       }
@@ -257,8 +261,8 @@ export function OscalSspForm({
                     )}
                     onChange={(event) => {
                       updateDraft(req.id, {
-                        implementationStatus: event.target
-                          .value as ImplementationStatus | '',
+                        implementationStatus: event.target.value as
+                          ImplementationStatus | '',
                       });
                       if (statusError) {
                         setErrors((prev) => {

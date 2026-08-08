@@ -19,12 +19,15 @@ import {
   CONMON_STRATEGY_MIN_FIELD_LENGTH,
   CONMON_TOOLS,
   DEFAULT_CONMON_CONTROL_FAMILIES,
-} from '@/lib/scoring/conmonStrategy';
+} from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
 
 type ConMonStrategyTicketProps = {
-  ticket: Pick<Ticket, 'id' | 'ticket_type' | 'initial_state' | 'expected_state'>;
+  ticket: Pick<
+    Ticket,
+    'id' | 'ticket_type' | 'initial_state' | 'expected_state'
+  >;
   readOnly?: boolean;
   className?: string;
 };
@@ -78,9 +81,10 @@ function resolveMinLength(
   return fallback;
 }
 
-function formatSystemProfile(
-  initialState: Record<string, unknown>
-): { title: string; lines: string[] } {
+function formatSystemProfile(initialState: Record<string, unknown>): {
+  title: string;
+  lines: string[];
+} {
   const profile = initialState.systemProfile ?? initialState.system_profile;
   if (typeof profile === 'string' && profile.trim()) {
     return {
@@ -114,7 +118,9 @@ function formatSystemProfile(
     if (typeof value === 'string' && value.trim()) {
       lines.push(`${labelize(key)}: ${value.trim()}`);
     } else if (Array.isArray(value)) {
-      const items = value.filter((entry) => typeof entry === 'string') as string[];
+      const items = value.filter(
+        (entry) => typeof entry === 'string'
+      ) as string[];
       if (items.length > 0) {
         lines.push(`${labelize(key)}: ${items.join(', ')}`);
       }
@@ -163,7 +169,10 @@ export function ConMonStrategyTicket({
 
   const tools = useMemo(
     () =>
-      resolveStringList(initialState.tools ?? expectedState.requiredTools, CONMON_TOOLS),
+      resolveStringList(
+        initialState.tools ?? expectedState.requiredTools,
+        CONMON_TOOLS
+      ),
     [initialState, expectedState]
   );
 
@@ -217,7 +226,8 @@ export function ConMonStrategyTicket({
 
     const trimmedEscalation = escalationReporting.trim();
     if (!trimmedEscalation) {
-      nextErrors.escalationReporting = 'Escalation / reporting cadence is required.';
+      nextErrors.escalationReporting =
+        'Escalation / reporting cadence is required.';
     } else if (trimmedEscalation.length < minEscalationLength) {
       nextErrors.escalationReporting = `Must be at least ${minEscalationLength} characters.`;
     }

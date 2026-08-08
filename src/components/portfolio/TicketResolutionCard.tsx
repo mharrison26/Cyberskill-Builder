@@ -76,10 +76,7 @@ export function TicketResolutionCard({
               </Badge>
             ) : null}
             {normalized ? (
-              <Badge
-                variant="outline"
-                className={cn('font-normal', badgeTone)}
-              >
+              <Badge variant="outline" className={cn('font-normal', badgeTone)}>
                 {SCORE_STATUS_LABELS[normalized]}
               </Badge>
             ) : null}

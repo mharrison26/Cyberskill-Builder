@@ -223,7 +223,10 @@ export function resolveOutputPath(
   return underOutput[0] ?? candidates[0] ?? null;
 }
 
-function stripCommentsAndStrings(source: string, language: 'js' | 'py'): string {
+function stripCommentsAndStrings(
+  source: string,
+  language: 'js' | 'py'
+): string {
   // Best-effort for static checks — not a full lexer.
   let text = source;
   if (language === 'js') {
@@ -328,7 +331,9 @@ export function runStaticScriptChecks(args: {
     /\bJSON\.stringify\b|\bjson\.dump\b|\bjson\.dumps\b/.test(stripped) ||
     (language === 'py'
       ? /\bopen\s*\([^)]*['"]w/.test(source) || /\bwrite_text\b/.test(stripped)
-      : /\bwriteFileSync\b|\bwriteFile\b|\bcreateWriteStream\b/.test(stripped)) ||
+      : /\bwriteFileSync\b|\bwriteFile\b|\bcreateWriteStream\b/.test(
+          stripped
+        )) ||
     (args.outputPath
       ? new RegExp(
           basename(args.outputPath).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),

@@ -138,8 +138,7 @@ export function ControlMappingWorkArea({
           {prompt.source_control_id}
         </p>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          {prompt.source_label ??
-            FRAMEWORK_LABELS[prompt.source_framework]}
+          {prompt.source_label ?? FRAMEWORK_LABELS[prompt.source_framework]}
         </p>
       </div>
 
@@ -147,8 +146,7 @@ export function ControlMappingWorkArea({
         {prompt.targets.map((target) => {
           const options = target.options ?? [];
           const groupSelected = selected[target.framework] ?? new Set();
-          const label =
-            target.label ?? FRAMEWORK_LABELS[target.framework];
+          const label = target.label ?? FRAMEWORK_LABELS[target.framework];
 
           return (
             <fieldset key={target.framework} className="space-y-3">
@@ -180,9 +178,7 @@ export function ControlMappingWorkArea({
                             className="size-4 accent-primary"
                             checked={checked}
                             disabled={readOnly}
-                            onChange={() =>
-                              toggle(target.framework, controlId)
-                            }
+                            onChange={() => toggle(target.framework, controlId)}
                           />
                           <span className="font-mono text-sm">{controlId}</span>
                         </Label>

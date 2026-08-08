@@ -152,9 +152,8 @@ describe('conmonStrategyTicketScorer', () => {
 
   it('returns needs_revision when API key is missing after deterministic pass', async () => {
     vi.stubEnv('ANTHROPIC_API_KEY', '');
-    const { MissingAnthropicApiKeyError } = await import(
-      '@/lib/grading/callClaudeGrading'
-    );
+    const { MissingAnthropicApiKeyError } =
+      await import('@/lib/grading/callClaudeGrading');
     vi.mocked(callClaudeGrading).mockRejectedValue(
       new MissingAnthropicApiKeyError()
     );

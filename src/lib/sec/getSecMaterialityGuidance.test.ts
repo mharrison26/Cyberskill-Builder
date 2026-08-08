@@ -45,7 +45,9 @@ describe('getSecMaterialityGuidance', () => {
     expect(ids).toContain('reasonable-investor');
     expect(ids).toContain('rule-overview');
     expect(ids).toContain('financial-impact');
-    expect(retrieved.catalogPath).toContain('cybersecurity-disclosure-materiality');
+    expect(retrieved.catalogPath).toContain(
+      'cybersecurity-disclosure-materiality'
+    );
     expect(retrieved.disclaimer?.toLowerCase()).toContain('not legal advice');
 
     const formatted = formatRetrievedSecMaterialityGuidance(retrieved);

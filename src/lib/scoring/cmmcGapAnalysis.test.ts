@@ -58,7 +58,11 @@ function completeScores() {
   return PRACTICE_IDS.map((practiceId, index) => ({
     practiceId,
     score:
-      index === 0 ? ('met' as const) : index === 1 ? ('partial' as const) : ('not_met' as const),
+      index === 0
+        ? ('met' as const)
+        : index === 1
+          ? ('partial' as const)
+          : ('not_met' as const),
   }));
 }
 
@@ -186,8 +190,8 @@ describe('cmmcGapAnalysisTicketScorer', () => {
     );
 
     expect(result.status).toBe('needs_revision');
-    expect(
-      (result.structuredResult as { reason?: string }).reason
-    ).toBe('grading_insufficient_evidence');
+    expect((result.structuredResult as { reason?: string }).reason).toBe(
+      'grading_insufficient_evidence'
+    );
   });
 });

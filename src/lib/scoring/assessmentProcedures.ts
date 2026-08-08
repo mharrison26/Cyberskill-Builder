@@ -28,7 +28,8 @@ import type {
  *   - grade student procedures against retrieved text only
  */
 
-export const ASSESSMENT_PROCEDURES_MIN_FIELD_LENGTH = 40;
+export { ASSESSMENT_PROCEDURES_MIN_FIELD_LENGTH } from '@/lib/scoring/ticketUi';
+import { ASSESSMENT_PROCEDURES_MIN_FIELD_LENGTH } from '@/lib/scoring/ticketUi';
 
 export type AssessmentProceduresExpectedState = {
   controlId?: string;
@@ -65,7 +66,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function readControlId(record: Record<string, unknown> | null | undefined): string | null {
+function readControlId(
+  record: Record<string, unknown> | null | undefined
+): string | null {
   if (!record) return null;
   const value = record.controlId ?? record.control_id;
   if (typeof value === 'string' && value.trim()) {
@@ -148,7 +151,9 @@ export function evaluateAssessmentProceduresDeterministic(
   ok: boolean;
   feedback: string;
 } {
-  const expected = parseAssessmentProceduresExpectedState(ticket.expected_state);
+  const expected = parseAssessmentProceduresExpectedState(
+    ticket.expected_state
+  );
   const minLength =
     typeof expected.minFieldLength === 'number' &&
     Number.isFinite(expected.minFieldLength) &&
@@ -269,7 +274,11 @@ export const assessmentProceduresTicketScorer: TicketScorer = {
       ticket
     );
 
-    if (!deterministic.ok || !deterministic.parsed || !deterministic.controlId) {
+    if (
+      !deterministic.ok ||
+      !deterministic.parsed ||
+      !deterministic.controlId
+    ) {
       return {
         status: 'needs_revision',
         structuredResult: deterministic.structured,

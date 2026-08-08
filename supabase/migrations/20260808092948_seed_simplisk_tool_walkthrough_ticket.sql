@@ -5,10 +5,12 @@
 --   - likelihood/impact justification (RAG-graded vs pinned SP 800-30 text)
 --
 -- toolUrl default:
---   http://localhost — assumes SimpleRisk published on host port 80 (common
---   Docker/community mapping). Override per cohort via Admin → Tickets
---   (initial_state.toolUrl) or NEXT_PUBLIC_SIMPLERISK_URL (UI fallback when
---   initial_state.toolUrl is empty).
+--   http://localhost — official SimpleRisk Docker publish on host port 80:
+--     docker pull simplerisk/simplerisk
+--     docker run --name simplerisk -d -p 80:80 -p 443:443 simplerisk/simplerisk
+--   Docs: https://www.simplerisk.com/download/docker
+--   Override per cohort via Admin → Tickets (initial_state.toolUrl) or
+--   NEXT_PUBLIC_SIMPLERISK_URL (UI fallback when initial_state.toolUrl is empty).
 --
 -- How to create / customize this ticket content:
 --   1. Admin → Tickets → create or edit a ticket with ticket_type = tool_walkthrough
@@ -54,7 +56,7 @@ SELECT
   jsonb_build_object(
     'toolName', 'SimpleRisk',
     'toolUrl', 'http://localhost',
-    'toolHint', 'Use the self-hosted SimpleRisk instance for this lab (default http://localhost). Your instructor may share a different cohort URL.',
+    'toolHint', 'Use the self-hosted SimpleRisk instance for this lab (default http://localhost). Start it with: docker run --name simplerisk -d -p 80:80 -p 443:443 simplerisk/simplerisk. Your instructor may share a different cohort URL.',
     'steps', jsonb_build_array(
       jsonb_build_object(
         'title', 'Sign in',

@@ -88,8 +88,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const submission = isAoReviewTicketType(context.ticket.ticket_type)
     ? mergeAoReviewSubmission(
         parsedSubmission,
-        (existingProgress?.submission as Record<string, unknown> | null) ??
-          null
+        (existingProgress?.submission as Record<string, unknown> | null) ?? null
       )
     : parsedSubmission;
 

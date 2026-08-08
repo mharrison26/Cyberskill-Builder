@@ -75,9 +75,10 @@ function parseRequirementsFromTicket(
   return parsed.length > 0 ? parsed : [...NIST_800_171_REV3_SUBSET];
 }
 
-function parseAnswers(
-  submission: TicketSubmission
-): { answers?: SspRequirementAnswer[]; fieldErrors: string[] } {
+function parseAnswers(submission: TicketSubmission): {
+  answers?: SspRequirementAnswer[];
+  fieldErrors: string[];
+} {
   const fieldErrors: string[] = [];
   const raw = submission.answers;
   if (!Array.isArray(raw)) {
@@ -125,9 +126,7 @@ function parseAnswers(
     }
 
     const narrativeRaw =
-      record.implementationNarrative ??
-      record.narrative ??
-      record.description;
+      record.implementationNarrative ?? record.narrative ?? record.description;
     if (typeof narrativeRaw !== 'string' || !narrativeRaw.trim()) {
       fieldErrors.push(
         `answers[${index}] (${requirementId}): implementationNarrative is required.`
@@ -215,9 +214,7 @@ export const oscalSspTicketScorer: TicketScorer = {
     const orderedAnswers = requiredIds.map((id) => {
       const answer = answers.find((entry) => {
         const match = findSubsetRequirement(entry.requirementId, requirements);
-        const answeredId = (
-          match?.id ?? entry.requirementId
-        ).toLowerCase();
+        const answeredId = (match?.id ?? entry.requirementId).toLowerCase();
         return answeredId === id.toLowerCase();
       });
       if (!answer) {

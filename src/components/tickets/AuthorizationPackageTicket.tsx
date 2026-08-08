@@ -31,14 +31,19 @@ type SubmitResponse = {
 };
 
 type AuthorizationPackageTicketProps = {
-  ticket: Pick<Ticket, 'id' | 'ticket_type' | 'initial_state' | 'expected_state'>;
+  ticket: Pick<
+    Ticket,
+    'id' | 'ticket_type' | 'initial_state' | 'expected_state'
+  >;
   readOnly?: boolean;
   className?: string;
 };
 
 function statusTone(status: string): string {
-  if (status === 'present') return 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30';
-  if (status === 'incomplete') return 'bg-amber-500/15 text-amber-900 border-amber-500/30';
+  if (status === 'present')
+    return 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30';
+  if (status === 'incomplete')
+    return 'bg-amber-500/15 text-amber-900 border-amber-500/30';
   return 'bg-muted text-muted-foreground';
 }
 
@@ -115,7 +120,9 @@ export function AuthorizationPackageTicket({
       setAcknowledged(true);
     } catch (error) {
       setFeedback(
-        error instanceof Error ? error.message : 'Failed to submit package review'
+        error instanceof Error
+          ? error.message
+          : 'Failed to submit package review'
       );
       setFeedbackTone('error');
     } finally {
@@ -227,9 +234,7 @@ export function AuthorizationPackageTicket({
         </label>
         <Button
           type="button"
-          disabled={
-            readOnly || !acknowledged || !pkg?.complete || isSubmitting
-          }
+          disabled={readOnly || !acknowledged || !pkg?.complete || isSubmitting}
           onClick={() => void handleSubmit()}
         >
           {isSubmitting ? 'Submitting…' : 'Submit package review'}

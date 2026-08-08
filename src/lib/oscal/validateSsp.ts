@@ -15,8 +15,7 @@ export const OSCAL_SSP_SCHEMA_PATH = 'data/oscal/oscal_ssp_schema.json';
 export type SspSchemaError = OscalSchemaError;
 
 export type SspValidationResult =
-  | { valid: true; errors: [] }
-  | { valid: false; errors: SspSchemaError[] };
+  { valid: true; errors: [] } | { valid: false; errors: SspSchemaError[] };
 
 /** Validate an OSCAL SSP document against the vendored NIST SSP JSON Schema. */
 export function validateOscalSsp(document: unknown): SspValidationResult {

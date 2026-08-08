@@ -26,23 +26,19 @@ import type {
  *   - grade memo against retrieved text only
  */
 
-export const CONMON_STRATEGY_MIN_FIELD_LENGTH = 40;
-export const CONMON_STRATEGY_MIN_ESCALATION_LENGTH = 80;
-
-export const DEFAULT_CONMON_CONTROL_FAMILIES = [
-  'AC',
-  'AU',
-  'CA',
-  'CM',
-  'IA',
-  'RA',
-  'SC',
-  'SI',
-] as const;
-
-export const CONMON_TOOLS = ['DefectDojo', 'CloudSploit', 'Scuba'] as const;
-
-export type ConMonToolName = (typeof CONMON_TOOLS)[number];
+export {
+  CONMON_STRATEGY_MIN_FIELD_LENGTH,
+  CONMON_STRATEGY_MIN_ESCALATION_LENGTH,
+  DEFAULT_CONMON_CONTROL_FAMILIES,
+  CONMON_TOOLS,
+  type ConMonToolName,
+} from '@/lib/scoring/ticketUi';
+import {
+  CONMON_STRATEGY_MIN_FIELD_LENGTH,
+  CONMON_STRATEGY_MIN_ESCALATION_LENGTH,
+  DEFAULT_CONMON_CONTROL_FAMILIES,
+  CONMON_TOOLS,
+} from '@/lib/scoring/ticketUi';
 
 export type ConMonFamilyCadence = {
   family: string;
@@ -107,7 +103,8 @@ function normalizeFamily(family: string): string {
 
 function normalizeTool(tool: string): string {
   const trimmed = tool.trim().toLowerCase();
-  if (trimmed === 'defectdojo' || trimmed === 'defect dojo') return 'DefectDojo';
+  if (trimmed === 'defectdojo' || trimmed === 'defect dojo')
+    return 'DefectDojo';
   if (
     trimmed === 'cloudsploit' ||
     trimmed === 'cloud sploit' ||
@@ -147,7 +144,8 @@ function parseToolCoverage(raw: unknown): ConMonToolCoverage | null {
   const rationale = asNonEmptyString(raw.rationale);
   if (!toolRaw || !rationale) return null;
 
-  const familiesRaw = raw.families ?? raw.controlFamilies ?? raw.control_families;
+  const familiesRaw =
+    raw.families ?? raw.controlFamilies ?? raw.control_families;
   let families: string[] = [];
   if (Array.isArray(familiesRaw)) {
     families = familiesRaw
@@ -183,11 +181,13 @@ export function extractConMonStrategySubmission(
     submission.family_cadences ??
     submission.cadences;
   const toolRaw =
-    submission.toolCoverage ??
-    submission.tool_coverage ??
-    submission.tools;
+    submission.toolCoverage ?? submission.tool_coverage ?? submission.tools;
 
-  if (!escalationReporting || !Array.isArray(familyRaw) || !Array.isArray(toolRaw)) {
+  if (
+    !escalationReporting ||
+    !Array.isArray(familyRaw) ||
+    !Array.isArray(toolRaw)
+  ) {
     return null;
   }
 
@@ -244,7 +244,9 @@ function formatSystemProfile(
     if (typeof value === 'string' && value.trim()) {
       parts.push(`${key}: ${value.trim()}`);
     } else if (Array.isArray(value)) {
-      const items = value.filter((entry) => typeof entry === 'string') as string[];
+      const items = value.filter(
+        (entry) => typeof entry === 'string'
+      ) as string[];
       if (items.length > 0) {
         parts.push(`${key}: ${items.join(', ')}`);
       }
@@ -323,7 +325,8 @@ export function evaluateConMonStrategyDeterministic(
 
   const shortCadenceFields = parsed.familyCadences.filter(
     (row) =>
-      row.cadence.length < minFieldLength || row.rationale.length < minFieldLength
+      row.cadence.length < minFieldLength ||
+      row.rationale.length < minFieldLength
   );
 
   const toolsCovered = Array.from(
@@ -465,11 +468,7 @@ export const conmonStrategyTicketScorer: TicketScorer = {
 
     try {
       const { grading, retrievedSectionIds, guidancePath } =
-        await gradeMemoWithSp800137(
-          deterministic.parsed,
-          ticket,
-          expected
-        );
+        await gradeMemoWithSp800137(deterministic.parsed, ticket, expected);
 
       const structured: ConMonStrategyStructuredResult = {
         ...deterministic.structured,

@@ -358,8 +358,5 @@ registerTicketScorer('oscal_generator', oscalGeneratorTicketScorer);
 registerTicketScorer('capstone_oscal', oscalGeneratorTicketScorer);
 registerTicketScorer('cmmc_gap_analysis', cmmcGapAnalysisTicketScorer);
 registerTicketScorer('cmmc_l2_gap', cmmcGapAnalysisTicketScorer);
-registerTicketScorer(
-  'authorization_package',
-  authorizationPackageTicketScorer
-);
+registerTicketScorer('authorization_package', authorizationPackageTicketScorer);
 registerTicketScorer('ao_review', aoReviewTicketScorer);

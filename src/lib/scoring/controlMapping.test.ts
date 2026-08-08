@@ -139,9 +139,9 @@ describe('evaluateControlMapping', () => {
       ticket()
     );
     expect(resolved.status).toBe('resolved');
-    expect(controlMappingFeedback(resolved.structuredResult as never)).toContain(
-      'accepted'
-    );
+    expect(
+      controlMappingFeedback(resolved.structuredResult as never)
+    ).toContain('accepted');
 
     const failed = await scorer.score(
       { answers: { soc2: ['CC7.1'], iso27001: [] } },

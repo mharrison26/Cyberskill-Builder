@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { TOOL_WALKTHROUGH_MIN_JUSTIFICATION_LENGTH } from '@/lib/scoring/toolWalkthrough';
+import { TOOL_WALKTHROUGH_MIN_JUSTIFICATION_LENGTH } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
 

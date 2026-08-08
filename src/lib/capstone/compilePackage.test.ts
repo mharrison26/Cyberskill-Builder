@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  parseSourceArtifactsFromTicketState,
-} from '@/lib/capstone/compilePackage';
+import { parseSourceArtifactsFromTicketState } from '@/lib/capstone/compilePackage';
 import {
   DEFAULT_CAPSTONE_SOURCE_ARTIFACTS,
   GRC_TICKET_CODES,
@@ -116,9 +114,9 @@ describe('buildDeterministicAoQuestions', () => {
     const questions = buildDeterministicAoQuestions(pkg);
     expect(questions.length).toBeGreaterThanOrEqual(5);
     expect(questions.length).toBeLessThanOrEqual(7);
-    expect(questions.some((q) => q.prompt.includes('Privileged accounts'))).toBe(
-      true
-    );
+    expect(
+      questions.some((q) => q.prompt.includes('Privileged accounts'))
+    ).toBe(true);
     expect(questions.some((q) => q.prompt.includes('GRC-09'))).toBe(true);
   });
 });

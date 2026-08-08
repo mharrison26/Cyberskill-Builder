@@ -36,10 +36,7 @@ export type TicketTier = 1 | 2 | 3;
 /** Reference row in public.control_mappings (framework crosswalk). */
 export type ControlMappingConfidence = 'high' | 'medium' | 'low';
 
-export type ControlMappingFramework =
-  | 'nist_800_53'
-  | 'soc2'
-  | 'iso27001';
+export type ControlMappingFramework = 'nist_800_53' | 'soc2' | 'iso27001';
 
 export interface ControlMapping {
   id: string;
@@ -220,11 +217,7 @@ export interface CCCERValues {
 
 /** POA&M remediation entry (public.poam_items / ticket submission). */
 export type PoamItemStatus =
-  | 'open'
-  | 'ongoing'
-  | 'completed'
-  | 'delayed'
-  | 'risk_accepted';
+  'open' | 'ongoing' | 'completed' | 'delayed' | 'risk_accepted';
 
 export interface PoamItem {
   id: string;

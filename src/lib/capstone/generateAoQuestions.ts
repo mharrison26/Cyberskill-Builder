@@ -174,7 +174,8 @@ export function buildDeterministicAoQuestions(
     const entries = Array.isArray(poam.payload.entries)
       ? poam.payload.entries
       : [];
-    const sample = (items[0] ?? entries[0]) as Record<string, unknown> | undefined;
+    const sample = (items[0] ?? entries[0]) as
+      Record<string, unknown> | undefined;
     const weakness =
       typeof sample?.weakness_description === 'string'
         ? sample.weakness_description
@@ -271,7 +272,11 @@ export async function generateAoQuestionsFromPackage(
     }
 
     const anthropic = new Anthropic({ apiKey });
-    const prompt = buildGenerationPrompt(pkg, packageSectionsText, guidanceText);
+    const prompt = buildGenerationPrompt(
+      pkg,
+      packageSectionsText,
+      guidanceText
+    );
 
     const response = await anthropic.messages.create({
       model: resolveAnthropicModel(),

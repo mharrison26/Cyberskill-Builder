@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ASSESSMENT_PROCEDURES_MIN_FIELD_LENGTH } from '@/lib/scoring/assessmentProcedures';
+import { ASSESSMENT_PROCEDURES_MIN_FIELD_LENGTH } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -91,7 +91,8 @@ export function AssessmentProceduresTicket({
     for (const [key, value] of fields) {
       const trimmed = value.trim();
       if (!trimmed) {
-        nextErrors[key] = `${key[0]!.toUpperCase()}${key.slice(1)} procedures are required.`;
+        nextErrors[key] =
+          `${key[0]!.toUpperCase()}${key.slice(1)} procedures are required.`;
       } else if (trimmed.length < minFieldLength) {
         nextErrors[key] =
           `${key[0]!.toUpperCase()}${key.slice(1)} must be at least ${minFieldLength} characters.`;
@@ -133,7 +134,9 @@ export function AssessmentProceduresTicket({
       };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Failed to submit assessment procedures.');
+        throw new Error(
+          payload.error ?? 'Failed to submit assessment procedures.'
+        );
       }
 
       setScoreStatus(payload.status ?? null);

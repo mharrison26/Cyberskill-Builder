@@ -28,35 +28,20 @@ import type {
  *   - grade memo quality against retrieved text only
  */
 
-export const SEC_MATERIALITY_MIN_FACTOR_LENGTH = 40;
-export const SEC_MATERIALITY_MIN_RATIONALE_LENGTH = 60;
-
-/** Factor keys students must address in the memo. */
-export const SEC_MATERIALITY_FACTOR_KEYS = [
-  'nature_scope',
-  'data_compromise',
-  'operational_impact',
-  'financial_impact',
-  'reputational_legal',
-  'reasonable_investor',
-] as const;
-
-export type SecMaterialityFactorKey =
-  (typeof SEC_MATERIALITY_FACTOR_KEYS)[number];
-
-export const SEC_MATERIALITY_FACTOR_LABELS: Record<
-  SecMaterialityFactorKey,
-  string
-> = {
-  nature_scope: 'Nature, scope, and systems affected',
-  data_compromise: 'Data compromised and individuals affected',
-  operational_impact: 'Operational and service impact',
-  financial_impact: 'Financial condition and results of operations',
-  reputational_legal: 'Reputational harm, litigation, and regulatory risk',
-  reasonable_investor: 'Reasonable-investor materiality analysis',
-};
-
-export type SecMaterialityDetermination = 'material' | 'not_material';
+export {
+  SEC_MATERIALITY_MIN_FACTOR_LENGTH,
+  SEC_MATERIALITY_MIN_RATIONALE_LENGTH,
+  SEC_MATERIALITY_FACTOR_KEYS,
+  SEC_MATERIALITY_FACTOR_LABELS,
+  type SecMaterialityFactorKey,
+  type SecMaterialityDetermination,
+} from '@/lib/scoring/ticketUi';
+import {
+  SEC_MATERIALITY_MIN_FACTOR_LENGTH,
+  SEC_MATERIALITY_MIN_RATIONALE_LENGTH,
+  SEC_MATERIALITY_FACTOR_KEYS,
+  type SecMaterialityDetermination,
+} from '@/lib/scoring/ticketUi';
 
 export type SecMaterialityExpectedState = {
   minFactorLength?: number;
@@ -187,10 +172,7 @@ export function extractSecMaterialitySubmission(
   };
 }
 
-function resolveMinLength(
-  value: unknown,
-  fallback: number
-): number {
+function resolveMinLength(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
     return Math.floor(value);
   }
