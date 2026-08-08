@@ -1,0 +1,112 @@
+{
+  "document": "NIST SP 800-30 Revision 1",
+  "title": "Guide for Conducting Risk Assessments",
+  "source_url": "https://csrc.nist.gov/publications/detail/sp/800-30/rev-1/final",
+  "notes": "Pinned excerpts for RAG-style grading. Graders must use only retrieved section text, not parametric knowledge of SP 800-30.",
+  "sections": [
+    {
+      "id": "ra-process",
+      "title": "Risk assessment process overview",
+      "topics": ["process", "prepare", "conduct", "maintain"],
+      "keywords": [
+        "risk assessment",
+        "threat",
+        "vulnerability",
+        "likelihood",
+        "impact",
+        "risk determination",
+        "prepare",
+        "conduct",
+        "maintain"
+      ],
+      "text": "NIST SP 800-30 Rev. 1 frames risk assessment as a process that prepares for the assessment, conducts the assessment, and maintains the assessment. Conducting the assessment includes identifying threat sources and events, identifying vulnerabilities and predisposing conditions, determining likelihood of occurrence, determining magnitude of impact, and determining risk. Results support organizational risk responses and should be documented so decision makers can understand how likelihood and impact were derived."
+    },
+    {
+      "id": "likelihood",
+      "title": "Determining likelihood of occurrence",
+      "topics": ["likelihood", "probability", "threat event"],
+      "keywords": [
+        "likelihood",
+        "probability",
+        "threat event",
+        "adversarial",
+        "non-adversarial",
+        "capability",
+        "intent",
+        "targeting",
+        "occurrence",
+        "exploit"
+      ],
+      "text": "Likelihood of occurrence expresses the probability that a given threat event will be initiated or will occur, and that it will result in adverse impacts considering any predisposing conditions and the effectiveness of planned or implemented controls. For adversarial threat events, assessors consider adversary capability, intent, and targeting, as well as the susceptibility of the organization and systems. For non-adversarial events, assessors consider historical evidence, empirical data, and other factors indicating how often the event may occur. Likelihood determinations should be justified with concrete factors (for example, exposed services, weak authentication, known exploitability, or observed attack patterns) rather than unsupported labels such as high or low alone."
+    },
+    {
+      "id": "impact",
+      "title": "Determining magnitude of impact",
+      "topics": ["impact", "adverse impact", "mission"],
+      "keywords": [
+        "impact",
+        "magnitude",
+        "adverse",
+        "mission",
+        "business",
+        "assets",
+        "individuals",
+        "other organizations",
+        "nation",
+        "confidentiality",
+        "integrity",
+        "availability",
+        "harm"
+      ],
+      "text": "Impact determinations estimate the magnitude of harm that can be expected from the unauthorized disclosure, modification, destruction, or loss of information or information system capabilities, or from denial of service. Assessors consider adverse impacts to organizational operations (mission, functions, image, or reputation), organizational assets, individuals, other organizations, and the Nation. Justifications should connect the threat event and vulnerability to specific harm categories (for example, loss of confidentiality of sensitive data, disruption of a critical business process, or regulatory exposure) and explain severity in organizational context, not merely assign an impact score."
+    },
+    {
+      "id": "risk-determination",
+      "title": "Determining risk",
+      "topics": ["risk", "risk determination", "combination"],
+      "keywords": [
+        "risk",
+        "risk determination",
+        "likelihood",
+        "impact",
+        "combination",
+        "uncertainty",
+        "level of risk",
+        "prioritize"
+      ],
+      "text": "Risk is a function of the likelihood of a threat event occurring and the resulting impact. Risk determination combines assessed likelihood and impact, considering uncertainty in the determinations and any dependencies among threat events. The resulting level of risk supports prioritization and risk response decisions. A sound justification explains how the stated likelihood and impact levels were selected and why their combination yields the recorded risk level for the register entry."
+    },
+    {
+      "id": "documentation",
+      "title": "Documenting assessment results",
+      "topics": ["documentation", "risk register", "results"],
+      "keywords": [
+        "document",
+        "documentation",
+        "risk register",
+        "results",
+        "rationale",
+        "assumptions",
+        "uncertainty",
+        "traceability"
+      ],
+      "text": "Risk assessment results should be documented with sufficient detail for stakeholders to understand the rationale for likelihood, impact, and risk determinations. Documentation typically identifies the threat event, vulnerability or predisposing condition, affected assets or systems, assessed likelihood, assessed impact, overall risk, and key assumptions or uncertainties. When logging a risk in a register or tool, the narrative justification is the primary evidence that likelihood and impact were assessed using a defensible method rather than arbitrary scoring."
+    },
+    {
+      "id": "controls-and-predisposing",
+      "title": "Controls and predisposing conditions",
+      "topics": ["controls", "vulnerability", "predisposing conditions"],
+      "keywords": [
+        "control",
+        "controls",
+        "vulnerability",
+        "predisposing",
+        "condition",
+        "effectiveness",
+        "mitigation",
+        "residual"
+      ],
+      "text": "Vulnerabilities and predisposing conditions influence both likelihood and impact. Existing or planned controls may reduce the likelihood that a threat event succeeds or may lessen impact if the event occurs. Justifications should acknowledge relevant control strengths or gaps (for example, missing multifactor authentication, incomplete logging, or compensating monitoring) when explaining residual likelihood and impact for the logged risk."
+    }
+  ]
+}

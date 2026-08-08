@@ -1,3 +1,9 @@
+export type AssessmentMethodsText = {
+  examine: string;
+  interview: string;
+  test: string;
+};
+
 export interface ControlCatalogEntry {
   /** Stable row key (OSCAL control id, e.g. "ac-1") */
   id: string;
@@ -6,6 +12,10 @@ export interface ControlCatalogEntry {
   title: string;
   family: string;
   statement: string;
+  /** Flattened SP 800-53A assessment objective prose (from OSCAL parts). */
+  assessmentObjective: string;
+  /** SP 800-53A assessment-method object lists by Examine / Interview / Test. */
+  assessmentMethods: AssessmentMethodsText;
 }
 
 type OscalProp = {
@@ -102,6 +112,72 @@ export function extractStatement(control: OscalControl): string {
 }
 
 /**
+ * Flatten SP 800-53A assessment-objective parts into labeled prose lines.
+ * Uses the same label+prose walk as control statements.
+ */
+export function extractAssessmentObjective(control: OscalControl): string {
+  const objectivePart = control.parts?.find(
+    (p) => p.name === 'assessment-objective'
+  );
+  if (!objectivePart) return '';
+
+  const lines: string[] = [];
+  collectStatementLines(objectivePart, lines);
+  return lines.join('\n\n');
+}
+
+function methodPropValue(part: OscalPart): string | undefined {
+  return part.props?.find((p) => p.name === 'method')?.value;
+}
+
+function extractAssessmentObjectsProse(methodPart: OscalPart): string {
+  const objectParts =
+    methodPart.parts?.filter((p) => p.name === 'assessment-objects') ?? [];
+
+  if (objectParts.length === 0) {
+    const lines: string[] = [];
+    collectStatementLines(methodPart, lines);
+    return lines.join('\n\n');
+  }
+
+  return objectParts
+    .map((part) => {
+      const lines: string[] = [];
+      collectStatementLines(part, lines);
+      return lines.join('\n\n');
+    })
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+/**
+ * Extract SP 800-53A Examine / Interview / Test assessment-method object lists.
+ */
+export function extractAssessmentMethods(
+  control: OscalControl
+): AssessmentMethodsText {
+  const methods: AssessmentMethodsText = {
+    examine: '',
+    interview: '',
+    test: '',
+  };
+
+  for (const part of control.parts ?? []) {
+    if (part.name !== 'assessment-method') continue;
+
+    const method = methodPropValue(part)?.trim().toUpperCase();
+    if (!method) continue;
+
+    const prose = extractAssessmentObjectsProse(part);
+    if (method === 'EXAMINE') methods.examine = prose;
+    else if (method === 'INTERVIEW') methods.interview = prose;
+    else if (method === 'TEST') methods.test = prose;
+  }
+
+  return methods;
+}
+
+/**
  * Flatten a control and its enhancements into catalog rows.
  * Enhancements are included as separate rows so each is searchable independently.
  */
@@ -116,6 +192,8 @@ function appendControlRows(
     title: control.title,
     family,
     statement: extractStatement(control),
+    assessmentObjective: extractAssessmentObjective(control),
+    assessmentMethods: extractAssessmentMethods(control),
   });
 
   for (const enhancement of control.controls ?? []) {

@@ -1,0 +1,180 @@
+{
+  "document": "CMMC 2.0 Level 2",
+  "title": "Curated CMMC 2.0 Level 2 practice descriptions (subset)",
+  "source_url": "https://dodcio.defense.gov/CMMC/",
+  "notes": "Pinned educational excerpts aligned to CMMC 2.0 Level 2 / NIST SP 800-171 Rev. 2 practice intent. Graders must use only retrieved practice text, not parametric knowledge of CMMC.",
+  "practices": [
+    {
+      "id": "AC.L2-3.1.1",
+      "domain": "Access Control",
+      "title": "Limit system access to authorized users, processes acting on behalf of authorized users, and devices (including other systems)",
+      "keywords": [
+        "access control",
+        "authorized users",
+        "account management",
+        "provisioning",
+        "deprovisioning",
+        "identity",
+        "system access"
+      ],
+      "text": "AC.L2-3.1.1 requires organizations to limit system access to authorized users, processes acting on behalf of authorized users, and authorized devices. Effective implementation includes documented account provisioning and deprovisioning, verification that only approved identities receive access, and controls that prevent unauthorized accounts or orphaned access from remaining active. Evidence typically includes account request/approval records, joiner-mover-leaver procedures, and periodic access reviews that confirm accounts still match authorized personnel and roles."
+    },
+    {
+      "id": "AC.L2-3.1.2",
+      "domain": "Access Control",
+      "title": "Limit system access to the types of transactions and functions that authorized users are permitted to execute",
+      "keywords": [
+        "role-based",
+        "transactions",
+        "functions",
+        "permissions",
+        "authorization",
+        "least function"
+      ],
+      "text": "AC.L2-3.1.2 requires limiting system access to the types of transactions and functions authorized users are permitted to execute. Implementation maps job roles to permitted actions and enforces those permissions in applications and systems. Assessors look for role definitions, permission matrices, and technical enforcement that prevents users from performing privileged or out-of-scope functions beyond their authorized duties."
+    },
+    {
+      "id": "AC.L2-3.1.5",
+      "domain": "Access Control",
+      "title": "Employ the principle of least privilege, including for specific security functions and privileged accounts",
+      "keywords": [
+        "least privilege",
+        "privileged accounts",
+        "admin",
+        "elevation",
+        "security functions"
+      ],
+      "text": "AC.L2-3.1.5 requires employing least privilege, including for security functions and privileged accounts. Users and processes should receive only the access necessary to perform assigned tasks. Privileged accounts should be limited, separately managed, and used only when required. Gaps include shared admin accounts, standing privileged access for day-to-day work, and missing justifications for elevated rights."
+    },
+    {
+      "id": "IA.L2-3.5.1",
+      "domain": "Identification and Authentication",
+      "title": "Identify information system users, processes acting on behalf of users, and devices",
+      "keywords": [
+        "identification",
+        "authentication",
+        "unique identity",
+        "users",
+        "devices",
+        "processes"
+      ],
+      "text": "IA.L2-3.5.1 requires identifying information system users, processes acting on behalf of users, and devices. Organizations assign unique identifiers so actions can be attributed to specific entities. Shared or generic logins, unidentified service accounts, and unmanaged devices undermine this practice. Implementation evidence includes unique user IDs, device inventory/identity for managed endpoints, and naming conventions for service identities."
+    },
+    {
+      "id": "IA.L2-3.5.3",
+      "domain": "Identification and Authentication",
+      "title": "Use multifactor authentication for local and network access to privileged accounts and for network access to non-privileged accounts",
+      "keywords": [
+        "multifactor",
+        "mfa",
+        "authentication",
+        "privileged",
+        "network access",
+        "local access"
+      ],
+      "text": "IA.L2-3.5.3 requires multifactor authentication for local and network access to privileged accounts and for network access to non-privileged accounts. MFA should cover remote/network access broadly and privileged access both locally and remotely. Partial implementations that only protect VPN login, while leaving privileged console or cloud admin access single-factor, do not fully meet the practice. Evidence includes MFA enrollment policies, IdP/SSO configuration, and coverage for privileged pathways."
+    },
+    {
+      "id": "AU.L2-3.3.1",
+      "domain": "Audit and Accountability",
+      "title": "Create and retain system audit logs and records to the extent needed to enable the monitoring, analysis, investigation, and reporting of unlawful or unauthorized system activity",
+      "keywords": [
+        "audit logs",
+        "logging",
+        "monitoring",
+        "investigation",
+        "retention",
+        "unauthorized activity"
+      ],
+      "text": "AU.L2-3.3.1 requires creating and retaining system audit logs and records sufficient to enable monitoring, analysis, investigation, and reporting of unlawful or unauthorized system activity. Logs should capture security-relevant events across systems that process CUI, be retained long enough for investigation, and be available for review. Gaps include missing logs on key systems, short retention, or logs that cannot support incident investigation."
+    },
+    {
+      "id": "CM.L2-3.4.1",
+      "domain": "Configuration Management",
+      "title": "Establish and maintain baseline configurations and inventories of organizational systems (including hardware, software, firmware, and documentation) throughout the system development life cycle",
+      "keywords": [
+        "baseline",
+        "configuration",
+        "inventory",
+        "hardware",
+        "software",
+        "firmware"
+      ],
+      "text": "CM.L2-3.4.1 requires establishing and maintaining baseline configurations and inventories of organizational systems, including hardware, software, firmware, and documentation, throughout the system development life cycle. Organizations should know what assets exist, how they are configured, and how baselines are updated. Ad hoc builds without documented baselines or incomplete inventories indicate gaps against this practice."
+    },
+    {
+      "id": "IR.L2-3.6.1",
+      "domain": "Incident Response",
+      "title": "Establish an operational incident-handling capability for organizational systems that includes preparation, detection, analysis, containment, recovery, and user response activities",
+      "keywords": [
+        "incident response",
+        "incident handling",
+        "detection",
+        "containment",
+        "recovery",
+        "preparation"
+      ],
+      "text": "IR.L2-3.6.1 requires an operational incident-handling capability covering preparation, detection, analysis, containment, recovery, and user response activities. A written plan alone is insufficient if the capability is not operational (roles, contacts, playbooks, and practiced procedures). Assessors look for an incident response plan, defined roles, detection/escalation paths, and evidence the organization can execute response activities."
+    },
+    {
+      "id": "MP.L2-3.8.3",
+      "domain": "Media Protection",
+      "title": "Sanitize or destroy information system media containing CUI before disposal or release for reuse",
+      "keywords": [
+        "media",
+        "sanitize",
+        "destroy",
+        "disposal",
+        "reuse",
+        "cui",
+        "media protection"
+      ],
+      "text": "MP.L2-3.8.3 requires sanitizing or destroying information system media containing CUI before disposal or release for reuse. Organizations need documented media sanitization/destruction procedures appropriate to media type and evidence that retired drives, removable media, and similar assets are sanitized or destroyed before leaving organizational control. Informal disposal without sanitization records is a common gap."
+    },
+    {
+      "id": "SC.L2-3.13.11",
+      "domain": "System and Communications Protection",
+      "title": "Employ FIPS-validated cryptography when used to protect the confidentiality of CUI",
+      "keywords": [
+        "encryption",
+        "cryptography",
+        "fips",
+        "confidentiality",
+        "cui",
+        "at rest",
+        "in transit"
+      ],
+      "text": "SC.L2-3.13.11 requires employing FIPS-validated cryptography when cryptography is used to protect the confidentiality of CUI. Organizations should identify where CUI is protected by encryption (in transit and at rest as applicable) and ensure cryptographic modules are FIPS-validated. Using non-validated crypto libraries, missing encryption for CUI repositories/backups, or inability to show FIPS validation status are typical gaps."
+    },
+    {
+      "id": "SI.L2-3.14.1",
+      "domain": "System and Information Integrity",
+      "title": "Identify, report, and correct information and information system flaws in a timely manner",
+      "keywords": [
+        "patch",
+        "patching",
+        "flaw remediation",
+        "vulnerability",
+        "timely",
+        "correct",
+        "system integrity",
+        "sla"
+      ],
+      "text": "SI.L2-3.14.1 requires identifying, reporting, and correcting information and information system flaws in a timely manner. Effective implementation includes vulnerability identification (scanning/advisories), prioritization, patching or mitigation within defined timelines, and tracking to closure. Ad hoc patching without SLAs, unscanned systems, or long-lived critical vulnerabilities indicate the practice is not met."
+    },
+    {
+      "id": "AT.L2-3.2.1",
+      "domain": "Awareness and Training",
+      "title": "Ensure that managers, systems administrators, and users of organizational systems are made aware of the security risks associated with their activities and of the applicable policies, standards, and procedures related to the security of those systems",
+      "keywords": [
+        "awareness",
+        "training",
+        "security risks",
+        "policies",
+        "procedures",
+        "users"
+      ],
+      "text": "AT.L2-3.2.1 requires ensuring managers, system administrators, and users are made aware of security risks associated with their activities and of applicable policies, standards, and procedures. Organizations typically deliver role-appropriate security awareness training on a recurring schedule and track completion. Absence of training records or training that omits CUI handling expectations indicates a gap."
+    }
+  ]
+}

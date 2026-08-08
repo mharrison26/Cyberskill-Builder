@@ -1,0 +1,106 @@
+{
+  "document": "NIST RMF / POA&M remediation guidance (pinned excerpts)",
+  "title": "Plan of Action and Milestones (POA&M) remediation planning",
+  "source_url": "https://csrc.nist.gov/projects/risk-management",
+  "notes": "Pinned excerpts for RAG-style POA&M grading. Graders must use only retrieved section text, not parametric knowledge of RMF/POA&M practice.",
+  "sections": [
+    {
+      "id": "poam-purpose",
+      "title": "Purpose of a POA&M",
+      "topics": ["poam", "remediation", "weakness", "corrective action"],
+      "keywords": [
+        "plan of action",
+        "milestones",
+        "poam",
+        "weakness",
+        "deficiency",
+        "corrective action",
+        "remediation",
+        "finding"
+      ],
+      "text": "A Plan of Action and Milestones (POA&M) documents known security and privacy weaknesses and the planned corrective actions to remediate or mitigate them. Each POA&M item should clearly identify the weakness, describe a realistic remediation approach, assign responsibility as appropriate, and establish a scheduled completion date. The POA&M is a living management tool used to track progress until the weakness is closed, risk is accepted, or the action is otherwise dispositioned."
+    },
+    {
+      "id": "weakness-description",
+      "title": "Describing the weakness",
+      "topics": ["weakness", "finding", "gap", "control"],
+      "keywords": [
+        "weakness description",
+        "finding",
+        "control gap",
+        "vulnerability",
+        "deficiency",
+        "condition",
+        "evidence",
+        "impact"
+      ],
+      "text": "A useful weakness description restates the finding in operational terms: what is deficient, which system or process is affected, and why the gap matters. Vague restatements (for example, 'fix the control') are insufficient. Prefer concrete language that ties the weakness to an observed condition, an unmet control expectation, and the risk or compliance exposure if left unaddressed."
+    },
+    {
+      "id": "milestone-quality",
+      "title": "Writing a realistic remediation milestone",
+      "topics": ["milestone", "remediation", "corrective action", "tasks"],
+      "keywords": [
+        "milestone",
+        "remediation plan",
+        "corrective action",
+        "implement",
+        "configure",
+        "document",
+        "verify",
+        "test",
+        "deploy",
+        "specific",
+        "actionable"
+      ],
+      "text": "Remediation milestones should be specific, actionable, and verifiable. Strong milestones name the corrective work (for example, implement MFA for privileged accounts, update the baseline configuration, or complete an annual access review), identify key intermediate steps when useful, and imply how completion will be evidenced. Weak milestones are slogans without work content (for example, 'improve security' or 'fix soon'). Dates must align with the amount of work described — a complex remediation should not claim an unrealistically immediate completion without justification."
+    },
+    {
+      "id": "scheduled-completion",
+      "title": "Scheduled completion dates",
+      "topics": ["schedule", "date", "timeline", "priority"],
+      "keywords": [
+        "scheduled completion",
+        "completion date",
+        "timeline",
+        "priority",
+        "due date",
+        "realistic",
+        "resource",
+        "urgency"
+      ],
+      "text": "Scheduled completion dates should reflect weakness severity, operational constraints, and the scope of the remediation. Higher-risk weaknesses generally warrant nearer-term dates and clearer interim milestones. Dates far in the future without interim progress points, or immediate dates for substantial engineering work, indicate an unrealistic plan. The date is a management commitment used to track on-time remediation, delay, or risk acceptance decisions."
+    },
+    {
+      "id": "status-tracking",
+      "title": "POA&M status tracking",
+      "topics": ["status", "tracking", "ongoing", "completed", "delayed"],
+      "keywords": [
+        "status",
+        "open",
+        "ongoing",
+        "completed",
+        "delayed",
+        "risk accepted",
+        "progress",
+        "closure"
+      ],
+      "text": "POA&M status values communicate lifecycle state. Open items are planned but not yet underway; ongoing items have active remediation work; completed items have been remediated and verified as appropriate; delayed items have missed or will miss the scheduled date and need re-planning; risk accepted items have an authorized decision to accept residual risk rather than remediate immediately. Status should match the narrative of the milestone and timeline."
+    },
+    {
+      "id": "traceability",
+      "title": "Traceability from finding to corrective action",
+      "topics": ["traceability", "finding", "control", "closure"],
+      "keywords": [
+        "traceability",
+        "finding id",
+        "control",
+        "closure evidence",
+        "residual risk",
+        "mitigate",
+        "compensate"
+      ],
+      "text": "Each POA&M entry should remain traceable to the originating finding or assessment observation. The corrective action should address the root weakness rather than an unrelated improvement. When full remediation is not feasible, the plan may document compensating controls or risk acceptance with clear residual-risk rationale. Closure should be supportable by evidence that the weakness was fixed or formally dispositioned."
+    }
+  ]
+}

@@ -1,5 +1,16 @@
 import type { CCCERValues, Ticket } from '@/types';
+import { aoReviewTicketScorer } from '@/lib/scoring/aoReview';
+import { assessmentProceduresTicketScorer } from '@/lib/scoring/assessmentProcedures';
+import { authorizationPackageTicketScorer } from '@/lib/scoring/authorizationPackage';
+import { cmmcGapAnalysisTicketScorer } from '@/lib/scoring/cmmcGapAnalysis';
 import { configDiffTicketScorer } from '@/lib/scoring/configDiff';
+import { conmonStrategyTicketScorer } from '@/lib/scoring/conmonStrategy';
+import { controlMappingTicketScorer } from '@/lib/scoring/controlMapping';
+import { oscalGeneratorTicketScorer } from '@/lib/scoring/oscalGenerator';
+import { oscalSspTicketScorer } from '@/lib/scoring/oscalSsp';
+import { poamTicketScorer } from '@/lib/scoring/poam';
+import { secMaterialityTicketScorer } from '@/lib/scoring/secMateriality';
+import { toolWalkthroughTicketScorer } from '@/lib/scoring/toolWalkthrough';
 
 /**
  * Pluggable ticket scoring.
@@ -9,8 +20,10 @@ import { configDiffTicketScorer } from '@/lib/scoring/configDiff';
  *   import { registerTicketScorer } from '@/lib/scoring';
  *   registerTicketScorer('my_track.config_diff', myScorer);
  *
- * Builtin scorers (config_remediation / config_diff, cccer, hybrid) register at
- * module load. Unregistered types fall back to `defaultTicketScorer`.
+ * Builtin scorers (config_remediation / config_diff, cccer, hybrid,
+ * tool_walkthrough, assessment_procedures, poam, sec_materiality,
+ * conmon_strategy, cmmc_gap_analysis, authorization_package, ao_review)
+ * register at module load. Unregistered types fall back to `defaultTicketScorer`.
  */
 
 export { configDiffTicketScorer } from '@/lib/scoring/configDiff';
@@ -20,6 +33,73 @@ export type {
   ConfigDiffStructuredResult,
   ExpectedState,
 } from '@/lib/scoring/configDiff';
+export {
+  controlMappingTicketScorer,
+  createControlMappingTicketScorer,
+  evaluateControlMapping,
+} from '@/lib/scoring/controlMapping';
+export type {
+  ControlMappingStructuredResult,
+  ControlMappingTargetResult,
+} from '@/lib/scoring/controlMapping';
+export { conmonStrategyTicketScorer } from '@/lib/scoring/conmonStrategy';
+export type {
+  ConMonStrategyExpectedState,
+  ConMonStrategyStructuredResult,
+  ConMonStrategySubmission,
+} from '@/lib/scoring/conmonStrategy';
+export { toolWalkthroughTicketScorer } from '@/lib/scoring/toolWalkthrough';
+export type {
+  ToolWalkthroughExpectedState,
+  ToolWalkthroughStructuredResult,
+  ToolWalkthroughSubmission,
+} from '@/lib/scoring/toolWalkthrough';
+export { assessmentProceduresTicketScorer } from '@/lib/scoring/assessmentProcedures';
+export type {
+  AssessmentProceduresExpectedState,
+  AssessmentProceduresStructuredResult,
+  AssessmentProceduresSubmission,
+} from '@/lib/scoring/assessmentProcedures';
+export {
+  evaluatePoamCompleteness,
+  isPoamTicketType,
+  poamTicketScorer,
+} from '@/lib/scoring/poam';
+export type {
+  PoamEntrySubmission,
+  PoamPriorFinding,
+  PoamStructuredResult,
+} from '@/lib/scoring/poam';
+export { secMaterialityTicketScorer } from '@/lib/scoring/secMateriality';
+export type {
+  SecMaterialityExpectedState,
+  SecMaterialityStructuredResult,
+  SecMaterialitySubmission,
+} from '@/lib/scoring/secMateriality';
+export {
+  evaluateOscalGenerator,
+  oscalGeneratorTicketScorer,
+  runStaticScriptChecks,
+} from '@/lib/scoring/oscalGenerator';
+export type {
+  OscalGeneratorDocumentKind,
+  OscalGeneratorExpectedState,
+  OscalGeneratorStructuredResult,
+  StaticCheckResult,
+} from '@/lib/scoring/oscalGenerator';
+export { oscalSspTicketScorer } from '@/lib/scoring/oscalSsp';
+export type { OscalSspStructuredResult } from '@/lib/scoring/oscalSsp';
+export {
+  authorizationPackageTicketScorer,
+  createAuthorizationPackageTicketScorer,
+} from '@/lib/scoring/authorizationPackage';
+export type { AuthorizationPackageStructuredResult } from '@/lib/scoring/authorizationPackage';
+export {
+  aoReviewTicketScorer,
+  createAoReviewTicketScorer,
+  evaluateAoReviewDeterministic,
+} from '@/lib/scoring/aoReview';
+export type { AoReviewStructuredResult } from '@/lib/scoring/aoReview';
 
 /** Outcome of scoring — maps onto ticket_progress in the submit route. */
 export type TicketScoreStatus = 'resolved' | 'needs_revision';
@@ -259,3 +339,27 @@ registerTicketScorer('config_remediation', configDiffTicketScorer);
 registerTicketScorer('config_diff', configDiffTicketScorer);
 registerTicketScorer('cccer', cccerTicketScorer);
 registerTicketScorer('hybrid', hybridTicketScorer);
+registerTicketScorer('control_mapping', controlMappingTicketScorer);
+registerTicketScorer('oscal_ssp', oscalSspTicketScorer);
+registerTicketScorer('ssp', oscalSspTicketScorer);
+registerTicketScorer('tool_walkthrough', toolWalkthroughTicketScorer);
+registerTicketScorer('simplerisk_walkthrough', toolWalkthroughTicketScorer);
+registerTicketScorer('simplerisk', toolWalkthroughTicketScorer);
+registerTicketScorer('assessment_procedures', assessmentProceduresTicketScorer);
+registerTicketScorer('sp800_53a', assessmentProceduresTicketScorer);
+registerTicketScorer('sp_800_53a', assessmentProceduresTicketScorer);
+registerTicketScorer('poam', poamTicketScorer);
+registerTicketScorer('poam_draft', poamTicketScorer);
+registerTicketScorer('sec_materiality', secMaterialityTicketScorer);
+registerTicketScorer('sec_cyber_materiality', secMaterialityTicketScorer);
+registerTicketScorer('conmon_strategy', conmonStrategyTicketScorer);
+registerTicketScorer('continuous_monitoring', conmonStrategyTicketScorer);
+registerTicketScorer('oscal_generator', oscalGeneratorTicketScorer);
+registerTicketScorer('capstone_oscal', oscalGeneratorTicketScorer);
+registerTicketScorer('cmmc_gap_analysis', cmmcGapAnalysisTicketScorer);
+registerTicketScorer('cmmc_l2_gap', cmmcGapAnalysisTicketScorer);
+registerTicketScorer(
+  'authorization_package',
+  authorizationPackageTicketScorer
+);
+registerTicketScorer('ao_review', aoReviewTicketScorer);

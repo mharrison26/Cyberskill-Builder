@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { getControlText } from './getControl';
+import {
+  getAssessmentObjectiveText,
+  getControlText,
+  OSCAL_CATALOG_PATH,
+} from './getControl';
 import { normalizeControlId } from './parseCatalog';
 
 describe('normalizeControlId', () => {
@@ -42,7 +46,51 @@ describe('getControlText', () => {
     expect(upper.statement).toBe(lower.statement);
   });
 
+  it('includes SP 800-53A assessment objective and methods for ac-2', () => {
+    const result = getControlText('ac-2');
+
+    expect(result.assessmentObjective.length).toBeGreaterThan(0);
+    expect(result.assessmentObjective.toLowerCase()).toContain('account');
+    expect(result.assessmentMethods.examine.length).toBeGreaterThan(0);
+    expect(result.assessmentMethods.interview.length).toBeGreaterThan(0);
+    expect(result.assessmentMethods.test.length).toBeGreaterThan(0);
+  });
+
   it('throws a clear error for unknown controls', () => {
     expect(() => getControlText('ia-99')).toThrow('Control not found: ia-99');
+  });
+});
+
+describe('getAssessmentObjectiveText', () => {
+  it('retrieves live SP 800-53A assessment content for ac-2', () => {
+    const result = getAssessmentObjectiveText('ac-2');
+
+    expect(result.controlId).toMatch(/AC-2/i);
+    expect(result.title).toBe('Account Management');
+    expect(result.catalogPath).toBe(OSCAL_CATALOG_PATH);
+    expect(result.assessmentObjective).toMatch(/account managers/i);
+    expect(result.assessmentMethods.examine).toMatch(/Access control policy/i);
+    expect(result.assessmentMethods.interview).toMatch(
+      /account management responsibilities/i
+    );
+    expect(result.assessmentMethods.test).toMatch(
+      /mechanisms for implementing account management/i
+    );
+  });
+
+  it('accepts parenthetical notation', () => {
+    const base = getAssessmentObjectiveText('ac-2');
+    const upper = getAssessmentObjectiveText('AC-2');
+
+    expect(upper.assessmentObjective).toBe(base.assessmentObjective);
+    expect(upper.assessmentMethods.examine).toBe(
+      base.assessmentMethods.examine
+    );
+  });
+
+  it('throws for unknown controls', () => {
+    expect(() => getAssessmentObjectiveText('ia-99')).toThrow(
+      'Control not found: ia-99'
+    );
   });
 });

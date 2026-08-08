@@ -101,6 +101,7 @@ export default async function PublicPortfolioPage({
                   narrative={item.narrative}
                   tier={item.tier}
                   ticketType={item.ticketType}
+                  isFlagship={item.isFlagship}
                 />
               ) : (
                 <FindingCard

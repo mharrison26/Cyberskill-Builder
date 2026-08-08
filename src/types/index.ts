@@ -33,6 +33,23 @@ export interface Lesson {
 /** Ticket content model (parallel to lessons). Tier is 1 | 2 | 3. */
 export type TicketTier = 1 | 2 | 3;
 
+/** Reference row in public.control_mappings (framework crosswalk). */
+export type ControlMappingConfidence = 'high' | 'medium' | 'low';
+
+export type ControlMappingFramework =
+  | 'nist_800_53'
+  | 'soc2'
+  | 'iso27001';
+
+export interface ControlMapping {
+  id: string;
+  source_framework: ControlMappingFramework;
+  source_control_id: string;
+  target_framework: ControlMappingFramework;
+  target_control_id: string;
+  mapping_confidence: ControlMappingConfidence;
+}
+
 export type TicketProgressStatus = 'new' | 'in_progress' | 'resolved';
 
 export interface Ticket {
@@ -113,6 +130,8 @@ export interface PortfolioItem {
   structured_result: Record<string, unknown>;
   narrative: string | null;
   is_public: boolean;
+  /** Track flagship capstone (AO review); sorts first on public portfolio. */
+  is_flagship?: boolean;
   created_at: string;
   ticket_id?: string | null;
   lesson_id?: string | null;
@@ -197,4 +216,37 @@ export interface CCCERValues {
   cause: string;
   effect: string;
   recommendation: string;
+}
+
+/** POA&M remediation entry (public.poam_items / ticket submission). */
+export type PoamItemStatus =
+  | 'open'
+  | 'ongoing'
+  | 'completed'
+  | 'delayed'
+  | 'risk_accepted';
+
+export interface PoamItem {
+  id: string;
+  tenant_id: string;
+  student_id: string;
+  track_id: string;
+  ticket_id?: string | null;
+  finding_id: string;
+  oscal_finding_id?: string | null;
+  weakness_description: string;
+  milestone: string;
+  scheduled_completion_date: string;
+  status: PoamItemStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Seed prior finding shown in a POA&M ticket initial_state. */
+export interface PoamPriorFindingSeed {
+  id: string;
+  control_id?: string;
+  title?: string;
+  summary: string;
+  finding_state?: string;
 }

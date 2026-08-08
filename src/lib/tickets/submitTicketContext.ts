@@ -118,7 +118,9 @@ export async function loadTicketProgress(
 ): Promise<TicketProgress | null> {
   const { data, error } = await context.supabase
     .from('ticket_progress')
-    .select('id, student_id, ticket_id, status, started_at, resolved_at')
+    .select(
+      'id, student_id, ticket_id, status, started_at, resolved_at, submission'
+    )
     .eq('student_id', context.appUser.id)
     .eq('ticket_id', ticketId)
     .maybeSingle();

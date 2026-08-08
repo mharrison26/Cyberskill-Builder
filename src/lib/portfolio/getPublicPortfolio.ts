@@ -22,6 +22,8 @@ export type PublicPortfolioItem = {
   narrative: string;
   tier: string | null;
   createdAt: string;
+  /** Track flagship capstone — displayed first on the public portfolio. */
+  isFlagship: boolean;
   // oscal_finding fields
   controlId: string | null;
   findingState: string | null;
@@ -101,12 +103,14 @@ export async function getPublicPortfolioItems(
       structured_result,
       score_status,
       ticket_type,
+      is_flagship,
       created_at,
       work_role_codes ( code, title )
     `
     )
     .eq('student_id', studentId)
     .eq('is_public', true)
+    .order('is_flagship', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -144,6 +148,7 @@ export async function getPublicPortfolioItems(
         narrative: extractNarrative(studentNarrative, observation),
         tier: row.tier ?? null,
         createdAt: row.created_at,
+        isFlagship: row.is_flagship === true,
         controlId,
         findingState,
         studentNarrative,
@@ -170,6 +175,7 @@ export async function getPublicPortfolioItems(
           : 'No summary available.',
       tier: row.tier ?? null,
       createdAt: row.created_at,
+      isFlagship: row.is_flagship === true,
       controlId: null,
       findingState: null,
       studentNarrative: null,
