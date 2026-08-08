@@ -9,6 +9,15 @@ export type LessonType =
 
 export type LessonTier = 'foundation' | 'intermediate' | 'advanced';
 
+/** DCWF work role catalog row (public.work_role_codes). */
+export interface WorkRoleCode {
+  code: string;
+  title: string;
+  workforce_element: string | null;
+  legacy_8570_category: string | null;
+  source_url: string | null;
+}
+
 export interface Lesson {
   id: string;
   track_id: string;
@@ -17,7 +26,101 @@ export interface Lesson {
   sort_order: number;
   title: string;
   learning_objectives: string | null;
+  /** FK → work_role_codes.code (nullable). */
   dcwf_code: string | null;
+}
+
+/** Ticket content model (parallel to lessons). Tier is 1 | 2 | 3. */
+export type TicketTier = 1 | 2 | 3;
+
+export type TicketProgressStatus = 'new' | 'in_progress' | 'resolved';
+
+export interface Ticket {
+  id: string;
+  tenant_id: string;
+  track_id: string;
+  tier: number;
+  ticket_type: string;
+  difficulty: string;
+  sla_minutes: number;
+  scenario_brief: string;
+  initial_state: Record<string, unknown>;
+  /** Deterministic scoring ruleset (migration 0026+). Default `{}`. */
+  expected_state: Record<string, unknown>;
+  /** FK → work_role_codes.code (nullable). */
+  dcwf_code: string | null;
+  sort_order: number;
+}
+
+export interface TicketProgress {
+  id: string;
+  student_id: string;
+  ticket_id: string;
+  status: TicketProgressStatus;
+  started_at: string | null;
+  resolved_at: string | null;
+  /** Latest submission payload when present (migration 0024+). */
+  submission?: Record<string, unknown> | null;
+}
+
+/** Fly Machines sandbox session (migration 0025+; PI-12 cost tracking). */
+export type SandboxSessionStatus = 'running' | 'stopped' | 'expired';
+
+export interface SandboxSession {
+  id: string;
+  ticket_id: string;
+  student_id: string;
+  tenant_id: string;
+  machine_id: string;
+  machine_name: string | null;
+  region: string | null;
+  status: SandboxSessionStatus;
+  started_at: string;
+  stopped_at: string | null;
+  duration_seconds: number | null;
+  idle_timeout_minutes: number;
+  expires_at: string;
+  stop_reason: string | null;
+  created_at: string;
+}
+
+/** Daily Fly sandbox machine-hours per tenant (migration 0028+). */
+export interface SandboxUsage {
+  id: string;
+  tenant_id: string;
+  usage_date: string;
+  machine_hours: number;
+  machine_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Unified portfolio artifact kinds (public.portfolio_items.item_kind). */
+export type PortfolioItemKind = 'oscal_finding' | 'ticket_resolution';
+
+export type PortfolioScoreStatus = 'resolved' | 'needs_revision';
+
+export interface PortfolioItem {
+  id: string;
+  tenant_id: string;
+  student_id: string;
+  track_id: string;
+  tier: string | null;
+  item_kind: PortfolioItemKind;
+  title: string;
+  /** FK → work_role_codes.code (nullable). */
+  dcwf_code: string | null;
+  structured_result: Record<string, unknown>;
+  narrative: string | null;
+  is_public: boolean;
+  created_at: string;
+  ticket_id?: string | null;
+  lesson_id?: string | null;
+  oscal_finding_id?: string | null;
+  ticket_type?: string | null;
+  score_status?: PortfolioScoreStatus | null;
+  submission?: Record<string, unknown> | null;
+  updated_at?: string;
 }
 
 export interface MockUser {
@@ -60,6 +163,7 @@ export interface MockFinding {
   controlId: string;
   findingState: FindingState;
   dcwfCode: string;
+  dcwfTitle?: string;
   narrative: string;
 }
 

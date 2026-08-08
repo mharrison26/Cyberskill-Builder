@@ -28,15 +28,15 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Scripts
 
-| Command                | Description                              |
-| ---------------------- | ---------------------------------------- |
-| `npm run dev`          | Start the development server             |
-| `npm run build`        | Create a production build                |
-| `npm run start`        | Serve the production build               |
-| `npm run lint`         | Run ESLint                               |
-| `npm run format`       | Format files with Prettier               |
-| `npm run format:check` | Check formatting without writing changes |
-| `npm run test:rls`     | Verify RLS + FORCE RLS on all public tables (requires `DATABASE_URL`) |
+| Command                | Description                                                              |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `npm run dev`          | Start the development server                                             |
+| `npm run build`        | Create a production build                                                |
+| `npm run start`        | Serve the production build                                               |
+| `npm run lint`         | Run ESLint                                                               |
+| `npm run format`       | Format files with Prettier                                               |
+| `npm run format:check` | Check formatting without writing changes                                 |
+| `npm run test:rls`     | Verify RLS + FORCE RLS on all public tables (requires `DATABASE_URL`)    |
 | `npm run a11y-check`   | WCAG 2.2 AA scan of `/`, `/dashboard`, and a GRC lesson page (see below) |
 
 ## Project structure
@@ -142,12 +142,12 @@ The test user must exist in Supabase Auth, have a row in `public.users`, and an 
 
 **CI:** configure these GitHub Actions secrets (repo **Settings** → **Secrets and variables** → **Actions**):
 
-| Secret | Purpose |
-| ------ | ------- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Required for `next build` and auth |
+| Secret                          | Purpose                            |
+| ------------------------------- | ---------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Required for `next build` and auth |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Required for `next build` and auth |
-| `A11Y_TEST_EMAIL` | Dedicated test account email |
-| `A11Y_TEST_PASSWORD` | Test account password |
+| `A11Y_TEST_EMAIL`               | Dedicated test account email       |
+| `A11Y_TEST_PASSWORD`            | Test account password              |
 
 The `accessibility` job runs when all four secrets are set; otherwise it prints a skip note (same pattern as RLS coverage).
 
@@ -193,12 +193,12 @@ The GitHub integration is already connected for this project; new clones only ne
 
 In the Vercel project → **Settings** → **Environment Variables**, set the variables from [`.env.local.example`](.env.local.example). Apply each to **Production**, **Preview**, and **Development**.
 
-| Variable | Required | Description |
-| -------- | -------- | ----------- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL (`https://oyexzmucngsoyxlxhofy.supabase.co`) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon/public key (Settings → API) |
-| `ANTHROPIC_API_KEY` | Yes | Server-side Anthropic key for AI lesson grading |
-| `ANTHROPIC_MODEL` | No | Override Claude model (default: `claude-sonnet-4-20250514`) |
+| Variable                        | Required | Description                                                       |
+| ------------------------------- | -------- | ----------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Yes      | Supabase project URL (`https://oyexzmucngsoyxlxhofy.supabase.co`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes      | Supabase anon/public key (Settings → API)                         |
+| `ANTHROPIC_API_KEY`             | Yes      | Server-side Anthropic key for AI lesson grading                   |
+| `ANTHROPIC_MODEL`               | No       | Override Claude model (default: `claude-sonnet-4-20250514`)       |
 
 > `NEXT_PUBLIC_*` variables are embedded in client bundles. They are safe to expose — Supabase Row Level Security protects data. Never add the **service role** key to Vercel.
 
@@ -220,11 +220,11 @@ Manual production redeploy:
 vercel --prod
 ```
 
-| Setting | Value |
-| ------- | ----- |
-| Vercel project | `cyberskill-builder` (team: CyberSkill Builder) |
-| Dashboard | [vercel.com/cyber-skill-builder/cyberskill-builder](https://vercel.com/cyber-skill-builder/cyberskill-builder) |
-| GitHub repo | [mharrison26/Cyberskill-Builder](https://github.com/mharrison26/Cyberskill-Builder) |
+| Setting        | Value                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------- |
+| Vercel project | `cyberskill-builder` (team: CyberSkill Builder)                                                                |
+| Dashboard      | [vercel.com/cyber-skill-builder/cyberskill-builder](https://vercel.com/cyber-skill-builder/cyberskill-builder) |
+| GitHub repo    | [mharrison26/Cyberskill-Builder](https://github.com/mharrison26/Cyberskill-Builder)                            |
 
 ## Connecting services
 
@@ -288,8 +288,44 @@ See **[Deploying to Vercel](#deploying-to-vercel)** for connect steps, automatic
 | GitHub → Vercel auto-deploy                       | Done                                                                          |
 | `gh` CLI installed & authenticated                | Optional — `brew install gh` + `gh auth login`                                |
 
+## Observability (Sentry + uptime)
+
+### Sentry (error monitoring)
+
+`@sentry/nextjs` is wired for client, server, and edge. The SDK is **disabled when no DSN is set**, so local/CI builds stay green without Sentry credentials.
+
+| Variable                        | Where                           | Purpose                                  |
+| ------------------------------- | ------------------------------- | ---------------------------------------- |
+| `NEXT_PUBLIC_SENTRY_DSN`        | Client (+ fallback server/edge) | Browser error reporting                  |
+| `SENTRY_DSN`                    | Server / edge                   | Preferred server DSN                     |
+| `SENTRY_AUTH_TOKEN`             | Build only (optional)           | Source map upload — **never commit**     |
+| `SENTRY_ORG` / `SENTRY_PROJECT` | Build only (optional)           | Required with auth token for source maps |
+
+Config files: `src/instrumentation-client.ts`, `src/sentry.server.config.ts`, `src/sentry.edge.config.ts`, `src/instrumentation.ts`. Next config is wrapped with `withSentryConfig` in `next.config.mjs`.
+
+Explicit captures for ticket pipelines use tags `feature` + `pi`:
+
+- **PI-03 scoring** — `feature:scoring`, `pi:PI-03` (`submit` route, config-diff LLM fallback)
+- **PI-05 sandbox** — `feature:sandbox`, `pi:PI-05` (sandbox route, Fly Machines API)
+
+Filter in Sentry with e.g. `feature:scoring` or `pi:PI-05`. Helpers live in `src/lib/observability/sentry.ts`. Student file contents are never sent.
+
+### Health endpoint + uptime workflow
+
+- Health: `GET /api/health` → `200` `{ ok: true, status: "healthy" }`
+- Workflow: `.github/workflows/uptime.yml` (hourly cron + manual dispatch)
+
+**Required GitHub repository variable** (Settings → Secrets and variables → Actions → Variables):
+
+| Name         | Example                                            |
+| ------------ | -------------------------------------------------- |
+| `UPTIME_URL` | `https://cyberskill-builder.vercel.app/api/health` |
+
+You may instead store the same value as a repository **secret** named `UPTIME_URL` (the workflow accepts either). The job fails on any non-200 response.
+
 ## Learn more
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [Supabase + Next.js SSR guide](https://supabase.com/docs/guides/auth/server-side/nextjs)
+- [Sentry Next.js docs](https://docs.sentry.io/platforms/javascript/guides/nextjs/)

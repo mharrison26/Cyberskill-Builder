@@ -10,6 +10,7 @@ import {
   Layers,
   Settings,
   Shield,
+  Ticket,
 } from 'lucide-react';
 
 import { Separator } from '@/components/ui/separator';
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
 const ADMIN_ITEMS = [
   { href: '/admin/tracks', label: 'Tracks', icon: Layers },
   { href: '/admin/lessons', label: 'Lessons', icon: BookOpen },
+  { href: '/admin/tickets', label: 'Tickets', icon: Ticket },
   { href: '/admin/grading', label: 'Grading Queue', icon: GraduationCap },
   { href: '/admin', label: 'Admin Home', icon: Settings },
 ];

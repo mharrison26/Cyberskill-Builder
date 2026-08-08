@@ -1,6 +1,10 @@
 import { createPublicClient } from '@/lib/supabase/public';
 import type { OscalObservation } from '@/lib/oscal/toAssessmentFinding';
-import type { FindingState } from '@/types';
+import type {
+  FindingState,
+  PortfolioItemKind,
+  PortfolioScoreStatus,
+} from '@/types';
 
 export type PublicTrackEnrollment = {
   trackId: string;
@@ -8,16 +12,53 @@ export type PublicTrackEnrollment = {
   trackSlug: string;
 };
 
+export type PublicPortfolioItem = {
+  id: string;
+  itemKind: PortfolioItemKind;
+  title: string;
+  dcwfCode: string;
+  /** Title from work_role_codes via FK join (fresh catalog value). */
+  dcwfTitle: string | null;
+  narrative: string;
+  tier: string | null;
+  createdAt: string;
+  // oscal_finding fields
+  controlId: string | null;
+  findingState: string | null;
+  studentNarrative: string | null;
+  observation: OscalObservation | null;
+  // ticket_resolution fields
+  scoreStatus: PortfolioScoreStatus | null;
+  ticketType: string | null;
+};
+
+/** @deprecated Prefer PublicPortfolioItem; kept for FindingCard mapping. */
 export type PublicFinding = {
   id: string;
   controlId: string;
   findingState: string;
   dcwfCode: string;
+  dcwfTitle: string | null;
   narrative: string;
   createdAt: string;
   studentNarrative: string | null;
   observation: OscalObservation | null;
 };
+
+type WorkRoleCodeEmbed = {
+  code: string;
+  title: string;
+};
+
+function embedWorkRoleTitle(
+  embed: WorkRoleCodeEmbed | WorkRoleCodeEmbed[] | null | undefined
+): string | null {
+  if (!embed) {
+    return null;
+  }
+  const row = Array.isArray(embed) ? embed[0] : embed;
+  return row?.title ?? null;
+}
 
 export async function getStudentActiveTracks(
   studentId: string
@@ -42,35 +83,135 @@ export async function getStudentActiveTracks(
   );
 }
 
-export async function getPublicFindings(
+export async function getPublicPortfolioItems(
   studentId: string
-): Promise<PublicFinding[]> {
+): Promise<PublicPortfolioItem[]> {
   const supabase = createPublicClient();
 
   const { data, error } = await supabase
-    .from('oscal_findings')
+    .from('portfolio_items')
     .select(
-      'id, control_id, finding_state, student_narrative, observation, dcwf_code, created_at'
+      `
+      id,
+      item_kind,
+      title,
+      dcwf_code,
+      narrative,
+      tier,
+      structured_result,
+      score_status,
+      ticket_type,
+      created_at,
+      work_role_codes ( code, title )
+    `
     )
     .eq('student_id', studentId)
     .eq('is_public', true)
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('[getPublicFindings]', error.message);
+    console.error('[getPublicPortfolioItems]', error.message);
     return [];
   }
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    controlId: row.control_id,
-    findingState: row.finding_state,
-    dcwfCode: row.dcwf_code ?? '',
-    narrative: extractNarrative(row.student_narrative, row.observation),
-    createdAt: row.created_at,
-    studentNarrative: row.student_narrative,
-    observation: (row.observation as OscalObservation | null) ?? null,
-  }));
+  return (data ?? []).map((row) => {
+    const itemKind = row.item_kind as PortfolioItemKind;
+    const structured =
+      (row.structured_result as Record<string, unknown> | null) ?? {};
+    const dcwfTitle = embedWorkRoleTitle(
+      row.work_role_codes as
+        WorkRoleCodeEmbed | WorkRoleCodeEmbed[] | null | undefined
+    );
+
+    if (itemKind === 'oscal_finding') {
+      const observation = structured as OscalObservation;
+      const findingState =
+        typeof structured.finding_state === 'string'
+          ? structured.finding_state
+          : typeof observation.ai_finding_state === 'string'
+            ? observation.ai_finding_state
+            : 'accepted';
+      const controlId = extractControlId(row.title, structured);
+      const studentNarrative =
+        typeof row.narrative === 'string' ? row.narrative : null;
+
+      return {
+        id: row.id,
+        itemKind,
+        title: row.title,
+        dcwfCode: row.dcwf_code ?? '',
+        dcwfTitle,
+        narrative: extractNarrative(studentNarrative, observation),
+        tier: row.tier ?? null,
+        createdAt: row.created_at,
+        controlId,
+        findingState,
+        studentNarrative,
+        observation,
+        scoreStatus: null,
+        ticketType: null,
+      };
+    }
+
+    const scoreStatus =
+      row.score_status === 'resolved' || row.score_status === 'needs_revision'
+        ? row.score_status
+        : null;
+
+    return {
+      id: row.id,
+      itemKind: 'ticket_resolution',
+      title: row.title,
+      dcwfCode: row.dcwf_code ?? '',
+      dcwfTitle,
+      narrative:
+        typeof row.narrative === 'string' && row.narrative.trim()
+          ? row.narrative.trim()
+          : 'No summary available.',
+      tier: row.tier ?? null,
+      createdAt: row.created_at,
+      controlId: null,
+      findingState: null,
+      studentNarrative: null,
+      observation: null,
+      scoreStatus,
+      ticketType: row.ticket_type ?? null,
+    };
+  });
+}
+
+/** @deprecated Use getPublicPortfolioItems. */
+export async function getPublicFindings(
+  studentId: string
+): Promise<PublicFinding[]> {
+  const items = await getPublicPortfolioItems(studentId);
+  return items
+    .filter((item) => item.itemKind === 'oscal_finding')
+    .map((item) => ({
+      id: item.id,
+      controlId: item.controlId ?? item.title,
+      findingState: item.findingState ?? 'accepted',
+      dcwfCode: item.dcwfCode,
+      dcwfTitle: item.dcwfTitle,
+      narrative: item.narrative,
+      createdAt: item.createdAt,
+      studentNarrative: item.studentNarrative,
+      observation: item.observation,
+    }));
+}
+
+function extractControlId(
+  title: string,
+  structured: Record<string, unknown>
+): string {
+  if (typeof structured.control_id === 'string' && structured.control_id) {
+    return structured.control_id;
+  }
+  const match = /^Finding:\s*(.+)$/i.exec(title.trim());
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+  return title;
 }
 
 function extractNarrative(

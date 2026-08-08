@@ -29,6 +29,7 @@ export default function MyPortfolioPage() {
               controlId={finding.controlId}
               findingState={finding.findingState}
               dcwfCode={finding.dcwfCode}
+              dcwfTitle={finding.dcwfTitle}
               narrative={finding.narrative}
               oscalFinding={{
                 id: finding.id,

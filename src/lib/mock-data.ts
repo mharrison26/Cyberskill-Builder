@@ -247,7 +247,8 @@ export const MOCK_FINDINGS: MockFinding[] = [
     id: 'finding-001',
     controlId: 'AC-1',
     findingState: 'satisfied',
-    dcwfCode: 'RMF-002',
+    dcwfCode: '722',
+    dcwfTitle: 'Information Systems Security Manager',
     narrative:
       'Access control policy is documented, approved by the AO, and disseminated to all system users. Annual review completed 2025-11-01.',
   },
@@ -255,7 +256,8 @@ export const MOCK_FINDINGS: MockFinding[] = [
     id: 'finding-002',
     controlId: 'AC-2',
     findingState: 'insufficient_evidence',
-    dcwfCode: 'RMF-002',
+    dcwfCode: '722',
+    dcwfTitle: 'Information Systems Security Manager',
     narrative:
       'Account management procedures exist but evidence of quarterly access reviews for privileged accounts was not provided.',
   },
@@ -263,7 +265,8 @@ export const MOCK_FINDINGS: MockFinding[] = [
     id: 'finding-003',
     controlId: 'AU-6',
     findingState: 'not_satisfied',
-    dcwfCode: 'RMF-004',
+    dcwfCode: '612',
+    dcwfTitle: 'Security Control Assessor',
     narrative:
       'Audit log review procedures are documented but no evidence of automated alerting for failed authentication attempts.',
   },
@@ -271,7 +274,8 @@ export const MOCK_FINDINGS: MockFinding[] = [
     id: 'finding-004',
     controlId: 'CM-2',
     findingState: 'not_started',
-    dcwfCode: 'RMF-003',
+    dcwfCode: '612',
+    dcwfTitle: 'Security Control Assessor',
     narrative:
       'Baseline configuration documentation has not yet been submitted for assessor review.',
   },

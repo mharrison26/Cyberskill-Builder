@@ -1,0 +1,11 @@
+import * as Sentry from '@sentry/nextjs';
+
+const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+
+Sentry.init({
+  dsn,
+  enabled: Boolean(dsn),
+  // Free-tier friendly: errors only; keep performance sampling near zero.
+  tracesSampleRate: 0,
+  sendDefaultPii: false,
+});
