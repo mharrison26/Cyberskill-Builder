@@ -1,0 +1,26 @@
+# Fly app for ephemeral PI-05 ticket sandboxes.
+# Create once: fly apps create cyberskill-sandbox
+# Deploy image: fly deploy --app cyberskill-sandbox
+
+app = "cyberskill-sandbox"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "7681"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 7681
+  auto_stop_machines = false
+  auto_start_machines = true
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]

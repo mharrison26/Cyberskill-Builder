@@ -37,3 +37,7 @@ next-env.d.ts
 
 # Supabase CLI local cache
 supabase/.temp/
+
+# Local migration scratch (never commit)
+.tmp-migrations/
+.tmp-mig-apply/
