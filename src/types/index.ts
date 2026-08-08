@@ -146,6 +146,14 @@ export interface MockUser {
   isAdmin: boolean;
 }
 
+/** Simulated directory user for mock_directory / helpdesk tickets. */
+export type {
+  MockDirectoryActionType,
+  MockDirectoryLoggedAction,
+  MockDirectoryUser,
+  MockDirectoryUserStatus,
+} from '@/lib/scoring/ticketUi';
+
 export interface MockTrack {
   id: string;
   slug: string;

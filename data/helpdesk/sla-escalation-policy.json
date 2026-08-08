@@ -1,0 +1,91 @@
+{
+  "document": "Helpdesk SLA and Escalation Policy (educational)",
+  "title": "Tier-1 SLA targets and escalate-or-resolve policy",
+  "source_url": "internal://helpdesk-sla-escalation-policy",
+  "notes": "Pinned educational SLA/escalation policy for grading escalate-or-resolve justifications. Graders must use only retrieved policy section text, not parametric knowledge of ITIL or vendor SLA practice.",
+  "sections": [
+    {
+      "id": "sla-targets",
+      "title": "Response and resolution SLA targets",
+      "topics": ["sla", "response", "resolution", "priority", "p1", "p2"],
+      "keywords": [
+        "sla",
+        "response time",
+        "resolution",
+        "priority",
+        "p1",
+        "p2",
+        "p3",
+        "acknowledge",
+        "target"
+      ],
+      "text": "Priority SLAs (business hours unless marked 24x7): P1 Critical — acknowledge within 15 minutes, continuous work until service restored or formally handed to an on-call owner; P2 High — acknowledge within 1 hour, resolve or provide a workaround within 4 hours; P3 Medium — acknowledge within 4 hours, resolve within 2 business days; P4 Low — acknowledge within 1 business day, resolve within 5 business days. Missing an acknowledge target without documented escalation is a policy violation."
+    },
+    {
+      "id": "tier1-scope",
+      "title": "What Tier 1 may resolve without escalation",
+      "topics": ["tier1", "resolve", "scope", "password", "how-to", "single-user"],
+      "keywords": [
+        "tier 1",
+        "resolve",
+        "password reset",
+        "unlock",
+        "how-to",
+        "single user",
+        "standard procedure",
+        "runbook",
+        "known issue"
+      ],
+      "text": "Tier 1 may resolve and close tickets when the issue is within documented runbooks: password reset or account unlock after identity verification, MFA re-enrollment for a single user, how-to guidance for standard tools, and known issues with a published workaround that restores the requester. Resolve only when the requester confirms the symptom is gone or an approved workaround is in place and documented."
+    },
+    {
+      "id": "escalate-triggers",
+      "title": "Mandatory escalation triggers",
+      "topics": ["escalate", "outage", "security", "vip", "sla breach", "multi-user"],
+      "keywords": [
+        "escalate",
+        "escalation",
+        "outage",
+        "multiple users",
+        "security",
+        "suspected breach",
+        "vip",
+        "executive",
+        "sla breach",
+        "data loss",
+        "production"
+      ],
+      "text": "Escalate immediately (do not attempt a final close as Tier 1) when any of the following apply: (1) confirmed or suspected multi-user or site-wide outage of a production service; (2) security incident indicators (credential stuffing at scale, malware, phishing with confirmed credential compromise, unauthorized access); (3) executive / VIP or externally facing customer-impacting failure; (4) risk of imminent SLA breach on a P1/P2 after Tier-1 steps are exhausted; (5) potential data loss, corruption, or irreversible change requiring privileged change control. When escalating, capture symptoms, impact scope, steps already tried, and the policy trigger cited."
+    },
+    {
+      "id": "escalation-path",
+      "title": "Escalation path and handoff quality",
+      "topics": ["handoff", "tier2", "on-call", "documentation"],
+      "keywords": [
+        "handoff",
+        "tier 2",
+        "on-call",
+        "incident",
+        "documentation",
+        "impact",
+        "steps tried",
+        "bridge"
+      ],
+      "text": "Escalate to Tier 2 for application/platform defects and complex access issues; escalate to Security/IR for security triggers; escalate to on-call infrastructure for production outages outside Tier-1 runbooks. A valid escalation notes: who is affected and how many, business impact, timeline of symptoms, exact troubleshooting already performed, and the specific policy trigger. Do not escalate solely because the ticket is inconvenient; do not resolve-and-close when a mandatory trigger is present."
+    },
+    {
+      "id": "decision-test",
+      "title": "Escalate-or-resolve decision test",
+      "topics": ["decision", "justification", "policy citation"],
+      "keywords": [
+        "decision",
+        "justify",
+        "citation",
+        "trigger",
+        "resolve vs escalate",
+        "policy"
+      ],
+      "text": "Choose Resolve only when the issue is inside Tier-1 scope and no mandatory escalation trigger applies. Choose Escalate when any mandatory trigger applies, even if a temporary workaround exists. Justifications must cite the matching policy section (scope vs trigger) and tie facts from the scenario (impact, user count, security signals, VIP, SLA pressure) to that rule. Generic statements such as 'this seems important' without a policy link do not meet the standard."
+    }
+  ]
+}

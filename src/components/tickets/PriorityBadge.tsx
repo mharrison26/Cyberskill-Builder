@@ -19,6 +19,7 @@ function priorityTone(difficulty: string): string {
       return 'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground';
     case 'low':
     case 'p3':
+    case 'p4':
     default:
       return 'border-status-not-started-foreground/20 bg-status-not-started text-status-not-started-foreground';
   }

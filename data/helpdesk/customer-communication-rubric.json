@@ -1,0 +1,69 @@
+{
+  "document": "Customer Communication Rubric — Helpdesk De-escalation",
+  "title": "Short rubric for angry-customer email replies (educational)",
+  "source_url": "https://example.com/helpdesk/customer-communication-rubric",
+  "notes": "Pinned educational rubric for RAG-style grading of student customer replies. Graders must use only retrieved section text, not parametric knowledge of support best practices.",
+  "disclaimer": "Educational rubric only. Not a substitute for your organization's support or legal policies.",
+  "sections": [
+    {
+      "id": "acknowledge-frustration",
+      "title": "Acknowledge frustration",
+      "topics": ["empathy", "acknowledgment", "frustration", "apology"],
+      "keywords": [
+        "acknowledge",
+        "frustration",
+        "sorry",
+        "understand",
+        "inconvenience",
+        "empathy",
+        "hear you"
+      ],
+      "text": "A strong reply explicitly recognizes the customer's frustration or inconvenience before jumping to solutions. Use plain, human language (for example: \"I'm sorry you've been locked out for three days — that is frustrating\"). Do not minimize the impact, blame the customer, or skip acknowledgment entirely. A brief apology for the experience is appropriate when the customer has been waiting or repeatedly contacting support."
+    },
+    {
+      "id": "state-next-steps",
+      "title": "State clear next steps",
+      "topics": ["next-steps", "action", "timeline", "ownership"],
+      "keywords": [
+        "next steps",
+        "will",
+        "today",
+        "timeline",
+        "follow up",
+        "escalat",
+        "resolve",
+        "action"
+      ],
+      "text": "State what you will do next, who owns it, and when the customer should expect an update. Prefer concrete actions (reset link sent, ticket escalated to identity team, call within two business hours) over vague promises (\"looking into it\"). If you need information from the customer, ask for one clear item and explain why. End with a specific follow-up commitment so the customer knows what happens after this reply."
+    },
+    {
+      "id": "avoid-jargon",
+      "title": "Avoid jargon",
+      "topics": ["plain-language", "jargon", "clarity"],
+      "keywords": [
+        "jargon",
+        "plain language",
+        "technical",
+        "LDAP",
+        "SSO",
+        "ticket ID",
+        "explain"
+      ],
+      "text": "Write in plain language a non-technical customer can follow. Avoid unexplained acronyms and internal tooling names (LDAP, SSO federation, IdP, KB article IDs, queue names) unless you immediately translate them into everyday terms. Prefer \"we'll unlock your account and send a password reset link\" over \"we'll clear the lockout flag in AD and re-sync the IdP session.\" Internal ticket numbers may be included if useful, but they must not replace a clear explanation of what happens next."
+    },
+    {
+      "id": "professional-tone",
+      "title": "Professional tone",
+      "topics": ["tone", "professional", "de-escalation", "calm"],
+      "keywords": [
+        "professional",
+        "tone",
+        "calm",
+        "respectful",
+        "de-escalat",
+        "courteous"
+      ],
+      "text": "Keep a calm, respectful, professional tone even if the customer's email is angry or sarcastic. Do not match hostility, argue about who is at fault, use sarcasm, or over-promise. Be concise and confident. Avoid ALL CAPS, excessive exclamation points, or overly casual slang. The reply should de-escalate: acknowledge the problem, take ownership of the path forward, and leave the customer feeling heard and informed."
+    }
+  ]
+}

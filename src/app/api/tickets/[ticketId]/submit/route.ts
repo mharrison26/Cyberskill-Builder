@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { isAoReviewTicketType } from '@/lib/capstone/ticketCodes';
+import { isFlagshipEligibleTicketType } from '@/lib/helpdesk/ticketCodes';
 import { captureFeatureException } from '@/lib/observability/sentry';
 import { persistPoamItems } from '@/lib/poam/persistPoamItems';
 import {
@@ -157,9 +158,11 @@ export async function POST(request: Request, { params }: RouteContext) {
     context.ticket.scenario_brief.trim().slice(0, 200) ||
     `Ticket ${ticketId.slice(0, 8)}`;
 
+  const flagshipEligible = isFlagshipEligibleTicketType(
+    context.ticket.ticket_type
+  );
   const markFlagship =
-    isAoReviewTicketType(context.ticket.ticket_type) &&
-    scoreResult.status === 'resolved';
+    flagshipEligible && scoreResult.status === 'resolved';
 
   const { data: portfolioItem, error: portfolioError } = await context.supabase
     .from('portfolio_items')
@@ -179,11 +182,9 @@ export async function POST(request: Request, { params }: RouteContext) {
         score_status: scoreResult.status,
         submission,
         updated_at: now,
-        // Clear flagship on AO upsert; promote again below when resolved.
+        // Clear flagship on flagship-eligible upsert; promote again below when resolved.
         // Omitted for other ticket types so unrelated submits leave flagship alone.
-        ...(isAoReviewTicketType(context.ticket.ticket_type)
-          ? { is_flagship: false }
-          : {}),
+        ...(flagshipEligible ? { is_flagship: false } : {}),
       },
       { onConflict: 'student_id,ticket_id' }
     )
@@ -213,7 +214,8 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   let isFlagship = Boolean(portfolioItem.is_flagship);
   if (markFlagship) {
-    // Clear any prior flagship on this track, then promote this AO review item.
+    // Clear any prior flagship on this track, then promote this capstone item
+    // (GRC AO review or helpdesk HD-07 / PI-07).
     const { error: clearError } = await context.supabase
       .from('portfolio_items')
       .update({ is_flagship: false, updated_at: now })
