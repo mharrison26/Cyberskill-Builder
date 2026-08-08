@@ -25,6 +25,8 @@ type TicketResolutionCardProps = {
   narrative: string;
   tier?: string | null;
   ticketType?: string | null;
+  /** Track flagship capstone (AO review). */
+  isFlagship?: boolean;
   className?: string;
 };
 
@@ -45,6 +47,7 @@ export function TicketResolutionCard({
   narrative,
   tier,
   ticketType,
+  isFlagship = false,
   className,
 }: TicketResolutionCardProps) {
   const truncated =
@@ -57,18 +60,27 @@ export function TicketResolutionCard({
   const dcwfLabel = formatDcwfLabel(dcwfCode, dcwfTitle);
 
   return (
-    <Card className={cn(className)}>
+    <Card
+      className={cn(
+        isFlagship && 'border-foreground/40 sm:col-span-2',
+        className
+      )}
+    >
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-2">
           <CardTitle className="text-base leading-snug">{title}</CardTitle>
-          {normalized ? (
-            <Badge
-              variant="outline"
-              className={cn('shrink-0 font-normal', badgeTone)}
-            >
-              {SCORE_STATUS_LABELS[normalized]}
-            </Badge>
-          ) : null}
+          <div className="flex shrink-0 flex-wrap gap-1.5">
+            {isFlagship ? (
+              <Badge variant="default" className="font-normal">
+                Flagship
+              </Badge>
+            ) : null}
+            {normalized ? (
+              <Badge variant="outline" className={cn('font-normal', badgeTone)}>
+                {SCORE_STATUS_LABELS[normalized]}
+              </Badge>
+            ) : null}
+          </div>
         </div>
         <CardDescription className="text-xs">
           {[

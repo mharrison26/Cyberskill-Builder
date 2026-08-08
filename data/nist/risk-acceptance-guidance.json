@@ -1,0 +1,95 @@
+{
+  "document": "NIST RMF risk acceptance (pinned excerpts)",
+  "title": "Authorizing Official risk acceptance expectations",
+  "source_url": "https://csrc.nist.gov/projects/risk-management",
+  "notes": "Pinned excerpts for AO review Q&A generation and grading. Graders must use retrieved section text plus the student's compiled authorization package — not parametric knowledge of RMF practice.",
+  "sections": [
+    {
+      "id": "ao-role",
+      "title": "Authorizing Official role",
+      "topics": ["authorizing official", "authorization", "accountability"],
+      "keywords": [
+        "authorizing official",
+        "ao",
+        "authorization decision",
+        "accountability",
+        "residual risk",
+        "mission"
+      ],
+      "text": "The Authorizing Official (AO) is accountable for accepting residual risk to organizational operations, assets, individuals, and other organizations. An authorization decision is based on the complete authorization package — typically including the system security plan (SSP), assessment results or findings, and the plan of action and milestones (POA&M). The AO expects clear linkage between implemented controls, known weaknesses, planned remediation, and residual risk that will remain after planned actions."
+    },
+    {
+      "id": "risk-acceptance-criteria",
+      "title": "Risk acceptance criteria",
+      "topics": ["risk acceptance", "residual risk", "criteria"],
+      "keywords": [
+        "risk acceptance",
+        "accept residual risk",
+        "residual risk",
+        "mission impact",
+        "likelihood",
+        "impact",
+        "justification"
+      ],
+      "text": "Risk acceptance is an explicit decision that residual risk is within organizational tolerance for a defined period or condition. Strong justifications identify the weakness or control gap, the residual likelihood and impact after compensating controls, who is accountable, and what monitoring or revisit triggers apply. Weak justifications merely assert that risk is 'low' or 'acceptable' without tying the claim to evidence in the SSP, assessment findings, or POA&M."
+    },
+    {
+      "id": "poam-and-acceptance",
+      "title": "POA&M items and acceptance decisions",
+      "topics": ["poam", "risk accepted", "remediation", "timeline"],
+      "keywords": [
+        "poam",
+        "risk accepted",
+        "remediation",
+        "milestone",
+        "scheduled completion",
+        "delayed",
+        "compensating control"
+      ],
+      "text": "POA&M entries with status risk_accepted, delayed, or long-dated completion require AO-facing rationale. The AO will ask whether remediation timelines are realistic, whether compensating controls reduce residual risk enough to continue operation, and whether open weaknesses undermine claims in the SSP control implementation narratives. Acceptance should not be used to hide unfinished remediation without a clear residual-risk story."
+    },
+    {
+      "id": "ssp-traceability",
+      "title": "SSP implementation traceability",
+      "topics": ["ssp", "implementation", "controls", "traceability"],
+      "keywords": [
+        "system security plan",
+        "ssp",
+        "implementation status",
+        "control implementation",
+        "responsible role",
+        "partially implemented",
+        "planned"
+      ],
+      "text": "SSP control implementation statements should be consistent with known findings and POA&M items. If a control is described as implemented while related weaknesses remain open, the AO expects an explanation of scope boundaries, compensating controls, or planned closure. Responsible roles named in the SSP should be able to own remediation or acceptance decisions for associated gaps."
+    },
+    {
+      "id": "oscal-package-integrity",
+      "title": "Machine-readable package integrity",
+      "topics": ["oscal", "artifacts", "package", "consistency"],
+      "keywords": [
+        "oscal",
+        "authorization package",
+        "assessment results",
+        "consistency",
+        "machine-readable",
+        "artifact"
+      ],
+      "text": "When OSCAL (or other machine-readable) artifacts accompany the package, the AO expects them to reflect the same system boundary, control posture, and open items described in narrative SSP and POA&M content. Contradictions between generated OSCAL artifacts and the student's written SSP/POA&M undermine confidence in the authorization package and should be explained or corrected before acceptance."
+    },
+    {
+      "id": "continuous-monitoring",
+      "title": "Conditions and continuous monitoring",
+      "topics": ["continuous monitoring", "conditions", "reauthorization"],
+      "keywords": [
+        "continuous monitoring",
+        "conditions",
+        "revisit",
+        "reauthorization",
+        "trigger",
+        "metrics"
+      ],
+      "text": "Authorization and risk acceptance are often conditional. The AO looks for monitoring measures, revisit dates, or event-driven triggers (for example, missed POA&M dates, control degradation, or significant system change) that would reopen the residual-risk decision. Packages that accept risk without any monitoring or revisit condition leave the organization blind to growing exposure."
+    }
+  ]
+}

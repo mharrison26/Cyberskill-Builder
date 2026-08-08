@@ -1,0 +1,127 @@
+{
+  "document": "SEC Cybersecurity Disclosure Rule — Educational Materiality Summary",
+  "title": "Form 8-K Item 1.05 materiality factors (educational summary)",
+  "source_url": "https://www.sec.gov/files/rules/final/2023/33-11216.pdf",
+  "notes": "Pinned educational summary for RAG-style grading of student materiality memos. This is NOT official legal advice, not a substitute for the SEC adopting release or counsel, and must not be treated as authoritative regulatory text. Graders must use only retrieved section text, not parametric knowledge of SEC rules.",
+  "disclaimer": "Educational summary only. Not legal advice. Not an official SEC publication.",
+  "sections": [
+    {
+      "id": "rule-overview",
+      "title": "Item 1.05 and the four-business-day clock",
+      "topics": ["8-k", "item-1.05", "disclosure", "four-business-day"],
+      "keywords": [
+        "Form 8-K",
+        "Item 1.05",
+        "cybersecurity incident",
+        "four business days",
+        "material",
+        "disclosure"
+      ],
+      "text": "Under the SEC cybersecurity disclosure amendments, a registrant that experiences a cybersecurity incident it determines to be material must describe the material aspects of the nature, scope, and timing of the incident, and the material impact or reasonably likely material impact on the registrant, including its financial condition and results of operations, on Form 8-K Item 1.05. The Item 1.05 Form 8-K generally must be filed within four business days after the registrant determines that the incident is material. The four-business-day period runs from the materiality determination, not necessarily from discovery of the incident. A sound student memo states whether the incident is material or not material, explains why using qualitative and quantitative factors, and addresses whether and when the four-business-day Item 1.05 clock would start."
+    },
+    {
+      "id": "reasonable-investor",
+      "title": "Core materiality test (reasonable investor)",
+      "topics": ["materiality", "reasonable-investor", "qualitative", "quantitative"],
+      "keywords": [
+        "reasonable investor",
+        "materiality",
+        "qualitative",
+        "quantitative",
+        "total mix",
+        "important"
+      ],
+      "text": "Materiality for cybersecurity incidents follows the familiar securities-law standard: information is material if there is a substantial likelihood that a reasonable investor would consider it important in making an investment decision, or if it would significantly alter the total mix of information available. Registrants should consider both quantitative and qualitative factors. A student memo should apply this investor-focused test to the facts of the breach rather than relying only on technical severity labels (for example, CVSS scores) or unsupported conclusions that an incident is or is not material."
+    },
+    {
+      "id": "nature-scope",
+      "title": "Nature, scope, and systems affected",
+      "topics": ["nature", "scope", "systems", "incident"],
+      "keywords": [
+        "nature",
+        "scope",
+        "systems affected",
+        "unauthorized access",
+        "ransomware",
+        "availability",
+        "integrity",
+        "confidentiality"
+      ],
+      "text": "Assess the nature and scope of the incident: which systems, networks, or business processes were affected; whether confidentiality, integrity, or availability was compromised; whether the incident is contained or ongoing; and how long unauthorized access or disruption persisted. Breadth of operational reach (for example, core revenue systems versus an isolated lab environment) is relevant to whether a reasonable investor would care."
+    },
+    {
+      "id": "data-compromise",
+      "title": "Data compromised and individuals affected",
+      "topics": ["data", "pii", "customers", "exfiltration"],
+      "keywords": [
+        "data exposed",
+        "personal data",
+        "customer data",
+        "exfiltration",
+        "sensitive information",
+        "volume",
+        "individuals"
+      ],
+      "text": "Evaluate the type and volume of information accessed or exfiltrated, including whether sensitive personal data, payment data, credentials, or other confidential business information was involved, and how many customers, employees, or other individuals may be affected. Data sensitivity and scale can drive qualitative materiality even when immediate quantified financial loss is uncertain."
+    },
+    {
+      "id": "operational-impact",
+      "title": "Operational and service impact",
+      "topics": ["operations", "downtime", "services", "business continuity"],
+      "keywords": [
+        "operations",
+        "downtime",
+        "business interruption",
+        "services",
+        "customers",
+        "continuity",
+        "disruption"
+      ],
+      "text": "Consider whether the incident disrupted the registrant’s ability to provide goods or services, delayed key business processes, impaired internal controls or reporting systems, or forced significant contingency operations. Duration and criticality of any outage matter to investors evaluating near-term performance and operational resilience."
+    },
+    {
+      "id": "financial-impact",
+      "title": "Financial condition and results of operations",
+      "topics": ["financial", "costs", "revenue", "results of operations"],
+      "keywords": [
+        "financial condition",
+        "results of operations",
+        "remediation costs",
+        "lost revenue",
+        "expenses",
+        "insurance",
+        "material impact"
+      ],
+      "text": "Analyze the incident’s material impact or reasonably likely material impact on financial condition and results of operations. Relevant considerations include remediation and investigation costs, lost or deferred revenue, customer credits, increased insurance or security spend, and whether impacts are already estimable or still uncertain. Item 1.05 focuses on material impact, including financial condition and results of operations; uncertainty does not eliminate the need to reason about reasonably likely effects."
+    },
+    {
+      "id": "reputational-legal",
+      "title": "Reputational harm, litigation, and regulatory risk",
+      "topics": ["reputation", "litigation", "regulatory", "investigations"],
+      "keywords": [
+        "reputational harm",
+        "litigation",
+        "class action",
+        "regulatory investigation",
+        "enforcement",
+        "notification",
+        "brand"
+      ],
+      "text": "Qualitative materiality often turns on reputational harm, threatened or pending litigation (including consumer or securities claims), and regulatory investigations or enforcement exposure arising from the incident or related notification duties. A thoughtful memo connects these risks to investor significance rather than listing them generically."
+    },
+    {
+      "id": "timing-determination",
+      "title": "Materiality determination timing and series of related incidents",
+      "topics": ["timing", "determination", "related incidents", "aggregation"],
+      "keywords": [
+        "materiality determination",
+        "timing",
+        "related incidents",
+        "series",
+        "aggregation",
+        "without unreasonable delay"
+      ],
+      "text": "Companies should make a materiality determination without unreasonable delay after discovery of the incident. A series of related unauthorized occurrences may need to be treated as a single incident for materiality analysis when aggregation changes the investor picture. The memo should state when materiality was (or would be) determined on the given facts, and whether that determination starts the four-business-day Item 1.05 filing clock."
+    }
+  ]
+}
