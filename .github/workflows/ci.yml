@@ -9,6 +9,8 @@ permissions:
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,17 +36,20 @@ jobs:
         run: npm run typecheck
 
       - name: RLS coverage
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        if: ${{ env.DATABASE_URL != '' }}
         run: npm run test:rls
-        if: ${{ secrets.DATABASE_URL != '' }}
 
       - name: RLS coverage (skipped)
+        if: ${{ env.DATABASE_URL == '' }}
         run: echo "Skipping RLS coverage — set DATABASE_URL GitHub secret to enable"
-        if: ${{ secrets.DATABASE_URL == '' }}
 
   accessibility:
     runs-on: ubuntu-latest
+    env:
+      A11Y_TEST_EMAIL: ${{ secrets.A11Y_TEST_EMAIL }}
+      A11Y_TEST_PASSWORD: ${{ secrets.A11Y_TEST_PASSWORD }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -67,17 +72,13 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Build and run accessibility checks (WCAG 2.2 AA)
+        if: ${{ env.A11Y_TEST_EMAIL != '' && env.A11Y_TEST_PASSWORD != '' && env.NEXT_PUBLIC_SUPABASE_URL != '' && env.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' }}
         env:
           A11Y_SKIP_BUILD: '1'
-          A11Y_TEST_EMAIL: ${{ secrets.A11Y_TEST_EMAIL }}
-          A11Y_TEST_PASSWORD: ${{ secrets.A11Y_TEST_PASSWORD }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           npm run build
           npm run a11y-check
-        if: ${{ secrets.A11Y_TEST_EMAIL != '' && secrets.A11Y_TEST_PASSWORD != '' && secrets.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' }}
 
       - name: Accessibility (skipped)
+        if: ${{ env.A11Y_TEST_EMAIL == '' || env.A11Y_TEST_PASSWORD == '' || env.NEXT_PUBLIC_SUPABASE_URL == '' || env.NEXT_PUBLIC_SUPABASE_ANON_KEY == '' }}
         run: echo "Skipping accessibility checks — set A11Y_TEST_EMAIL, A11Y_TEST_PASSWORD, NEXT_PUBLIC_SUPABASE_URL, and NEXT_PUBLIC_SUPABASE_ANON_KEY GitHub secrets to enable"
-        if: ${{ secrets.A11Y_TEST_EMAIL == '' || secrets.A11Y_TEST_PASSWORD == '' || secrets.NEXT_PUBLIC_SUPABASE_URL == '' || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY == '' }}
