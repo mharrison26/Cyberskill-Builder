@@ -5,11 +5,18 @@ import { assertTenantSandboxConcurrency } from '@/lib/sandbox/costControls';
 import { assertSandboxEligible } from '@/lib/sandbox/eligibility';
 import {
   destroySandboxMachine,
+  execSandboxMachine,
   FlyMachinesError,
   getDefaultIdleTimeoutMinutes,
   launchSandboxMachine,
   waitForSandboxMachine,
 } from '@/lib/sandbox/flyMachines';
+import {
+  buildPreloadPythonSource,
+  extractPreloadFiles,
+  extractPreloadModes,
+  pythonExecCommand,
+} from '@/lib/sandbox/guestState';
 import { buildTerminalWebSocketUrl } from '@/lib/sandbox/terminalUrl';
 import { createClient } from '@/lib/supabase/server';
 import { resolveSubmitTicketContext } from '@/lib/tickets/submitTicketContext';
@@ -291,12 +298,25 @@ export async function POST(_request: Request, { params }: RouteContext) {
 
   const idleTimeoutMinutes = getDefaultIdleTimeoutMinutes();
 
+  const initialState = (context.ticket.initial_state ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const preloadFiles = extractPreloadFiles(initialState);
+  const preloadModes = extractPreloadModes(initialState);
+
   let launched;
   try {
     launched = await launchSandboxMachine({
       ticketId,
       studentId: context.appUser.id,
       idleTimeoutMinutes,
+      env: {
+        SANDBOX_SCENARIO:
+          typeof initialState.scenario === 'string'
+            ? initialState.scenario
+            : context.ticket.ticket_type,
+      },
     });
     // Best-effort wait so the websocket is more likely ready for the client.
     try {
@@ -315,6 +335,50 @@ export async function POST(_request: Request, { params }: RouteContext) {
         level: 'warning',
         extras: { machineId: launched.machine.id },
       });
+    }
+
+    // Seed intentionally unhardened baseline files when the ticket defines them.
+    if (Object.keys(preloadFiles).length > 0) {
+      try {
+        const source = buildPreloadPythonSource(preloadFiles, preloadModes);
+        const result = await execSandboxMachine(
+          launched.machine.id,
+          pythonExecCommand(source),
+          { timeoutSeconds: 45 }
+        );
+        if (result.exitCode !== 0) {
+          console.warn('sandbox preload exec non-zero:', {
+            exitCode: result.exitCode,
+            stderr: result.stderr.slice(0, 300),
+          });
+          captureFeatureException(
+            new Error(`sandbox preload failed (exit ${result.exitCode})`),
+            {
+              feature: 'sandbox',
+              pi: 'PI-05',
+              operation: 'preload_baseline',
+              ticketId,
+              ticketType: context.ticket.ticket_type,
+              level: 'warning',
+              extras: {
+                machineId: launched.machine.id,
+                stderrPreview: result.stderr.slice(0, 300),
+              },
+            }
+          );
+        }
+      } catch (preloadError) {
+        console.warn('sandbox preload failed:', preloadError);
+        captureFeatureException(preloadError, {
+          feature: 'sandbox',
+          pi: 'PI-05',
+          operation: 'preload_baseline',
+          ticketId,
+          ticketType: context.ticket.ticket_type,
+          level: 'warning',
+          extras: { machineId: launched.machine.id },
+        });
+      }
     }
   } catch (error) {
     console.error('Fly sandbox launch failed:', error);

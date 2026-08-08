@@ -1,0 +1,71 @@
+{
+  "document": "Subnetting & TCP/IP Diagnostics Rubric",
+  "title": "Basic subnetting and TCP/IP explanations for network topology fault justifications (educational)",
+  "source_url": "https://example.com/networking/subnetting-tcpip-rubric",
+  "notes": "Pinned educational rubric for RAG-style grading of student justifications about misconfigured devices/subnets. Graders must use only retrieved section text, not parametric knowledge of networking.",
+  "disclaimer": "Educational rubric only. Not a substitute for vendor documentation or your organization's network standards.",
+  "sections": [
+    {
+      "id": "gateway-same-subnet",
+      "title": "Default gateway must be on-link",
+      "topics": ["gateway", "default-route", "subnet", "on-link"],
+      "keywords": [
+        "default gateway",
+        "gateway",
+        "same subnet",
+        "on-link",
+        "wrong gateway",
+        "destination host unreachable",
+        "default route"
+      ],
+      "text": "A host's default gateway IPv4 address must fall inside the host's configured subnet (same network number after applying the subnet mask). If the gateway address is on a different subnet, the host cannot ARP for it on the local link, so pings to that gateway often fail with Destination host unreachable from the host itself. A correct justification explains that the misconfigured host points at a gateway outside its /24 (or other mask), not merely that \"the internet is down.\""
+    },
+    {
+      "id": "subnet-mask-boundaries",
+      "title": "Subnet mask defines local vs routed",
+      "topics": ["subnet-mask", "prefix", "broadcast", "network"],
+      "keywords": [
+        "subnet mask",
+        "prefix length",
+        "slash",
+        "255.255.255.0",
+        "local network",
+        "broadcast",
+        "network address"
+      ],
+      "text": "The subnet mask (or CIDR prefix) decides which destinations are considered local (L2 / ARP) versus which require the default gateway. For a /24 (255.255.255.0), hosts sharing the first three octets are on-link; addresses outside that range must be routed. Justifications should use the mask to show why a chosen IP is or is not a valid gateway for that host, and should not invent alternate masks that are not present in the diagram or command output."
+    },
+    {
+      "id": "evidence-from-diagnostics",
+      "title": "Cite diagnostic evidence",
+      "topics": ["ipconfig", "ping", "traceroute", "arp", "evidence"],
+      "keywords": [
+        "ipconfig",
+        "ip route",
+        "ping",
+        "traceroute",
+        "tracert",
+        "arp",
+        "command output",
+        "evidence"
+      ],
+      "text": "Tie the fault location to concrete lines from the provided diagram and static command output (addressing, gateway, failed ping/traceroute hops, ARP emptiness for the gateway, etc.). Prefer specific observations (\"gateway 10.20.40.1 is outside 10.20.30.0/24\"; \"tracert fails at hop 1 with host unreachable\") over generic claims. Do not invent interfaces, IPs, or successful probes that are not shown."
+    },
+    {
+      "id": "isolate-fault-location",
+      "title": "Isolate the misconfigured device or subnet",
+      "topics": ["fault-location", "isolation", "device", "vlan"],
+      "keywords": [
+        "misconfigured",
+        "workstation",
+        "router",
+        "vlan",
+        "svi",
+        "switch",
+        "isolate",
+        "fault location"
+      ],
+      "text": "Name the specific device or subnet that is wrong and briefly explain why neighboring devices are less likely. For example, if only one workstation shows a gateway outside its VLAN while the diagram's VLAN SVI and peer subnet look consistent, blame that workstation's host configuration rather than the core switch WAN or an unrelated file server. Avoid blaming the entire path when evidence localizes the error to one host's addressing."
+    }
+  ]
+}

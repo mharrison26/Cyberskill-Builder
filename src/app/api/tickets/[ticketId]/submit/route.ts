@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { isAoReviewTicketType } from '@/lib/capstone/ticketCodes';
 import { isFlagshipEligibleTicketType } from '@/lib/helpdesk/ticketCodes';
+import { isInfraDesignCapstoneTicketType } from '@/lib/infra/ticketCodes';
 import { captureFeatureException } from '@/lib/observability/sentry';
 import { persistPoamItems } from '@/lib/poam/persistPoamItems';
 import {
@@ -58,6 +59,41 @@ function mergeAoReviewSubmission(
   };
 }
 
+/** Preserve generated design doc + follow-up questions when the client omits them. */
+function mergeInfraDesignCapstoneSubmission(
+  submission: TicketSubmission,
+  existingSubmission: Record<string, unknown> | null | undefined
+): TicketSubmission {
+  if (!isPlainObject(existingSubmission)) {
+    return submission;
+  }
+
+  const existingQuestions = existingSubmission.questions;
+  const incomingQuestions = submission.questions;
+  const questions =
+    Array.isArray(incomingQuestions) && incomingQuestions.length > 0
+      ? incomingQuestions
+      : existingQuestions;
+
+  const incomingDesign = submission.designDoc;
+  const designDoc =
+    isPlainObject(incomingDesign) &&
+    (typeof incomingDesign.title === 'string' ||
+      typeof incomingDesign.body === 'string')
+      ? incomingDesign
+      : existingSubmission.designDoc;
+
+  return {
+    ...existingSubmission,
+    ...submission,
+    designDoc,
+    questions,
+    answers: isPlainObject(submission.answers)
+      ? submission.answers
+      : existingSubmission.answers,
+  };
+}
+
 export async function POST(request: Request, { params }: RouteContext) {
   const { ticketId } = params;
   const supabase = await createClient();
@@ -86,12 +122,14 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   const existingProgress = await loadTicketProgress(context, ticketId);
 
+  const existingSubmission =
+    (existingProgress?.submission as Record<string, unknown> | null) ?? null;
+
   const submission = isAoReviewTicketType(context.ticket.ticket_type)
-    ? mergeAoReviewSubmission(
-        parsedSubmission,
-        (existingProgress?.submission as Record<string, unknown> | null) ?? null
-      )
-    : parsedSubmission;
+    ? mergeAoReviewSubmission(parsedSubmission, existingSubmission)
+    : isInfraDesignCapstoneTicketType(context.ticket.ticket_type)
+      ? mergeInfraDesignCapstoneSubmission(parsedSubmission, existingSubmission)
+      : parsedSubmission;
 
   const scorer = resolveTicketScorer(context.ticket.ticket_type);
 
@@ -214,7 +252,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   let isFlagship = Boolean(portfolioItem.is_flagship);
   if (markFlagship) {
     // Clear any prior flagship on this track, then promote this capstone item
-    // (GRC AO review or helpdesk HD-07 / PI-07).
+    // (GRC AO review, helpdesk HD-07, or sysadmin SA-07 / PI-07).
     const { error: clearError } = await context.supabase
       .from('portfolio_items')
       .update({ is_flagship: false, updated_at: now })

@@ -1,4 +1,5 @@
 import { isAoReviewTicketType } from '@/lib/capstone/ticketCodes';
+import { isInfraDesignCapstoneTicketType } from '@/lib/infra/ticketCodes';
 
 /**
  * Helpdesk track ticket codes for curriculum + PI-07 flagship capstone.
@@ -81,10 +82,13 @@ export function isKbSourceTicketType(ticketType: string): boolean {
 
 /**
  * Ticket types that become the track flagship portfolio item on resolve (PI-07).
- * GRC uses ao_review; helpdesk uses helpdesk_capstone.
+ * GRC uses ao_review; helpdesk uses helpdesk_capstone; sysadmin uses
+ * infra_design_capstone.
  */
 export function isFlagshipEligibleTicketType(ticketType: string): boolean {
   return (
-    isAoReviewTicketType(ticketType) || isHelpdeskCapstoneTicketType(ticketType)
+    isAoReviewTicketType(ticketType) ||
+    isHelpdeskCapstoneTicketType(ticketType) ||
+    isInfraDesignCapstoneTicketType(ticketType)
   );
 }

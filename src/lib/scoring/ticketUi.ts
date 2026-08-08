@@ -81,6 +81,13 @@ export function isTriageUrgencyLevel(
 
 export const AO_REVIEW_MIN_ANSWER_LENGTH = 40;
 
+/**
+ * Sysadmin infra design capstone (SA-07 / PI-07) — design decision doc + tradeoff Q&A.
+ */
+export const INFRA_DESIGN_DOC_MIN_BODY_LENGTH = 400;
+export const INFRA_DESIGN_DOC_MIN_TITLE_LENGTH = 8;
+export const INFRA_DESIGN_FOLLOWUP_MIN_ANSWER_LENGTH = 40;
+
 /** Post-resolution KB write-up (HD-03) minimum field length. */
 export const KB_WRITEUP_MIN_FIELD_LENGTH = 40;
 
@@ -131,6 +138,9 @@ export const HELPDESK_PROCESS_DOC_SECTION_LABELS: Record<
 
 /** Junior-notes coaching feedback minimum field length. */
 export const COACHING_FEEDBACK_MIN_FIELD_LENGTH = 40;
+
+/** Backup / disaster recovery plan minimum field length. */
+export const BACKUP_DR_PLAN_MIN_FIELD_LENGTH = 40;
 
 /** Angry-customer email reply (de-escalation) minimum body length. */
 export const CUSTOMER_REPLY_MIN_REPLY_LENGTH = 120;
@@ -345,6 +355,144 @@ export function isNetworkDiagnosticsTicketType(ticketType: string): boolean {
 }
 
 /**
+ * Network topology fault: diagram + static diagnostics; student identifies
+ * misconfigured device/subnet (deterministic) and justifies with subnetting/TCP-IP (RAG).
+ */
+export const NETWORK_TOPOLOGY_FAULT_MIN_JUSTIFICATION_LENGTH = 80;
+
+export function isNetworkTopologyFaultTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'network_topology_fault' ||
+    base === 'subnet_fault_diagnosis' ||
+    base === 'topology_misconfig' ||
+    base === 'network_fault_location'
+  );
+}
+
+/**
+ * PI-04 WebContainer lab: navigate a seeded filesystem, inspect modes with
+ * `ls -l`, answer short questions graded deterministically.
+ */
+export function isFsPermissionsLabTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'fs_permissions_lab' ||
+    base === 'sandbox_permissions' ||
+    base === 'ls_permissions' ||
+    base === 'permissions_explore'
+  );
+}
+
+/**
+ * Config fault diagnosis: student reads a static named.conf / dhcpd.conf
+ * snippet, identifies the misconfigured line, and explains the impact.
+ * Primary grade is deterministic line match against expected_state.
+ */
+export const CONFIG_FAULT_DIAGNOSIS_MIN_IMPACT_LENGTH = 40;
+
+export function isConfigFaultDiagnosisTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'config_fault_diagnosis' ||
+    base === 'named_conf_fault' ||
+    base === 'dns_config_fault' ||
+    base === 'config_line_diagnosis'
+  );
+}
+
+/**
+ * CIS Benchmark-derived Linux hardening on a Fly ephemeral sandbox (PI-05).
+ * Graded with config-diff rules against captured guest filesystem state (PI-06).
+ */
+export type CisHardeningChecklistItem = {
+  id: string;
+  title: string;
+  description?: string;
+  hint?: string;
+};
+
+export function isCisHardeningTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'cis_hardening' ||
+    base === 'linux_hardening' ||
+    base === 'sysadmin_hardening'
+  );
+}
+
+export function parseCisHardeningChecklist(
+  initialState: Record<string, unknown> | null | undefined
+): CisHardeningChecklistItem[] {
+  if (!initialState) return [];
+  const raw = initialState.checklist;
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((entry): CisHardeningChecklistItem | null => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        return null;
+      }
+      const record = entry as Record<string, unknown>;
+      const id =
+        typeof record.id === 'string'
+          ? record.id.trim()
+          : typeof record.key === 'string'
+            ? record.key.trim()
+            : '';
+      const title =
+        typeof record.title === 'string'
+          ? record.title.trim()
+          : typeof record.label === 'string'
+            ? record.label.trim()
+            : '';
+      if (!id || !title) return null;
+      return {
+        id,
+        title,
+        description:
+          typeof record.description === 'string'
+            ? record.description.trim()
+            : typeof record.detail === 'string'
+              ? record.detail.trim()
+              : undefined,
+        hint: typeof record.hint === 'string' ? record.hint.trim() : undefined,
+      };
+    })
+    .filter((item): item is CisHardeningChecklistItem => item !== null);
+}
+
+/**
+ * Sysadmin outage / incident-response capstone (Fly PI-05 + config-diff PI-06
+ * + RAG report). Distinct from cis_hardening (hardening checklist only) and
+ * from p1_status_updates (comms cadence without live remediation).
+ */
+export const OUTAGE_CAPSTONE_MIN_REPORT_FIELD_LENGTH = 60;
+
+export type OutageDiagnosisChecklistItem = CisHardeningChecklistItem;
+
+export function isOutageCapstoneTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'outage_capstone' ||
+    base === 'incident_response_capstone' ||
+    base === 'sysadmin_outage_capstone'
+  );
+}
+
+/** Diagnosis hints for outage capstone (same checklist shape as CIS hardening). */
+export function parseOutageDiagnosisChecklist(
+  initialState: Record<string, unknown> | null | undefined
+): OutageDiagnosisChecklistItem[] {
+  return parseCisHardeningChecklist(initialState);
+}
+
+/**
  * P1 outage stakeholder status updates (simulated clock + mock channel).
  * Distinct from SLA queue simulation (PI-09): this scores cadence + content
  * of incident status posts, not queue/SLA handling.
@@ -361,6 +509,83 @@ export function isP1StatusUpdatesTicketType(ticketType: string): boolean {
     base === 'incident_status_cadence' ||
     base === 'stakeholder_updates' ||
     base === 'outage_comms'
+  );
+}
+
+/**
+ * Monitoring / alert configuration: student defines alert rules
+ * (type + threshold + routing) for a described system. Scored
+ * deterministically against a required-alert rubric.
+ */
+export const MONITORING_ALERT_TYPES = [
+  'disk_space',
+  'service_down',
+  'high_error_rate',
+  'high_latency',
+  'cpu_saturation',
+] as const;
+
+export type MonitoringAlertType = (typeof MONITORING_ALERT_TYPES)[number];
+
+export const MONITORING_ALERT_TYPE_LABELS: Record<MonitoringAlertType, string> =
+  {
+    disk_space: 'Disk space (usage %)',
+    service_down: 'Service down (failed health checks)',
+    high_error_rate: 'High error rate (5xx %)',
+    high_latency: 'High latency (p99 ms)',
+    cpu_saturation: 'CPU saturation (%)',
+  };
+
+/** Short hint shown next to the threshold input for each alert type. */
+export const MONITORING_ALERT_THRESHOLD_HINTS: Record<
+  MonitoringAlertType,
+  string
+> = {
+  disk_space: 'Alert when disk used % exceeds this value',
+  service_down: 'Alert after this many consecutive failed health checks',
+  high_error_rate: 'Alert when HTTP 5xx error rate % exceeds this value',
+  high_latency: 'Alert when p99 latency (ms) exceeds this value',
+  cpu_saturation: 'Alert when CPU usage % exceeds this value',
+};
+
+export const MONITORING_ALERT_ROUTES = [
+  'pagerduty',
+  'email_oncall',
+  'slack_ops',
+  'ticket_queue',
+] as const;
+
+export type MonitoringAlertRoute = (typeof MONITORING_ALERT_ROUTES)[number];
+
+export const MONITORING_ALERT_ROUTE_LABELS: Record<
+  MonitoringAlertRoute,
+  string
+> = {
+  pagerduty: 'PagerDuty (page on-call)',
+  email_oncall: 'Email on-call rotation',
+  slack_ops: 'Slack #ops channel',
+  ticket_queue: 'Create ticket in queue (no page)',
+};
+
+export function isMonitoringAlertType(
+  value: string
+): value is MonitoringAlertType {
+  return (MONITORING_ALERT_TYPES as readonly string[]).includes(value);
+}
+
+export function isMonitoringAlertRoute(
+  value: string
+): value is MonitoringAlertRoute {
+  return (MONITORING_ALERT_ROUTES as readonly string[]).includes(value);
+}
+
+export function isMonitoringConfigTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'monitoring_config' ||
+    base === 'alert_config' ||
+    base === 'monitoring_alerts'
   );
 }
 

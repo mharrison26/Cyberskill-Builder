@@ -1,0 +1,126 @@
+{
+  "document": "Backup and Disaster Recovery Best-Practices Checklist",
+  "title": "Small-business backup / DR planning checklist (educational)",
+  "source_url": "internal://backup-dr-best-practices-checklist",
+  "notes": "Pinned educational checklist for grading student backup and disaster recovery plans. Graders must use only retrieved checklist section text, not parametric knowledge of NIST, ISO, or vendor product defaults.",
+  "disclaimer": "Educational checklist only. Not a substitute for organizational policy, legal retention requirements, or vendor SLA terms.",
+  "sections": [
+    {
+      "id": "backup-frequency",
+      "title": "Backup frequency matched to change rate and criticality",
+      "topics": ["frequency", "schedule", "cadence", "backup"],
+      "keywords": [
+        "backup frequency",
+        "schedule",
+        "daily",
+        "hourly",
+        "continuous",
+        "incremental",
+        "full backup",
+        "cadence",
+        "change rate"
+      ],
+      "text": "Backup frequency should reflect how often data changes and how critical the system is. Highly transactional databases and actively edited file shares usually need more frequent protection (for example hourly or continuous incremental plus a regular full) than mostly static archives. SaaS applications may rely on vendor backups plus export or API-based copies on a documented schedule. State a concrete cadence per major system rather than a single vague phrase such as \"regular backups.\" Justify why quieter systems can run less often without leaving the business exposed."
+    },
+    {
+      "id": "retention",
+      "title": "Retention that supports recovery and business needs",
+      "topics": ["retention", "keep", "history", "versions"],
+      "keywords": [
+        "retention",
+        "retain",
+        "keep",
+        "days",
+        "weeks",
+        "months",
+        "versions",
+        "history",
+        "grandfather-father-son",
+        "GFS"
+      ],
+      "text": "Retention defines how long backup copies and versions remain available. Plans should keep enough history to recover from late-discovered corruption, accidental deletion, or ransomware (often days to weeks of short-term versions plus longer monthly/quarterly copies where needed). Retention should not be identical for every system by default: financial databases, CRM exports, and file shares may need different windows. Call out offsite or immutable copies when the checklist context requires surviving local failure. Avoid \"keep forever\" without a reason, and avoid retention so short that a weekend outage erases the only good copy."
+    },
+    {
+      "id": "rpo-targets",
+      "title": "Recovery Point Objectives (RPO) by system",
+      "topics": ["rpo", "data loss", "recovery point", "objectives"],
+      "keywords": [
+        "RPO",
+        "recovery point",
+        "data loss",
+        "acceptable loss",
+        "hours",
+        "minutes",
+        "transaction",
+        "objective"
+      ],
+      "text": "RPO is the maximum acceptable amount of data loss measured in time (for example 15 minutes, 4 hours, or 24 hours). Strong plans set RPO per system or data class and tie it to backup frequency: if RPO is 4 hours, backups or replication must capture changes at least that often. Customer-facing CRM and invoicing databases typically need tighter RPOs than archival file shares. State numeric targets and briefly explain business impact (lost invoices, rework, customer trust) rather than copying a single RPO for every asset without rationale."
+    },
+    {
+      "id": "rto-targets",
+      "title": "Recovery Time Objectives (RTO) by system",
+      "topics": ["rto", "downtime", "recovery time", "objectives"],
+      "keywords": [
+        "RTO",
+        "recovery time",
+        "downtime",
+        "restore time",
+        "hours",
+        "availability",
+        "outage",
+        "objective"
+      ],
+      "text": "RTO is the maximum acceptable downtime before the system must be usable again. Plans should assign RTO by system priority: the on-prem database that blocks invoicing may need a shorter RTO than a departmental file share that can wait overnight. RTO must be realistic given restore method (rebuild VM, restore from cloud snapshot, failover, SaaS vendor recovery). Mention who restores and what \"restored\" means (data available, users can log in, integrations working). Do not claim near-zero RTO without describing a standby or rapid restore path."
+    },
+    {
+      "id": "restore-testing",
+      "title": "Restore testing cadence and evidence",
+      "topics": ["restore", "testing", "validation", "drill"],
+      "keywords": [
+        "restore test",
+        "recovery test",
+        "drill",
+        "validation",
+        "quarterly",
+        "monthly",
+        "prove",
+        "sample restore",
+        "tabletop"
+      ],
+      "text": "Backups that are never restored are unverified. Plans must include a restore-testing cadence (for example monthly sample-file restores and quarterly full-system or application recovery drills) and note what success looks like (file opens, database mounts, CRM export imports, users can work). Cover at least the most critical systems on a defined schedule. Document who runs the test and that failures trigger remediation. Tabletop discussions alone are weaker than an actual restore; prefer a mix of technical restore tests and occasional end-to-end recovery exercises."
+    },
+    {
+      "id": "scope-by-system",
+      "title": "Coverage across all inventoried systems",
+      "topics": ["scope", "inventory", "systems", "coverage"],
+      "keywords": [
+        "file server",
+        "CRM",
+        "database",
+        "endpoints",
+        "SaaS",
+        "on-prem",
+        "inventory",
+        "coverage",
+        "systems"
+      ],
+      "text": "A complete small-business plan addresses each major system in the inventory: on-premises file services, databases, endpoints or identity/cloud mailboxes, and SaaS applications (including export or vendor recovery assumptions). Do not assume SaaS needs no plan, and do not ignore endpoints if they hold unique local data. For each system, the plan should make backup method, frequency, retention, RPO, RTO, and restore testing discoverable. Gaps such as \"CRM is in the cloud so we skip it\" fail this criterion unless vendor capabilities and residual risk are explicitly documented."
+    },
+    {
+      "id": "offsite-separation",
+      "title": "Offsite or separated copies",
+      "topics": ["offsite", "separation", "immutable", "3-2-1"],
+      "keywords": [
+        "offsite",
+        "3-2-1",
+        "immutable",
+        "air gap",
+        "cloud copy",
+        "separate",
+        "ransomware",
+        "secondary location"
+      ],
+      "text": "At least one recent backup copy should survive loss of the primary site or a ransomware event that encrypts locally attached disks. Educational best practice for small businesses includes keeping a copy offsite or in a separate cloud/account, and preferring immutability or access controls that prevent immediate overwrite by the same admin credentials used on production. The classic 3-2-1 idea (multiple copies, different media/locations, one offsite) is a useful check: a single USB disk left plugged into the file server is not adequate separation."
+    }
+  ]
+}

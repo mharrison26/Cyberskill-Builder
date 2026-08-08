@@ -387,3 +387,56 @@ export async function waitForSandboxMachine(
     }
   );
 }
+
+export type FlyExecResult = {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  exitSignal: number;
+};
+
+/**
+ * Run a command inside a running sandbox machine (Machines API exec).
+ * Used to preload intentionally unhardened baselines and to snapshot
+ * filesystem state for config-diff scoring on submit.
+ */
+export async function execSandboxMachine(
+  machineId: string,
+  command: string[],
+  options?: { timeoutSeconds?: number }
+): Promise<FlyExecResult> {
+  const config = getFlyMachinesConfig();
+  const id = machineId.trim();
+  if (!id) {
+    throw new Error('machineId is required');
+  }
+  if (!Array.isArray(command) || command.length === 0) {
+    throw new Error('command is required');
+  }
+
+  const timeout = options?.timeoutSeconds ?? 30;
+  const raw = await flyFetch<{
+    stdout?: string;
+    stderr?: string;
+    exit_code?: number;
+    exit_signal?: number;
+  }>(
+    `/v1/apps/${encodeURIComponent(config.appName)}/machines/${encodeURIComponent(id)}/exec`,
+    {
+      method: 'POST',
+      apiToken: config.apiToken,
+      apiHostname: config.apiHostname,
+      body: JSON.stringify({
+        command,
+        timeout,
+      }),
+    }
+  );
+
+  return {
+    stdout: typeof raw?.stdout === 'string' ? raw.stdout : '',
+    stderr: typeof raw?.stderr === 'string' ? raw.stderr : '',
+    exitCode: typeof raw?.exit_code === 'number' ? raw.exit_code : -1,
+    exitSignal: typeof raw?.exit_signal === 'number' ? raw.exit_signal : 0,
+  };
+}
