@@ -20,16 +20,22 @@ export async function GET() {
     { data: users, error: usersError },
     { data: track_enrollments, error: enrollmentsError },
     { data: lesson_progress, error: progressError },
+    { data: ticket_progress, error: ticketProgressError },
     { data: oscal_findings, error: findingsError },
   ] = await Promise.all([
     supabase.from('users').select('*').eq('id', userId),
     supabase.from('track_enrollments').select('*').eq('student_id', userId),
     supabase.from('lesson_progress').select('*').eq('student_id', userId),
+    supabase.from('ticket_progress').select('*').eq('student_id', userId),
     supabase.from('oscal_findings').select('*').eq('student_id', userId),
   ]);
 
   const fetchError =
-    usersError ?? enrollmentsError ?? progressError ?? findingsError;
+    usersError ??
+    enrollmentsError ??
+    progressError ??
+    ticketProgressError ??
+    findingsError;
 
   if (fetchError) {
     console.error('account export fetch failed:', fetchError);
@@ -46,6 +52,7 @@ export async function GET() {
     users: users ?? [],
     track_enrollments: track_enrollments ?? [],
     lesson_progress: lesson_progress ?? [],
+    ticket_progress: ticket_progress ?? [],
     oscal_findings: oscal_findings ?? [],
   };
 

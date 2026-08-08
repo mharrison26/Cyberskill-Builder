@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { FindingCard } from '@/components/FindingCard';
+import { TicketResolutionCard } from '@/components/portfolio/TicketResolutionCard';
 import {
-  getPublicFindings,
+  getPublicPortfolioItems,
   getStudentActiveTracks,
   toFindingStateDisplay,
 } from '@/lib/portfolio/getPublicPortfolio';
@@ -44,9 +45,9 @@ export default async function PublicPortfolioPage({
     notFound();
   }
 
-  const [tracks, findings] = await Promise.all([
+  const [tracks, items] = await Promise.all([
     getStudentActiveTracks(user.id),
-    getPublicFindings(user.id),
+    getPublicPortfolioItems(user.id),
   ]);
 
   const displayName = displayNameFromEmail(user.email);
@@ -83,33 +84,49 @@ export default async function PublicPortfolioPage({
         )}
       </section>
 
-      <section className="mt-10" aria-labelledby="findings-heading">
-        <h2 id="findings-heading" className="text-lg font-semibold">
-          Control findings
+      <section className="mt-10" aria-labelledby="portfolio-heading">
+        <h2 id="portfolio-heading" className="text-lg font-semibold">
+          Portfolio artifacts
         </h2>
-        {findings.length > 0 ? (
+        {items.length > 0 ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {findings.map((finding) => (
-              <FindingCard
-                key={finding.id}
-                controlId={finding.controlId}
-                findingState={toFindingStateDisplay(finding.findingState)}
-                dcwfCode={finding.dcwfCode}
-                narrative={finding.narrative}
-                oscalFinding={{
-                  id: finding.id,
-                  control_id: finding.controlId,
-                  finding_state: finding.findingState,
-                  student_narrative: finding.studentNarrative,
-                  observation: finding.observation,
-                }}
-              />
-            ))}
+            {items.map((item) =>
+              item.itemKind === 'ticket_resolution' ? (
+                <TicketResolutionCard
+                  key={item.id}
+                  title={item.title}
+                  scoreStatus={item.scoreStatus}
+                  dcwfCode={item.dcwfCode}
+                  dcwfTitle={item.dcwfTitle}
+                  narrative={item.narrative}
+                  tier={item.tier}
+                  ticketType={item.ticketType}
+                />
+              ) : (
+                <FindingCard
+                  key={item.id}
+                  controlId={item.controlId ?? item.title}
+                  findingState={toFindingStateDisplay(
+                    item.findingState ?? 'accepted'
+                  )}
+                  dcwfCode={item.dcwfCode}
+                  dcwfTitle={item.dcwfTitle}
+                  narrative={item.narrative}
+                  oscalFinding={{
+                    id: item.id,
+                    control_id: item.controlId ?? item.title,
+                    finding_state: item.findingState ?? 'accepted',
+                    student_narrative: item.studentNarrative,
+                    observation: item.observation,
+                  }}
+                />
+              )
+            )}
           </div>
         ) : (
           <p className="mt-6 rounded-md border border-dashed border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-            No public findings yet. Completed assessments marked public will
-            appear here.
+            No public artifacts yet. Completed assessments and ticket
+            resolutions marked public will appear here.
           </p>
         )}
       </section>

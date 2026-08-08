@@ -1,0 +1,50 @@
+# Hourly zero-cost uptime check against the production health endpoint.
+#
+# Required repository variable (Settings → Secrets and variables → Actions → Variables):
+#   UPTIME_URL — full health URL, e.g. https://cyberskill-builder.vercel.app/api/health
+#
+# Optional: use a repository secret named UPTIME_URL instead (vars take precedence below
+# only when set; secrets.UPTIME_URL is the fallback).
+name: Uptime
+
+on:
+  schedule:
+    # Every hour at minute 0 (UTC)
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Hit health endpoint
+        env:
+          UPTIME_URL: ${{ vars.UPTIME_URL || secrets.UPTIME_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${UPTIME_URL:-}" ]; then
+            echo "::error::UPTIME_URL is not set. Add a repository variable (or secret) named UPTIME_URL, e.g. https://cyberskill-builder.vercel.app/api/health"
+            exit 1
+          fi
+          echo "Checking: ${UPTIME_URL}"
+          http_code="$(curl -sS -o /tmp/uptime-body.txt -w '%{http_code}' \
+            --max-time 30 \
+            --retry 2 \
+            --retry-delay 5 \
+            -H 'Accept: application/json' \
+            "$UPTIME_URL")"
+          echo "HTTP status: ${http_code}"
+          if [ -f /tmp/uptime-body.txt ]; then
+            echo "Body:"
+            head -c 2048 /tmp/uptime-body.txt || true
+            echo
+          fi
+          if [ "$http_code" != "200" ]; then
+            echo "::error::Health check failed (expected HTTP 200, got ${http_code})"
+            exit 1
+          fi
+          echo "Health check OK"

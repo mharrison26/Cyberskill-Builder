@@ -70,6 +70,11 @@ export async function POST(request: Request) {
         admin.from('lesson_progress').delete().eq('student_id', userId),
     },
     {
+      table: 'ticket_progress',
+      run: () =>
+        admin.from('ticket_progress').delete().eq('student_id', userId),
+    },
+    {
       table: 'track_enrollments',
       run: () =>
         admin.from('track_enrollments').delete().eq('student_id', userId),

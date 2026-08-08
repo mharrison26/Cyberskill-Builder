@@ -2,14 +2,21 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { QueueVolumeSparkline } from '@/components/dashboard/QueueVolumeSparkline';
+import { SystemsStatusPanel } from '@/components/dashboard/SystemsStatusPanel';
+import { TrackModuleTabs } from '@/components/dashboard/TrackModuleTabs';
 import { LessonCard } from '@/components/LessonCard';
+import { SlaComplianceStat } from '@/components/tickets/SlaComplianceStat';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
   getAppShellContext,
   mapLessonProgressStatus,
 } from '@/lib/auth/appShell';
+import { buildQueueVolumeSeries } from '@/lib/dashboard/queueVolume';
+import { getSystemsStatus } from '@/lib/dashboard/systemsStatus';
 import { createClient } from '@/lib/supabase/server';
+import type { SlaResolutionInput } from '@/lib/tickets/sla';
 import type { LessonType } from '@/types';
 
 export const metadata: Metadata = {
@@ -32,7 +39,25 @@ type TrackLesson = {
   title: string;
 };
 
-export default async function DashboardPage() {
+type TicketProgressJoin = {
+  ticket_id: string;
+  status: string;
+  started_at: string | null;
+  resolved_at: string | null;
+  tickets:
+    | { id: string; track_id: string; sla_minutes: number }
+    | { id: string; track_id: string; sla_minutes: number }[]
+    | null;
+};
+
+type DashboardPageProps = {
+  searchParams: Promise<{ track?: string }> | { track?: string };
+};
+
+export default async function DashboardPage({
+  searchParams,
+}: DashboardPageProps) {
+  const params = await searchParams;
   const supabase = await createClient();
   const {
     data: { user: authUser },
@@ -74,18 +99,48 @@ export default async function DashboardPage() {
     .filter((track): track is EnrolledTrack => track !== null);
 
   const trackIds = enrolledTracks.map((track) => track.id);
+  const requestedTrackSlug =
+    typeof params.track === 'string' ? params.track.trim() : '';
+  const activeTrackSlug = enrolledTracks.some(
+    (track) => track.slug === requestedTrackSlug
+  )
+    ? requestedTrackSlug
+    : null;
 
-  const { data: allLessons, error: lessonsError } =
+  const visibleTracks = activeTrackSlug
+    ? enrolledTracks.filter((track) => track.slug === activeTrackSlug)
+    : enrolledTracks;
+
+  const [
+    { data: allLessons, error: lessonsError },
+    { data: ticketRows },
+    { data: ticketProgressRows, error: ticketProgressError },
+  ] = await Promise.all([
     trackIds.length > 0
-      ? await supabase
+      ? supabase
           .from('lessons')
           .select('id, track_id, tier, lesson_type, sort_order, title')
           .in('track_id', trackIds)
           .order('sort_order', { ascending: true })
-      : { data: [], error: null };
+      : Promise.resolve({ data: [] as TrackLesson[], error: null }),
+    trackIds.length > 0
+      ? supabase.from('tickets').select('track_id').in('track_id', trackIds)
+      : Promise.resolve({ data: [] as { track_id: string }[], error: null }),
+    supabase
+      .from('ticket_progress')
+      .select(
+        'ticket_id, status, started_at, resolved_at, tickets ( id, track_id, sla_minutes )'
+      )
+      .eq('student_id', appUser.id),
+  ]);
 
   if (lessonsError) {
     throw new Error(`Failed to load lessons: ${lessonsError.message}`);
+  }
+  if (ticketProgressError) {
+    throw new Error(
+      `Failed to load ticket progress: ${ticketProgressError.message}`
+    );
   }
 
   const lessonIds = (allLessons ?? []).map((lesson) => lesson.id);
@@ -110,6 +165,28 @@ export default async function DashboardPage() {
     lessonsByTrack.set(lesson.track_id, existing);
   }
 
+  const trackIdsWithTickets = new Set(
+    (ticketRows ?? []).map((row) => row.track_id as string)
+  );
+
+  const queueSeries = buildQueueVolumeSeries(ticketProgressRows ?? [], {
+    days: 14,
+  });
+  const systems = getSystemsStatus(appUser.id);
+
+  const slaItems: SlaResolutionInput[] = (
+    (ticketProgressRows ?? []) as TicketProgressJoin[]
+  )
+    .filter((row) => row.status === 'resolved')
+    .map((row) => {
+      const ticket = Array.isArray(row.tickets) ? row.tickets[0] : row.tickets;
+      return {
+        startedAt: row.started_at,
+        resolvedAt: row.resolved_at,
+        slaMinutes: ticket?.sla_minutes ?? NaN,
+      };
+    });
+
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <header>
@@ -131,61 +208,104 @@ export default async function DashboardPage() {
           </Button>
         </div>
       ) : (
-        enrolledTracks.map((track) => {
-          const lessons = lessonsByTrack.get(track.id) ?? [];
-          const tiers = Array.from(
-            new Set(lessons.map((lesson) => lesson.tier))
-          );
+        <>
+          <section
+            aria-label="Operations overview"
+            className="grid gap-3 sm:grid-cols-3"
+          >
+            <QueueVolumeSparkline series={queueSeries} />
+            <SystemsStatusPanel systems={systems} />
+            <div className="flex min-h-[5.5rem] flex-col justify-between rounded-md border border-border bg-card px-3 py-2.5">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                SLA compliance
+              </p>
+              <SlaComplianceStat
+                items={slaItems}
+                className="mt-2 border-0 bg-transparent p-0"
+              />
+            </div>
+          </section>
 
-          return (
-            <section key={track.id} aria-labelledby={`track-${track.id}`}>
-              <div className="mb-4">
-                <h2 id={`track-${track.id}`} className="text-lg font-semibold">
-                  {track.name}
-                </h2>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  /tracks/{track.slug}
-                </p>
-              </div>
+          <TrackModuleTabs
+            tracks={enrolledTracks.map((track) => ({
+              id: track.id,
+              slug: track.slug,
+              name: track.name,
+              hasTickets: trackIdsWithTickets.has(track.id),
+            }))}
+            activeSlug={activeTrackSlug}
+          />
 
-              {lessons.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No lessons published for this track yet.
-                </p>
-              ) : (
-                tiers.map((tier, index) => {
-                  const tierLessons = lessons.filter(
-                    (lesson) => lesson.tier === tier
-                  );
+          {visibleTracks.map((track) => {
+            const lessons = lessonsByTrack.get(track.id) ?? [];
+            const tiers = Array.from(
+              new Set(lessons.map((lesson) => lesson.tier))
+            );
+            const hasTickets = trackIdsWithTickets.has(track.id);
 
-                  return (
-                    <div key={tier} className="mb-6">
-                      {index > 0 ? <Separator className="mb-6" /> : null}
-                      <h3 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
-                        Tier {tier}
-                      </h3>
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        {tierLessons.map((lesson) => (
-                          <LessonCard
-                            key={lesson.id}
-                            id={lesson.id}
-                            title={lesson.title}
-                            status={mapLessonProgressStatus(
-                              progressByLesson.get(lesson.id)
-                            )}
-                            lessonType={lesson.lesson_type as LessonType}
-                            tier={lesson.tier}
-                            href={`/tracks/${track.slug}/lessons/${lesson.id}`}
-                          />
-                        ))}
+            return (
+              <section key={track.id} aria-labelledby={`track-${track.id}`}>
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <h2
+                      id={`track-${track.id}`}
+                      className="text-lg font-semibold"
+                    >
+                      {track.name}
+                    </h2>
+                    <p className="mt-0.5 font-mono text-sm text-muted-foreground">
+                      /tracks/{track.slug}
+                    </p>
+                  </div>
+                  {hasTickets ? (
+                    <Link
+                      href={`/tracks/${track.slug}/console`}
+                      className="font-mono text-xs text-primary underline-offset-2 hover:underline"
+                    >
+                      Ticket console
+                    </Link>
+                  ) : null}
+                </div>
+
+                {lessons.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No lessons published for this track yet.
+                  </p>
+                ) : (
+                  tiers.map((tier, index) => {
+                    const tierLessons = lessons.filter(
+                      (lesson) => lesson.tier === tier
+                    );
+
+                    return (
+                      <div key={tier} className="mb-6">
+                        {index > 0 ? <Separator className="mb-6" /> : null}
+                        <h3 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                          Tier {tier}
+                        </h3>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          {tierLessons.map((lesson) => (
+                            <LessonCard
+                              key={lesson.id}
+                              id={lesson.id}
+                              title={lesson.title}
+                              status={mapLessonProgressStatus(
+                                progressByLesson.get(lesson.id)
+                              )}
+                              lessonType={lesson.lesson_type as LessonType}
+                              tier={lesson.tier}
+                              href={`/tracks/${track.slug}/lessons/${lesson.id}`}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
-            </section>
-          );
-        })
+                    );
+                  })
+                )}
+              </section>
+            );
+          })}
+        </>
       )}
     </div>
   );

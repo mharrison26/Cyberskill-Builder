@@ -1,0 +1,514 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import type { FileSystemTree, WebContainer } from '@webcontainer/api';
+import type { FitAddon } from '@xterm/addon-fit';
+import type { Terminal } from '@xterm/xterm';
+
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+
+import '@xterm/xterm/css/xterm.css';
+
+export type CodeSandboxProps = {
+  ticketId: string;
+  /** Flat path → file contents map used to seed the WebContainer FS. */
+  initialState: Record<string, string>;
+  readOnly?: boolean;
+  className?: string;
+  onSubmitComplete?: (result: {
+    ok: boolean;
+    status?: number;
+    body?: unknown;
+  }) => void;
+};
+
+type BootStatus = 'idle' | 'booting' | 'ready' | 'error';
+
+function normalizePath(path: string): string {
+  return path
+    .replace(/\\/g, '/')
+    .replace(/^\.?\//, '')
+    .replace(/\/+/g, '/');
+}
+
+/** Convert a flat path→contents map into a WebContainer FileSystemTree. */
+export function filesToTree(files: Record<string, string>): FileSystemTree {
+  const tree: FileSystemTree = {};
+
+  for (const [rawPath, contents] of Object.entries(files)) {
+    if (typeof contents !== 'string') continue;
+    const parts = normalizePath(rawPath).split('/').filter(Boolean);
+    if (parts.length === 0) continue;
+
+    let current: FileSystemTree = tree;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i]!;
+      const existing = current[part];
+      if (!existing || !('directory' in existing)) {
+        current[part] = { directory: {} };
+      }
+      current = (current[part] as { directory: FileSystemTree }).directory;
+    }
+
+    const fileName = parts[parts.length - 1]!;
+    current[fileName] = { file: { contents } };
+  }
+
+  return tree;
+}
+
+function flattenTree(
+  tree: FileSystemTree,
+  prefix = ''
+): Record<string, string> {
+  const out: Record<string, string> = {};
+
+  for (const [name, node] of Object.entries(tree)) {
+    const path = prefix ? `${prefix}/${name}` : name;
+    if ('directory' in node && node.directory) {
+      Object.assign(out, flattenTree(node.directory, path));
+    } else if (
+      'file' in node &&
+      node.file &&
+      'contents' in node.file &&
+      !('symlink' in node.file)
+    ) {
+      const contents = node.file.contents;
+      out[path] =
+        typeof contents === 'string'
+          ? contents
+          : new TextDecoder().decode(contents);
+    }
+  }
+
+  return out;
+}
+
+const SKIP_DIRS = new Set(['node_modules', '.git', '.cache']);
+
+async function collectFilesFromFs(
+  container: WebContainer,
+  dir = '.'
+): Promise<Record<string, string>> {
+  const entries = await container.fs.readdir(dir, { withFileTypes: true });
+  const files: Record<string, string> = {};
+
+  for (const entry of entries) {
+    if (SKIP_DIRS.has(entry.name)) continue;
+    const path = dir === '.' ? entry.name : `${dir}/${entry.name}`;
+    if (entry.isDirectory()) {
+      Object.assign(files, await collectFilesFromFs(container, path));
+    } else if (entry.isFile()) {
+      files[path] = await container.fs.readFile(path, 'utf-8');
+    }
+  }
+
+  return files;
+}
+
+async function ensureParentDirs(
+  container: WebContainer,
+  filePath: string
+): Promise<void> {
+  const parts = normalizePath(filePath).split('/');
+  if (parts.length <= 1) return;
+  const dir = parts.slice(0, -1).join('/');
+  await container.fs.mkdir(dir, { recursive: true });
+}
+
+export function CodeSandbox({
+  ticketId,
+  initialState,
+  readOnly = false,
+  className,
+  onSubmitComplete,
+}: CodeSandboxProps) {
+  const terminalHostRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<WebContainer | null>(null);
+  const terminalRef = useRef<Terminal | null>(null);
+  const fitAddonRef = useRef<FitAddon | null>(null);
+  const shellWriterRef = useRef<WritableStreamDefaultWriter<string> | null>(
+    null
+  );
+  const bootingRef = useRef(false);
+
+  const filePaths = Object.keys(initialState).sort();
+  const [paths, setPaths] = useState<string[]>(filePaths);
+  const [activePath, setActivePath] = useState<string | null>(
+    filePaths[0] ?? null
+  );
+  const [editorValue, setEditorValue] = useState(
+    filePaths[0] ? (initialState[filePaths[0]] ?? '') : ''
+  );
+  const [dirty, setDirty] = useState(false);
+  const [bootStatus, setBootStatus] = useState<BootStatus>('idle');
+  const [bootError, setBootError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let resizeObserver: ResizeObserver | null = null;
+    let shellProcess: { kill: () => void } | null = null;
+
+    async function boot() {
+      if (bootingRef.current || containerRef.current) return;
+      if (!terminalHostRef.current) return;
+      bootingRef.current = true;
+      setBootStatus('booting');
+      setBootError(null);
+
+      try {
+        const [{ WebContainer }, { Terminal }, { FitAddon }] =
+          await Promise.all([
+            import('@webcontainer/api'),
+            import('@xterm/xterm'),
+            import('@xterm/addon-fit'),
+          ]);
+
+        if (cancelled || !terminalHostRef.current) return;
+
+        const fitAddon = new FitAddon();
+        const terminal = new Terminal({
+          convertEol: true,
+          cursorBlink: true,
+          fontSize: 13,
+          fontFamily:
+            'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+          theme: {
+            background: '#0f172a',
+            foreground: '#e2e8f0',
+            cursor: '#94a3b8',
+            selectionBackground: '#334155',
+          },
+        });
+        terminal.loadAddon(fitAddon);
+        terminal.open(terminalHostRef.current);
+        fitAddon.fit();
+
+        terminalRef.current = terminal;
+        fitAddonRef.current = fitAddon;
+
+        const container = await WebContainer.boot({
+          coep: 'credentialless',
+          workdirName: 'ticket-lab',
+        });
+        if (cancelled) {
+          container.teardown();
+          return;
+        }
+
+        containerRef.current = container;
+
+        const tree = filesToTree(initialState);
+        if (Object.keys(tree).length > 0) {
+          await container.mount(tree);
+        }
+
+        const process = await container.spawn('jsh');
+        shellProcess = process;
+
+        process.output.pipeTo(
+          new WritableStream({
+            write(data) {
+              terminal.write(data);
+            },
+          })
+        );
+
+        const writer = process.input.getWriter();
+        shellWriterRef.current = writer;
+        terminal.onData((data) => {
+          void writer.write(data);
+        });
+
+        resizeObserver = new ResizeObserver(() => {
+          fitAddon.fit();
+        });
+        resizeObserver.observe(terminalHostRef.current);
+
+        const seededPaths = Object.keys(initialState).sort();
+        setPaths(seededPaths);
+        if (!cancelled) {
+          setBootStatus('ready');
+        }
+      } catch (error) {
+        if (cancelled) return;
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Failed to boot in-browser sandbox.';
+        setBootError(message);
+        setBootStatus('error');
+        terminalRef.current?.writeln(`\r\n[sandbox] ${message}`);
+      } finally {
+        bootingRef.current = false;
+      }
+    }
+
+    void boot();
+
+    return () => {
+      cancelled = true;
+      resizeObserver?.disconnect();
+      void shellWriterRef.current?.close().catch(() => undefined);
+      shellWriterRef.current = null;
+      shellProcess?.kill();
+      terminalRef.current?.dispose();
+      terminalRef.current = null;
+      fitAddonRef.current = null;
+      containerRef.current?.teardown();
+      containerRef.current = null;
+    };
+    // Seed once on mount from the ticket's initial_state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only boot
+  }, [ticketId]);
+
+  async function persistActiveFile(): Promise<void> {
+    const container = containerRef.current;
+    if (!container || !activePath || readOnly) return;
+    await ensureParentDirs(container, activePath);
+    await container.fs.writeFile(activePath, editorValue);
+    setDirty(false);
+  }
+
+  async function selectFile(path: string) {
+    if (path === activePath) return;
+    try {
+      await persistActiveFile();
+    } catch {
+      // Still allow navigation; surface via editor state if needed.
+    }
+
+    const container = containerRef.current;
+    setActivePath(path);
+    if (container) {
+      try {
+        const contents = await container.fs.readFile(path, 'utf-8');
+        setEditorValue(contents);
+        setDirty(false);
+        return;
+      } catch {
+        // Fall through to local seed.
+      }
+    }
+    setEditorValue(initialState[path] ?? '');
+    setDirty(false);
+  }
+
+  async function refreshFileList() {
+    const container = containerRef.current;
+    if (!container) return;
+    try {
+      const snapshot = await collectFilesFromFs(container);
+      const nextPaths = Object.keys(snapshot).sort();
+      setPaths(nextPaths);
+      if (activePath && !snapshot[activePath] && nextPaths[0]) {
+        setActivePath(nextPaths[0]);
+        setEditorValue(snapshot[nextPaths[0]] ?? '');
+        setDirty(false);
+      }
+    } catch {
+      // Keep current list if readdir fails mid-boot.
+    }
+  }
+
+  async function handleSubmit() {
+    const container = containerRef.current;
+    if (!container || bootStatus !== 'ready' || readOnly) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setSubmitSuccess(false);
+
+    try {
+      await persistActiveFile();
+
+      let files: Record<string, string>;
+      try {
+        const exported = await container.export('.', { format: 'json' });
+        files = flattenTree(exported);
+      } catch {
+        files = await collectFilesFromFs(container);
+      }
+
+      // Body is the TicketSubmission itself (see POST /api/tickets/[ticketId]/submit).
+      const response = await fetch(`/api/tickets/${ticketId}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files }),
+      });
+
+      let body: unknown;
+      try {
+        body = await response.json();
+      } catch {
+        body = undefined;
+      }
+
+      if (!response.ok) {
+        const message =
+          typeof body === 'object' &&
+          body !== null &&
+          'error' in body &&
+          typeof (body as { error: unknown }).error === 'string'
+            ? (body as { error: string }).error
+            : 'Submission failed. Please try again.';
+        setSubmitError(message);
+        onSubmitComplete?.({ ok: false, status: response.status, body });
+        return;
+      }
+
+      setSubmitSuccess(true);
+      onSubmitComplete?.({ ok: true, status: response.status, body });
+    } catch {
+      setSubmitError('Network error. Check your connection and try again.');
+      onSubmitComplete?.({ ok: false });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <section
+      aria-labelledby="code-sandbox-heading"
+      className={cn(
+        'overflow-hidden rounded-lg border border-border bg-card text-card-foreground',
+        className
+      )}
+      data-ticket-id={ticketId}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <div>
+          <h2 id="code-sandbox-heading" className="text-base font-semibold">
+            Lab sandbox
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {bootStatus === 'booting' && 'Booting in-browser runtime…'}
+            {bootStatus === 'ready' &&
+              'Edit files and use the terminal. Submit when ready.'}
+            {bootStatus === 'error' &&
+              (bootError ?? 'Sandbox failed to start.')}
+            {bootStatus === 'idle' && 'Preparing sandbox…'}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={bootStatus !== 'ready' || readOnly}
+            onClick={() => void refreshFileList()}
+          >
+            Refresh files
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={
+              bootStatus !== 'ready' || readOnly || !activePath || !dirty
+            }
+            onClick={() => void persistActiveFile()}
+          >
+            Save file
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={bootStatus !== 'ready' || readOnly || isSubmitting}
+            onClick={() => void handleSubmit()}
+          >
+            {isSubmitting ? 'Submitting…' : 'Submit lab'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid min-h-[28rem] grid-cols-1 md:grid-cols-[12rem_1fr]">
+        <aside className="border-b border-border md:border-b-0 md:border-r">
+          <p className="border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Files
+          </p>
+          <ul className="max-h-48 overflow-y-auto p-1 md:max-h-none md:min-h-[12rem]">
+            {paths.length === 0 ? (
+              <li className="px-2 py-2 text-sm text-muted-foreground">
+                No files seeded
+              </li>
+            ) : (
+              paths.map((path) => (
+                <li key={path}>
+                  <button
+                    type="button"
+                    className={cn(
+                      'w-full rounded-md px-2 py-1.5 text-left font-mono text-xs transition-colors',
+                      path === activePath
+                        ? 'bg-secondary text-foreground'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    )}
+                    onClick={() => void selectFile(path)}
+                  >
+                    {path}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        </aside>
+
+        <div className="flex min-h-[12rem] flex-col">
+          <div className="border-b border-border px-3 py-2 text-xs text-muted-foreground">
+            {activePath ?? 'No file selected'}
+            {dirty ? ' · unsaved' : null}
+          </div>
+          <Textarea
+            aria-label={
+              activePath ? `Edit ${activePath}` : 'File editor (empty)'
+            }
+            value={editorValue}
+            disabled={!activePath || readOnly || bootStatus === 'booting'}
+            spellCheck={false}
+            className="min-h-[12rem] flex-1 resize-none rounded-none border-0 bg-background font-mono text-xs focus-visible:ring-0 md:text-xs"
+            onChange={(event) => {
+              setEditorValue(event.target.value);
+              setDirty(true);
+            }}
+            onBlur={() => {
+              if (dirty) void persistActiveFile();
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="border-t border-border">
+        <p className="border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Terminal
+        </p>
+        <div
+          ref={terminalHostRef}
+          className="h-52 w-full bg-slate-900 px-1 py-1 [&_.xterm]:h-full [&_.xterm-viewport]:overflow-auto"
+          aria-label="Interactive lab terminal"
+        />
+      </div>
+
+      {submitError ? (
+        <p
+          className="border-t border-border px-4 py-2 text-sm text-destructive"
+          role="alert"
+        >
+          {submitError}
+        </p>
+      ) : null}
+      {submitSuccess ? (
+        <p
+          className="border-t border-border px-4 py-2 text-sm text-[color:var(--status-satisfied-foreground)]"
+          role="status"
+        >
+          Submission received.
+        </p>
+      ) : null}
+    </section>
+  );
+}

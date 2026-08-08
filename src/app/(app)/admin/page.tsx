@@ -27,6 +27,11 @@ const ADMIN_LINKS = [
     description: 'Manage lesson content, ordering, and publication status.',
   },
   {
+    href: '/admin/tickets',
+    title: 'Tickets',
+    description: 'Create and edit ticket scenarios across training tracks.',
+  },
+  {
     href: '/admin/grading',
     title: 'Grading Queue',
     description: 'Review student submissions and AI-generated findings.',
