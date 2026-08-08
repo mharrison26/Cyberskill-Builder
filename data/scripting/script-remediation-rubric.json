@@ -1,0 +1,76 @@
+{
+  "document": "Script Remediation Quality Rubric — Helpdesk / Sysadmin",
+  "title": "Short rubric for PowerShell/Bash remediation scripts (educational)",
+  "source_url": "https://example.com/scripting/script-remediation-rubric",
+  "notes": "Pinned educational rubric for RAG-style grading of student remediation scripts. Graders must use only retrieved section text, not parametric knowledge of OS internals.",
+  "disclaimer": "Educational rubric only. Not a substitute for your organization's change-control or runbook standards.",
+  "sections": [
+    {
+      "id": "targeted-fix",
+      "title": "Targeted fix",
+      "topics": ["targeted", "scope", "precise", "remediation"],
+      "keywords": [
+        "targeted",
+        "scope",
+        "precise",
+        "stuck",
+        "spooler",
+        "queue",
+        "service",
+        "restart",
+        "clear"
+      ],
+      "text": "A strong remediation script fixes the reported symptom with a narrow, intentional change. Prefer clearing stuck print jobs and restarting the print service (or equivalent service) over broad destructive commands. Name the service or queue you touch. Avoid catch-all deletes of entire system trees when a spool directory or job list is enough. The script should make the intended end state obvious to a peer reviewing the runbook."
+    },
+    {
+      "id": "side-effects",
+      "title": "Side-effect awareness",
+      "topics": ["side-effects", "safety", "blast-radius", "preserve"],
+      "keywords": [
+        "side effect",
+        "blast radius",
+        "rm -rf",
+        "delete",
+        "config",
+        "preserve",
+        "backup",
+        "unsafe",
+        "recursive"
+      ],
+      "text": "Call out or avoid dangerous side effects. Do not delete printer configuration, drivers, user documents, or unrelated system paths. Prefer removing only stuck job files (or emptying the spool queue directory) and then restarting the service. Avoid recursive deletes of parent directories such as /var, /etc, or whole user profiles. If a restart is required, restart the specific service rather than rebooting the host. Scripts that would wipe shared config or leave the service permanently disabled fail this criterion."
+    },
+    {
+      "id": "idempotent-verify",
+      "title": "Idempotence and verification",
+      "topics": ["idempotent", "verify", "status", "safe-rerun"],
+      "keywords": [
+        "idempotent",
+        "verify",
+        "status",
+        "check",
+        "running",
+        "queue",
+        "empty",
+        "rerun",
+        "safe"
+      ],
+      "text": "Prefer scripts that are safe to re-run and that verify the result. Clearing an already-empty queue should not error fatally. After remediation, check service status and/or confirm the queue is idle (zero stuck jobs). Print a short success or failure message so an operator can see whether the fix worked. Silent scripts that mutate state with no verification are weaker than scripts that confirm the service is running and the queue is clear."
+    },
+    {
+      "id": "clarity-ops",
+      "title": "Operator clarity",
+      "topics": ["clarity", "comments", "runbook", "readable"],
+      "keywords": [
+        "comment",
+        "readable",
+        "echo",
+        "Write-Host",
+        "runbook",
+        "error",
+        "set -e",
+        "ErrorAction"
+      ],
+      "text": "Write the script so another Tier-1/Tier-2 agent can follow it. Use a short header comment describing the purpose. Prefer clear variable names and explicit paths over opaque one-liners. Surface errors (for example set -euo pipefail in Bash, or stopping on errors in PowerShell) instead of swallowing failures. Keep the script short and runnable without interactive prompts."
+    }
+  ]
+}

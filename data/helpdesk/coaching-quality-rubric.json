@@ -1,0 +1,93 @@
+{
+  "document": "Coaching Quality Rubric — Peer / Junior Ticket Notes Review",
+  "title": "Short rubric for coaching feedback on junior technician ticket notes (educational)",
+  "source_url": "internal://coaching-quality-rubric",
+  "notes": "Pinned educational rubric for RAG-style grading of student coaching feedback. Graders must use only retrieved section text, not parametric knowledge of management or HR practice. This is NOT a compliance framework.",
+  "disclaimer": "Educational rubric only. Not a substitute for your organization's performance-management or HR policies.",
+  "sections": [
+    {
+      "id": "specific",
+      "title": "Specific observations tied to the notes",
+      "topics": ["specific", "evidence", "examples", "observations", "cite"],
+      "keywords": [
+        "specific",
+        "evidence",
+        "example",
+        "cite",
+        "quote",
+        "missing step",
+        "notes",
+        "observation",
+        "concrete"
+      ],
+      "text": "Strong coaching feedback cites concrete evidence from the junior technician's ticket notes. Name what was written (or omitted): missing verification, skipped identity checks, vague verbs such as \"fixed stuff,\" slang, blame, or incomplete troubleshooting. Avoid generic praise or criticism that could apply to any ticket (\"needs to improve documentation\"). Prefer short quotations or paraphrases of the actual notes so the junior can see exactly which lines to improve."
+    },
+    {
+      "id": "actionable",
+      "title": "Actionable next steps the junior can follow",
+      "topics": ["actionable", "next steps", "guidance", "practice", "checklist"],
+      "keywords": [
+        "actionable",
+        "next steps",
+        "guidance",
+        "practice",
+        "checklist",
+        "should",
+        "rewrite",
+        "template",
+        "verify",
+        "document"
+      ],
+      "text": "Coaching must tell the junior what to do differently on the next ticket. Prefer ordered, teachable actions: which steps to document (reproduce, identity verify, change made, verification with the user), a short note template, and one practice habit (for example: always include a verification line before closing). Vague advice such as \"be more professional\" or \"write better notes\" without a concrete behavior change fails this criterion."
+    },
+    {
+      "id": "respectful",
+      "title": "Respectful, developmental tone",
+      "topics": ["respectful", "tone", "developmental", "professional", "encourage"],
+      "keywords": [
+        "respectful",
+        "tone",
+        "professional",
+        "developmental",
+        "encourage",
+        "growth",
+        "shaming",
+        "insult",
+        "sarcasm",
+        "colleague"
+      ],
+      "text": "Feedback should treat the junior as a colleague who can grow. Critique the notes and process, not the person. Avoid sarcasm, insults, public shaming, or language that labels someone as lazy or incompetent. Pair gaps with strengths when any exist, and frame corrections as standards for the team (clear documentation, respectful customer language, complete steps). The delivery field should model how you would say this to the junior in a 1:1 — firm on quality, respectful in wording."
+    },
+    {
+      "id": "balance",
+      "title": "Balanced strengths and gaps",
+      "topics": ["balance", "strengths", "gaps", "fair"],
+      "keywords": [
+        "balance",
+        "strengths",
+        "gaps",
+        "fair",
+        "both",
+        "positive",
+        "improvement"
+      ],
+      "text": "Effective coaching usually includes at least one specific strength (even a thin one: they closed promptly, they contacted the user, they attempted a restart) alongside gaps. All-negative feedback that only shames, or empty praise with no gaps, is weaker against this rubric. The goal is a fair snapshot the junior can act on."
+    },
+    {
+      "id": "documentation-standards",
+      "title": "Helpdesk documentation expectations referenced",
+      "topics": ["documentation", "notes", "verification", "professionalism"],
+      "keywords": [
+        "documentation",
+        "ticket notes",
+        "verification",
+        "professional",
+        "steps",
+        "customer",
+        "close",
+        "reproduce"
+      ],
+      "text": "When coaching on incomplete notes, tie feedback to helpdesk documentation expectations: problem statement, steps taken in order, changes made, verification of resolution with the user, and professional wording suitable for audit or handoff. Unprofessional tone in the junior notes (slang, jokes at the customer's expense, blame) should be called out with a short model of better wording."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "ticketCount": 72,
+  "averageResolutionHours": 7.27,
+  "medianResolutionHours": 3.5,
+  "slaCompliancePercent": 83,
+  "volumeByCategory": {
+    "access": 18,
+    "hardware": 12,
+    "software": 15,
+    "network": 10,
+    "email": 9,
+    "account": 8
+  },
+  "averageRaw": 7.265740740740741,
+  "medianRaw": 3.5,
+  "within": 60
+}

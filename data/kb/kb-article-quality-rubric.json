@@ -1,0 +1,95 @@
+{
+  "document": "KB Article Quality Rubric",
+  "title": "Helpdesk knowledge-base write-up quality rubric (educational)",
+  "source_url": "internal://kb-article-quality-rubric",
+  "notes": "Pinned writing-quality rubric for grading post-resolution KB articles. This is NOT a compliance framework (not NIST, CMMC, or SEC). Graders must use only retrieved rubric section text, not parametric knowledge of helpdesk practice.",
+  "sections": [
+    {
+      "id": "clarity",
+      "title": "Clarity and plain language",
+      "topics": ["clarity", "readable", "plain language", "audience", "structure"],
+      "keywords": [
+        "clarity",
+        "plain language",
+        "readable",
+        "clear",
+        "concise",
+        "audience",
+        "structured",
+        "headings",
+        "skimmable"
+      ],
+      "text": "A high-quality knowledge-base article is clear and easy to scan. The problem statement should state what the user experienced in everyday language. Sentences should be short enough to follow on first read. The article should be organized so a Tier-1 agent can find the cause, the fix steps, and the prevention tip without re-reading. Prefer concrete verbs and observable symptoms over vague phrases such as \"something was wrong\" or \"fixed the issue.\""
+    },
+    {
+      "id": "completeness",
+      "title": "Completeness of problem, cause, fix, and prevention",
+      "topics": ["completeness", "problem", "root cause", "resolution", "prevention"],
+      "keywords": [
+        "completeness",
+        "complete",
+        "problem",
+        "root cause",
+        "resolution",
+        "steps",
+        "prevention",
+        "tip",
+        "reproduce",
+        "verify"
+      ],
+      "text": "Completeness means all four sections carry useful content: (1) Problem — what failed, for whom, and under what conditions; (2) Root cause — the underlying reason, not only the symptom; (3) Resolution steps — ordered, actionable steps another agent could follow, including verification that the fix worked; (4) Prevention tip — a practical way to reduce recurrence (user guidance, monitoring, configuration hygiene, or process change). An article that only restates the ticket title, omits verification, or leaves prevention blank is incomplete."
+    },
+    {
+      "id": "jargon",
+      "title": "Jargon explained for the next reader",
+      "topics": ["jargon", "acronyms", "terminology", "explain", "glossary"],
+      "keywords": [
+        "jargon",
+        "acronym",
+        "terminology",
+        "explain",
+        "definition",
+        "plain English",
+        "MFA",
+        "VPN",
+        "SSO",
+        "DNS"
+      ],
+      "text": "Technical terms and acronyms are allowed when they are accurate, but unexplained jargon fails the rubric. On first use, expand or briefly define abbreviations and product-specific labels (for example MFA as multi-factor authentication, VPN as virtual private network, or a vendor portal name). Assume the next reader may be a new Tier-1 agent or a student peer. If a command, error code, or UI label appears, pair it with what it means in context so the article remains usable without prior knowledge of that ticket."
+    },
+    {
+      "id": "actionable-steps",
+      "title": "Actionable, ordered resolution steps",
+      "topics": ["steps", "procedure", "actionable", "ordered", "verification"],
+      "keywords": [
+        "steps",
+        "procedure",
+        "ordered",
+        "actionable",
+        "numbered",
+        "verify",
+        "confirmation",
+        "reproduce",
+        "success criteria"
+      ],
+      "text": "Resolution steps should be ordered and actionable. Prefer numbered steps that name who acts (agent or user), what they click or run, and what success looks like. Include a verification step (for example user can sign in again, VPN connects, or the error no longer appears). Avoid dumping logs without interpretation. Steps that cannot be followed by another agent — \"tweaked settings until it worked\" — do not meet this criterion."
+    },
+    {
+      "id": "prevention-quality",
+      "title": "Useful prevention tip",
+      "topics": ["prevention", "recurrence", "tip", "proactive"],
+      "keywords": [
+        "prevention",
+        "prevent",
+        "recurrence",
+        "tip",
+        "proactive",
+        "monitor",
+        "document",
+        "training",
+        "hygiene"
+      ],
+      "text": "The prevention tip should reduce the chance the same issue returns. Strong tips are specific to the root cause (for example remind users to approve MFA prompts only when they initiated sign-in, or document a required group membership before VPN access). Weak tips are generic slogans such as \"be careful\" or \"train users better\" with no concrete action. The tip may target end users, agents, or system owners, but it must be actionable."
+    }
+  ]
+}

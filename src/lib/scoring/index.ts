@@ -6,11 +6,23 @@ import { cmmcGapAnalysisTicketScorer } from '@/lib/scoring/cmmcGapAnalysis';
 import { configDiffTicketScorer } from '@/lib/scoring/configDiff';
 import { conmonStrategyTicketScorer } from '@/lib/scoring/conmonStrategy';
 import { controlMappingTicketScorer } from '@/lib/scoring/controlMapping';
+import { coachingFeedbackTicketScorer } from '@/lib/scoring/coachingFeedback';
+import { customerReplyTicketScorer } from '@/lib/scoring/customerReply';
+import { helpdeskCapstoneTicketScorer } from '@/lib/scoring/helpdeskCapstone';
+import { kbWriteupTicketScorer } from '@/lib/scoring/kbWriteup';
+import { kpiReportTicketScorer } from '@/lib/scoring/kpiReport';
+import { mockDirectoryTicketScorer } from '@/lib/scoring/mockDirectory';
+import { networkDiagnosticsTicketScorer } from '@/lib/scoring/networkDiagnostics';
 import { oscalGeneratorTicketScorer } from '@/lib/scoring/oscalGenerator';
 import { oscalSspTicketScorer } from '@/lib/scoring/oscalSsp';
+import { p1StatusUpdatesTicketScorer } from '@/lib/scoring/p1StatusUpdates';
 import { poamTicketScorer } from '@/lib/scoring/poam';
 import { secMaterialityTicketScorer } from '@/lib/scoring/secMateriality';
+import { scriptRemediationTicketScorer } from '@/lib/scoring/scriptRemediation';
+import { slaEscalationTicketScorer } from '@/lib/scoring/slaEscalation';
+import { slaQueueSimTicketScorer } from '@/lib/scoring/slaQueueSim';
 import { toolWalkthroughTicketScorer } from '@/lib/scoring/toolWalkthrough';
+import { triageTicketScorer } from '@/lib/scoring/triage';
 
 /**
  * Pluggable ticket scoring.
@@ -22,7 +34,10 @@ import { toolWalkthroughTicketScorer } from '@/lib/scoring/toolWalkthrough';
  *
  * Builtin scorers (config_remediation / config_diff, cccer, hybrid,
  * tool_walkthrough, assessment_procedures, poam, sec_materiality,
- * conmon_strategy, cmmc_gap_analysis, authorization_package, ao_review)
+ * conmon_strategy, cmmc_gap_analysis, authorization_package, ao_review,
+ * triage, mock_directory, kb_writeup, customer_reply, network_diagnostics,
+ * sla_escalation, script_remediation, sla_queue_sim, coaching_feedback,
+ * p1_status_updates, kpi_report, helpdesk_capstone)
  * register at module load. Unregistered types fall back to `defaultTicketScorer`.
  */
 
@@ -100,6 +115,123 @@ export {
   evaluateAoReviewDeterministic,
 } from '@/lib/scoring/aoReview';
 export type { AoReviewStructuredResult } from '@/lib/scoring/aoReview';
+export {
+  evaluateTriage,
+  resolveExpectedPriority,
+  resolvePriorityFromRubric,
+  triageTicketScorer,
+} from '@/lib/scoring/triage';
+export type {
+  TriageExpectedState,
+  TriageStructuredResult,
+  TriageSubmission,
+} from '@/lib/scoring/triage';
+export {
+  evaluateMockDirectoryDeterministic,
+  mockDirectoryTicketScorer,
+  parseMockDirectoryUsers,
+} from '@/lib/scoring/mockDirectory';
+export type {
+  MockDirectoryExpectedState,
+  MockDirectoryStructuredResult,
+  MockDirectorySubmission,
+} from '@/lib/scoring/mockDirectory';
+export {
+  evaluateKbWriteupDeterministic,
+  kbWriteupTicketScorer,
+} from '@/lib/scoring/kbWriteup';
+export type {
+  KbWriteupExpectedState,
+  KbWriteupStructuredResult,
+  KbWriteupSubmission,
+} from '@/lib/scoring/kbWriteup';
+export {
+  createHelpdeskCapstoneTicketScorer,
+  evaluateProcessDocument,
+  extractProcessDocument,
+  helpdeskCapstoneTicketScorer,
+} from '@/lib/scoring/helpdeskCapstone';
+export type {
+  HelpdeskCapstoneExpectedState,
+  HelpdeskCapstoneStructuredResult,
+  HelpdeskCapstoneSubmission,
+  HelpdeskProcessDocument,
+} from '@/lib/scoring/helpdeskCapstone';
+export {
+  evaluateKpiReportDeterministic,
+  isKpiReportTicketType,
+  kpiReportTicketScorer,
+} from '@/lib/scoring/kpiReport';
+export type {
+  KpiReportExpectedState,
+  KpiReportStructuredResult,
+  KpiReportSubmission,
+} from '@/lib/scoring/kpiReport';
+export {
+  coachingFeedbackTicketScorer,
+  evaluateCoachingFeedbackDeterministic,
+} from '@/lib/scoring/coachingFeedback';
+export type {
+  CoachingFeedbackExpectedState,
+  CoachingFeedbackStructuredResult,
+  CoachingFeedbackSubmission,
+} from '@/lib/scoring/coachingFeedback';
+export {
+  evaluateP1StatusUpdates,
+  p1StatusUpdatesTicketScorer,
+  resolveRequiredUpdateTimes,
+} from '@/lib/scoring/p1StatusUpdates';
+export type {
+  P1StatusUpdatesExpectedState,
+  P1StatusUpdatesStructuredResult,
+  P1StatusUpdatesSubmission,
+} from '@/lib/scoring/p1StatusUpdates';
+export {
+  isScriptRemediationTicketType,
+  scriptRemediationTicketScorer,
+} from '@/lib/scoring/scriptRemediation';
+export type {
+  ScriptRemediationExpectedState,
+  ScriptRemediationStructuredResult,
+} from '@/lib/scoring/scriptRemediation';
+export {
+  evaluateSlaEscalationDeterministic,
+  slaEscalationTicketScorer,
+} from '@/lib/scoring/slaEscalation';
+export type {
+  SlaEscalationExpectedState,
+  SlaEscalationStructuredResult,
+  SlaEscalationSubmission,
+} from '@/lib/scoring/slaEscalation';
+export {
+  evaluateNetworkDiagnostics,
+  networkDiagnosticsTicketScorer,
+} from '@/lib/scoring/networkDiagnostics';
+export type {
+  NetworkDiagnosticsExpectedState,
+  NetworkDiagnosticsStructuredResult,
+  NetworkDiagnosticsSubmission,
+} from '@/lib/scoring/networkDiagnostics';
+export {
+  customerReplyTicketScorer,
+  evaluateCustomerReplyDeterministic,
+  extractCustomerEmailFromInitialState,
+} from '@/lib/scoring/customerReply';
+export type {
+  CustomerReplyExpectedState,
+  CustomerReplyStructuredResult,
+  CustomerReplySubmission,
+} from '@/lib/scoring/customerReply';
+export {
+  evaluateSlaQueueSim,
+  isSlaQueueSimTicketType,
+  slaQueueSimTicketScorer,
+} from '@/lib/scoring/slaQueueSim';
+export type {
+  SlaQueueSimExpectedState,
+  SlaQueueSimStructuredResult,
+  SlaQueueSimSubmission,
+} from '@/lib/scoring/slaQueueSim';
 
 /** Outcome of scoring — maps onto ticket_progress in the submit route. */
 export type TicketScoreStatus = 'resolved' | 'needs_revision';
@@ -360,3 +492,50 @@ registerTicketScorer('cmmc_gap_analysis', cmmcGapAnalysisTicketScorer);
 registerTicketScorer('cmmc_l2_gap', cmmcGapAnalysisTicketScorer);
 registerTicketScorer('authorization_package', authorizationPackageTicketScorer);
 registerTicketScorer('ao_review', aoReviewTicketScorer);
+registerTicketScorer('mock_directory', mockDirectoryTicketScorer);
+registerTicketScorer('directory_reset', mockDirectoryTicketScorer);
+registerTicketScorer('account_unlock', mockDirectoryTicketScorer);
+registerTicketScorer('triage', triageTicketScorer);
+registerTicketScorer('ticket_triage', triageTicketScorer);
+registerTicketScorer('helpdesk_triage', triageTicketScorer);
+registerTicketScorer('kb_writeup', kbWriteupTicketScorer);
+registerTicketScorer('helpdesk_kb', kbWriteupTicketScorer);
+registerTicketScorer('resolution_writeup', kbWriteupTicketScorer);
+registerTicketScorer('helpdesk_capstone', helpdeskCapstoneTicketScorer);
+registerTicketScorer('kb_capstone', helpdeskCapstoneTicketScorer);
+registerTicketScorer(
+  'onboarding_process_capstone',
+  helpdeskCapstoneTicketScorer
+);
+registerTicketScorer('kpi_report', kpiReportTicketScorer);
+registerTicketScorer('ticket_metrics', kpiReportTicketScorer);
+registerTicketScorer('helpdesk_kpis', kpiReportTicketScorer);
+registerTicketScorer('csv_kpi_analysis', kpiReportTicketScorer);
+registerTicketScorer('coaching_feedback', coachingFeedbackTicketScorer);
+registerTicketScorer('peer_coaching', coachingFeedbackTicketScorer);
+registerTicketScorer('junior_notes_review', coachingFeedbackTicketScorer);
+registerTicketScorer('sla_escalation', slaEscalationTicketScorer);
+registerTicketScorer('escalate_or_resolve', slaEscalationTicketScorer);
+registerTicketScorer('escalation_decision', slaEscalationTicketScorer);
+registerTicketScorer('customer_reply', customerReplyTicketScorer);
+registerTicketScorer('deescalation_reply', customerReplyTicketScorer);
+registerTicketScorer('angry_email', customerReplyTicketScorer);
+registerTicketScorer('script_remediation', scriptRemediationTicketScorer);
+registerTicketScorer('spooler_fix', scriptRemediationTicketScorer);
+registerTicketScorer('sandbox_script', scriptRemediationTicketScorer);
+registerTicketScorer('service_restart', scriptRemediationTicketScorer);
+registerTicketScorer('network_diagnostics', networkDiagnosticsTicketScorer);
+registerTicketScorer('pi04', networkDiagnosticsTicketScorer);
+registerTicketScorer('traceroute_fault', networkDiagnosticsTicketScorer);
+registerTicketScorer(
+  'command_output_diagnosis',
+  networkDiagnosticsTicketScorer
+);
+registerTicketScorer('sla_queue_sim', slaQueueSimTicketScorer);
+registerTicketScorer('queue_simulation', slaQueueSimTicketScorer);
+registerTicketScorer('timed_queue', slaQueueSimTicketScorer);
+registerTicketScorer('multi_ticket_sim', slaQueueSimTicketScorer);
+registerTicketScorer('p1_status_updates', p1StatusUpdatesTicketScorer);
+registerTicketScorer('incident_status_cadence', p1StatusUpdatesTicketScorer);
+registerTicketScorer('stakeholder_updates', p1StatusUpdatesTicketScorer);
+registerTicketScorer('outage_comms', p1StatusUpdatesTicketScorer);

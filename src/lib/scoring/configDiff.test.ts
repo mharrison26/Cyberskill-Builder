@@ -98,4 +98,55 @@ describe('evaluateConfigDiff', () => {
     expect(feedback).toContain('All 1 configuration checks passed');
     expect(feedback).not.toContain('/etc/shadow');
   });
+
+  it('passes file_absent when the path is missing from the submission', () => {
+    const result = evaluateConfigDiff(
+      {
+        files: {
+          'status/spooler.state': 'running\n',
+        },
+      },
+      ticket({
+        expected_state: {
+          rules: [
+            {
+              id: 'job_gone',
+              type: 'file_absent',
+              path: 'var/spool/cups/c00001',
+            },
+            {
+              id: 'status_ok',
+              type: 'file_contains',
+              path: 'status/spooler.state',
+              pattern: 'running',
+            },
+          ],
+        },
+      })
+    );
+    expect(result.passedCount).toBe(2);
+    expect(result.rules[0]?.passed).toBe(true);
+  });
+
+  it('fails file_absent when the path is still present', () => {
+    const result = evaluateConfigDiff(
+      {
+        files: {
+          'var/spool/cups/c00001': 'stuck job',
+        },
+      },
+      ticket({
+        expected_state: {
+          rules: [
+            {
+              id: 'job_gone',
+              type: 'file_absent',
+              path: 'var/spool/cups/c00001',
+            },
+          ],
+        },
+      })
+    );
+    expect(result.rules[0]?.passed).toBe(false);
+  });
 });

@@ -25,7 +25,7 @@ type TicketResolutionCardProps = {
   narrative: string;
   tier?: string | null;
   ticketType?: string | null;
-  /** Track flagship capstone (AO review). */
+  /** Track flagship capstone (GRC AO review or helpdesk HD-07 / PI-07). */
   isFlagship?: boolean;
   className?: string;
 };

@@ -30,6 +30,16 @@ permissions:
 jobs:
   cost-controls:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      FLY_APP_NAME: ${{ secrets.FLY_APP_NAME }}
+      FLY_SANDBOX_IMAGE: ${{ secrets.FLY_SANDBOX_IMAGE }}
+      FLY_API_HOSTNAME: ${{ secrets.FLY_API_HOSTNAME }}
+      FLY_SANDBOX_HOURLY_RATE_USD: ${{ secrets.FLY_SANDBOX_HOURLY_RATE_USD }}
+      FLY_MONTHLY_SPEND_WARNING_USD: ${{ secrets.FLY_MONTHLY_SPEND_WARNING_USD }}
+      FLY_MAX_ACTIVE_SANDBOXES_PER_TENANT: ${{ secrets.FLY_MAX_ACTIVE_SANDBOXES_PER_TENANT }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -49,19 +59,9 @@ jobs:
           fi
 
       - name: Run sandbox cost controls
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          FLY_APP_NAME: ${{ secrets.FLY_APP_NAME }}
-          FLY_SANDBOX_IMAGE: ${{ secrets.FLY_SANDBOX_IMAGE }}
-          FLY_API_HOSTNAME: ${{ secrets.FLY_API_HOSTNAME }}
-          FLY_SANDBOX_HOURLY_RATE_USD: ${{ secrets.FLY_SANDBOX_HOURLY_RATE_USD }}
-          FLY_MONTHLY_SPEND_WARNING_USD: ${{ secrets.FLY_MONTHLY_SPEND_WARNING_USD }}
-          FLY_MAX_ACTIVE_SANDBOXES_PER_TENANT: ${{ secrets.FLY_MAX_ACTIVE_SANDBOXES_PER_TENANT }}
+        if: ${{ env.NEXT_PUBLIC_SUPABASE_URL != '' && env.SUPABASE_SERVICE_ROLE_KEY != '' && env.FLY_API_TOKEN != '' && env.FLY_APP_NAME != '' && env.FLY_SANDBOX_IMAGE != '' }}
         run: npm run sandbox:cost-controls
-        if: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.SUPABASE_SERVICE_ROLE_KEY != '' && secrets.FLY_API_TOKEN != '' && secrets.FLY_APP_NAME != '' && secrets.FLY_SANDBOX_IMAGE != '' }}
 
       - name: Skipped (missing secrets)
+        if: ${{ env.NEXT_PUBLIC_SUPABASE_URL == '' || env.SUPABASE_SERVICE_ROLE_KEY == '' || env.FLY_API_TOKEN == '' || env.FLY_APP_NAME == '' || env.FLY_SANDBOX_IMAGE == '' }}
         run: echo "Skipping sandbox cost controls — set Supabase + Fly secrets to enable"
-        if: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL == '' || secrets.SUPABASE_SERVICE_ROLE_KEY == '' || secrets.FLY_API_TOKEN == '' || secrets.FLY_APP_NAME == '' || secrets.FLY_SANDBOX_IMAGE == '' }}

@@ -23,6 +23,7 @@ import type {
  *   rules: Array<
  *     | { id, type: 'file_equals', path, content }
  *     | { id, type: 'file_contains', path, pattern, regex?: boolean }
+ *     | { id, type: 'file_absent', path }
  *     | { id, type: 'file_permission', path, mode }
  *     | { id, type: 'command_history', pattern, regex?: boolean }
  *   >;
@@ -47,6 +48,11 @@ export type ConfigDiffRule =
       path: string;
       pattern: string;
       regex?: boolean;
+    }
+  | {
+      id: string;
+      type: 'file_absent';
+      path: string;
     }
   | {
       id: string;
@@ -357,6 +363,19 @@ function evaluateRule(
           : 'Required pattern was not found in the file.',
       };
     }
+    case 'file_absent': {
+      const path = normalizePath(rule.path);
+      const passed = files[path] === undefined;
+      return {
+        id: rule.id,
+        type: rule.type,
+        passed,
+        summary: `file_absent: ${path}`,
+        detail: passed
+          ? 'File is correctly absent from the sandbox filesystem.'
+          : 'File is still present; it should have been removed.',
+      };
+    }
     case 'file_permission': {
       const path = normalizePath(rule.path);
       const actual = modes[path];
@@ -425,6 +444,9 @@ function isConfigDiffRule(value: unknown): value is ConfigDiffRule {
     const hasPattern = typeof value.pattern === 'string';
     if (type === 'command_history') return hasPattern;
     return hasPattern && typeof value.path === 'string';
+  }
+  if (type === 'file_absent') {
+    return typeof value.path === 'string';
   }
   if (type === 'file_permission') {
     return typeof value.path === 'string' && typeof value.mode === 'string';

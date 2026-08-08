@@ -8,7 +8,7 @@ import * as Sentry from '@sentry/nextjs';
  */
 
 export type SentryFeature = 'scoring' | 'sandbox';
-export type SentryPi = 'PI-03' | 'PI-05';
+export type SentryPi = 'PI-03' | 'PI-05' | 'PI-06';
 
 export type FeatureErrorContext = {
   feature: SentryFeature;
