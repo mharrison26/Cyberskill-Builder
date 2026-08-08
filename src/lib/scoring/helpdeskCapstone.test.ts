@@ -34,7 +34,10 @@ function ticket(): ScorableTicket {
   };
 }
 
-function long(text: string, min = HELPDESK_PROCESS_DOC_MIN_SECTION_LENGTH): string {
+function long(
+  text: string,
+  min = HELPDESK_PROCESS_DOC_MIN_SECTION_LENGTH
+): string {
   if (text.length >= min) return text;
   return `${text} ${'x'.repeat(min - text.length)}`;
 }

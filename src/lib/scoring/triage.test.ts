@@ -91,8 +91,9 @@ describe('extractTriageSubmission', () => {
   });
 
   it('accepts priority digit forms', () => {
-    expect(extractTriageSubmission({ priority: '1', category: 'hardware' }))
-      .toMatchObject({ priority: 'P1' });
+    expect(
+      extractTriageSubmission({ priority: '1', category: 'hardware' })
+    ).toMatchObject({ priority: 'P1' });
   });
 
   it('returns null when fields are missing', () => {

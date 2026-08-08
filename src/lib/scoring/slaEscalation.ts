@@ -80,7 +80,10 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function normalizeDecision(value: unknown): SlaEscalationDecision | null {
   if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
   if (normalized === 'escalate' || normalized === 'escalation') {
     return 'escalate';
   }
@@ -120,8 +123,7 @@ export function parseSlaEscalationExpectedState(
       : undefined;
 
   let guidanceTopics: string[] | undefined;
-  const rawTopics =
-    expectedState.guidanceTopics ?? expectedState.policyTopics;
+  const rawTopics = expectedState.guidanceTopics ?? expectedState.policyTopics;
   if (Array.isArray(rawTopics)) {
     const topics = rawTopics
       .filter((item): item is string => typeof item === 'string')

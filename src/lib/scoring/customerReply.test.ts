@@ -168,9 +168,8 @@ describe('customerReplyTicketScorer', () => {
   });
 
   it('needs revision when Anthropic API key is missing', async () => {
-    const { MissingAnthropicApiKeyError } = await import(
-      '@/lib/grading/callClaudeGrading'
-    );
+    const { MissingAnthropicApiKeyError } =
+      await import('@/lib/grading/callClaudeGrading');
     vi.mocked(callClaudeGrading).mockRejectedValue(
       new MissingAnthropicApiKeyError()
     );

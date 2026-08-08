@@ -151,7 +151,9 @@ export function isCmmcGapAnalysisTicketType(ticketType: string): boolean {
 
 export function isTriageTicketType(ticketType: string): boolean {
   const base = ticketTypeBase(ticketType);
-  return base === 'triage' || base === 'ticket_triage' || base === 'helpdesk_triage';
+  return (
+    base === 'triage' || base === 'ticket_triage' || base === 'helpdesk_triage'
+  );
 }
 
 export function isMockDirectoryTicketType(ticketType: string): boolean {
@@ -340,11 +342,7 @@ export function TicketWorkSlot({
 
   if (isTriageTicketType(ticket.ticket_type)) {
     return (
-      <TriageTicket
-        ticket={ticket}
-        readOnly={readOnly}
-        className={className}
-      />
+      <TriageTicket ticket={ticket} readOnly={readOnly} className={className} />
     );
   }
 

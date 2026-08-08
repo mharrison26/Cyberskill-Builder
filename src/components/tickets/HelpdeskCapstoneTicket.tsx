@@ -109,9 +109,7 @@ export function HelpdeskCapstoneTicket({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [title, setTitle] = useState(
-    'Help Desk New-Hire Onboarding Checklist'
-  );
+  const [title, setTitle] = useState('Help Desk New-Hire Onboarding Checklist');
   const [sections, setSections] =
     useState<Record<HelpdeskProcessDocSectionKey, string>>(emptySections);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -163,7 +161,14 @@ export function HelpdeskCapstoneTicket({
     return HELPDESK_PROCESS_DOC_SECTION_KEYS.every(
       (key) => sections[key].trim().length >= minSectionLength
     );
-  }, [kb?.complete, acknowledged, title, sections, minTitleLength, minSectionLength]);
+  }, [
+    kb?.complete,
+    acknowledged,
+    title,
+    sections,
+    minTitleLength,
+    minSectionLength,
+  ]);
 
   async function handleSubmit() {
     if (readOnly || isSubmitting || !canSubmit) return;
@@ -286,10 +291,7 @@ export function HelpdeskCapstoneTicket({
                                 'Resolution steps',
                                 article.article.resolutionSteps,
                               ],
-                              [
-                                'Prevention tip',
-                                article.article.preventionTip,
-                              ],
+                              ['Prevention tip', article.article.preventionTip],
                             ] as const
                           ).map(([label, body]) => (
                             <div key={label}>

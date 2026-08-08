@@ -69,8 +69,7 @@ const FIELD_META: Array<{
     label: 'Respectful delivery',
     description:
       'How you would say this in a 1:1 — firm on quality, respectful to the person.',
-    placeholder:
-      'Draft the short coaching message you would give the junior…',
+    placeholder: 'Draft the short coaching message you would give the junior…',
     rows: 4,
   },
 ];
@@ -238,9 +237,7 @@ export function CoachingFeedbackTicket({
       };
 
       if (!response.ok) {
-        throw new Error(
-          payload.error ?? 'Failed to submit coaching feedback.'
-        );
+        throw new Error(payload.error ?? 'Failed to submit coaching feedback.');
       }
 
       setScoreStatus(payload.status ?? null);
@@ -280,7 +277,9 @@ export function CoachingFeedbackTicket({
           {context.juniorTech ? (
             <p>
               <span className="font-medium text-foreground">Junior tech: </span>
-              <span className="text-muted-foreground">{context.juniorTech}</span>
+              <span className="text-muted-foreground">
+                {context.juniorTech}
+              </span>
             </p>
           ) : null}
           {context.requester ? (

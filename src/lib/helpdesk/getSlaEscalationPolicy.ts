@@ -67,8 +67,9 @@ export function retrieveSlaEscalationPolicy(
   const doc = loadPolicyDocument();
   return retrieveFromGuidanceDocument(doc, SLA_ESCALATION_POLICY_PATH, query, {
     topK: options?.topK ?? 5,
-    requiredSectionIds:
-      options?.requiredSectionIds ?? [...DEFAULT_CORE_SECTION_IDS],
+    requiredSectionIds: options?.requiredSectionIds ?? [
+      ...DEFAULT_CORE_SECTION_IDS,
+    ],
   });
 }
 

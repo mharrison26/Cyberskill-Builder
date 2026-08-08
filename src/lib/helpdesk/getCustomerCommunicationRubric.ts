@@ -29,10 +29,7 @@ function loadRubricDocument(): GuidanceDocument & { disclaimer?: string } {
     return cachedDocument;
   }
 
-  const filePath = path.join(
-    process.cwd(),
-    CUSTOMER_COMMUNICATION_RUBRIC_PATH
-  );
+  const filePath = path.join(process.cwd(), CUSTOMER_COMMUNICATION_RUBRIC_PATH);
   const raw = readFileSync(filePath, 'utf8');
   const parsed = JSON.parse(raw) as GuidanceDocument & { disclaimer?: string };
 

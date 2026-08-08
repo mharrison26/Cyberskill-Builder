@@ -60,8 +60,7 @@ const FIELD_META: Array<{
     label: 'Resolution steps',
     description:
       'Ordered steps another agent can follow, including how you verified the fix.',
-    placeholder:
-      '1. …\n2. …\n3. Verify: …',
+    placeholder: '1. …\n2. …\n3. Verify: …',
     rows: 6,
   },
   {
@@ -69,8 +68,7 @@ const FIELD_META: Array<{
     label: 'Prevention tip',
     description:
       'A concrete tip that reduces recurrence for users, agents, or system owners.',
-    placeholder:
-      'Give one actionable prevention tip tied to the root cause…',
+    placeholder: 'Give one actionable prevention tip tied to the root cause…',
     rows: 3,
   },
 ];

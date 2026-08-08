@@ -31,7 +31,9 @@ function loadRubricDocument(): GuidanceDocument {
   const parsed = JSON.parse(raw) as GuidanceDocument;
 
   if (!parsed?.sections || !Array.isArray(parsed.sections)) {
-    throw new Error(`Invalid KB quality rubric file: ${KB_QUALITY_RUBRIC_PATH}`);
+    throw new Error(
+      `Invalid KB quality rubric file: ${KB_QUALITY_RUBRIC_PATH}`
+    );
   }
 
   cachedDocument = parsed;
@@ -43,11 +45,7 @@ export function resetKbQualityRubricCacheForTests(): void {
   cachedDocument = null;
 }
 
-const DEFAULT_CORE_SECTION_IDS = [
-  'clarity',
-  'completeness',
-  'jargon',
-] as const;
+const DEFAULT_CORE_SECTION_IDS = ['clarity', 'completeness', 'jargon'] as const;
 
 /**
  * Retrieve pinned KB-quality rubric sections for a student write-up.
@@ -64,8 +62,9 @@ export function retrieveKbQualityRubric(
   const doc = loadRubricDocument();
   return retrieveFromGuidanceDocument(doc, KB_QUALITY_RUBRIC_PATH, query, {
     topK: options?.topK ?? 5,
-    requiredSectionIds:
-      options?.requiredSectionIds ?? [...DEFAULT_CORE_SECTION_IDS],
+    requiredSectionIds: options?.requiredSectionIds ?? [
+      ...DEFAULT_CORE_SECTION_IDS,
+    ],
   });
 }
 

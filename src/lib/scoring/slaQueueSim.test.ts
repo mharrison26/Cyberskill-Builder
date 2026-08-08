@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScorableTicket } from '@/lib/scoring';
-import {
-  getTicketScorer,
-  listRegisteredTicketTypes,
-} from '@/lib/scoring';
+import { getTicketScorer, listRegisteredTicketTypes } from '@/lib/scoring';
 import {
   evaluateSlaQueueSim,
   extractSlaQueueSimSubmission,
@@ -54,7 +51,10 @@ function queueInitialState() {
         difficulty: 'medium',
         slaMinutes: 20,
         resolutionOptions: [
-          { id: 'dispatch_facilities', label: 'Dispatch facilities / clear jam' },
+          {
+            id: 'dispatch_facilities',
+            label: 'Dispatch facilities / clear jam',
+          },
           { id: 'replace_toner', label: 'Replace toner only' },
           { id: 'ignore', label: 'Close without action' },
         ],
@@ -142,7 +142,12 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
 }
 
 function correctItems(resolvedOffsetsMinutes: number[]) {
-  const answers = [
+  const answers: Array<{
+    id: string;
+    priority: 'P1' | 'P2' | 'P3' | 'P4';
+    category: string;
+    resolution: string;
+  }> = [
     {
       id: 'INC-1001',
       priority: 'P1',
@@ -173,7 +178,7 @@ function correctItems(resolvedOffsetsMinutes: number[]) {
       category: 'software',
       resolution: 'catalog_request',
     },
-  ] as const;
+  ];
 
   return answers.map((answer, index) => {
     const minutes = resolvedOffsetsMinutes[index] ?? 1;
@@ -202,9 +207,7 @@ describe('slaQueueSim parsers', () => {
     expect(items).toHaveLength(5);
     expect(items[0]?.id).toBe('INC-1001');
     expect(items[0]?.slaMinutes).toBe(5);
-    expect(items[0]?.resolutionOptions[0]?.id).toBe(
-      'restart_vpn_concentrator'
-    );
+    expect(items[0]?.resolutionOptions[0]?.id).toBe('restart_vpn_concentrator');
   });
 
   it('parses expected_state thresholds and per-item answers', () => {

@@ -4,10 +4,7 @@ import type {
   TicketScorer,
   TicketSubmission,
 } from '@/lib/scoring/index';
-import {
-  isTriagePriority,
-  type TriagePriority,
-} from '@/lib/scoring/ticketUi';
+import { isTriagePriority, type TriagePriority } from '@/lib/scoring/ticketUi';
 import {
   computeSlaCompliancePercent,
   wasResolvedWithinSla,
@@ -178,7 +175,8 @@ export function parseSlaQueueSimItems(
 ): SlaQueueSimItem[] {
   if (!isPlainObject(initialState)) return [];
 
-  const raw = initialState.items ?? initialState.queueItems ?? initialState.queue;
+  const raw =
+    initialState.items ?? initialState.queueItems ?? initialState.queue;
   if (!Array.isArray(raw)) return [];
 
   const items: SlaQueueSimItem[] = [];
@@ -287,7 +285,8 @@ export function parseSlaQueueSimExpectedState(
     }
   }
 
-  const passSla = expectedState.passSlaCompliancePercent ?? expectedState.passSla;
+  const passSla =
+    expectedState.passSlaCompliancePercent ?? expectedState.passSla;
   const passCorrect =
     expectedState.passCorrectnessPercent ?? expectedState.passCorrectness;
   const slaWeight = expectedState.slaWeight;
@@ -308,7 +307,8 @@ export function parseSlaQueueSimExpectedState(
         ? slaWeight
         : undefined,
     correctnessWeight:
-      typeof correctnessWeight === 'number' && Number.isFinite(correctnessWeight)
+      typeof correctnessWeight === 'number' &&
+      Number.isFinite(correctnessWeight)
         ? correctnessWeight
         : undefined,
   };
@@ -362,7 +362,8 @@ export function extractSlaQueueSimSubmission(
   if (items.length === 0) return null;
 
   return {
-    type: typeof submission.type === 'string' ? submission.type : 'sla_queue_sim',
+    type:
+      typeof submission.type === 'string' ? submission.type : 'sla_queue_sim',
     simulationStartedAt: startedAt,
     items,
   };

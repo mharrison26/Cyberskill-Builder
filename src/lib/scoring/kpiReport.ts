@@ -353,7 +353,8 @@ export function extractKpiReportSubmission(
   submission: TicketSubmission
 ): KpiReportSubmission | null {
   const files = extractKpiSubmissionFiles(submission);
-  const fromFiles = Object.keys(files).length > 0 ? extractKpisFromFiles(files) : null;
+  const fromFiles =
+    Object.keys(files).length > 0 ? extractKpisFromFiles(files) : null;
   const reportFromFiles =
     Object.keys(files).length > 0 ? extractReportFromFiles(files) : null;
 
@@ -629,9 +630,7 @@ export function evaluateKpiReportDeterministic(
     );
   }
   if (!reportOk) {
-    parts.push(
-      `Report must be at least ${minReportLength} characters.`
-    );
+    parts.push(`Report must be at least ${minReportLength} characters.`);
   }
   if (!keywordsOk) {
     parts.push(

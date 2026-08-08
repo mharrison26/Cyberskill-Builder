@@ -8,7 +8,6 @@ import {
   P1_STATUS_UPDATES_DEFAULT_TOLERANCE_MINUTES,
   P1_STATUS_UPDATES_MIN_FIELD_LENGTH,
   formatSimClock,
-  isP1StatusUpdatesTicketType,
 } from '@/lib/scoring/ticketUi';
 
 /**
@@ -54,7 +53,6 @@ export {
   P1_STATUS_UPDATES_MIN_FIELD_LENGTH,
   P1_STATUS_UPDATES_DEFAULT_TOLERANCE_MINUTES,
   formatSimClock,
-  isP1StatusUpdatesTicketType,
 } from '@/lib/scoring/ticketUi';
 
 export type P1StatusUpdateEntry = {
@@ -145,7 +143,7 @@ export function parseP1StatusUpdatesExpectedState(
       .map((item) => readNonNegInt(item))
       .filter((item): item is number => item !== null);
     if (times.length > 0) {
-      requiredUpdateTimes = [...new Set(times)].sort((a, b) => a - b);
+      requiredUpdateTimes = Array.from(new Set(times)).sort((a, b) => a - b);
     }
   }
 
@@ -156,8 +154,7 @@ export function parseP1StatusUpdatesExpectedState(
   );
 
   const incidentWindowMinutes = readPositiveInt(
-    expectedState.incidentWindowMinutes ??
-      expectedState.incident_window_minutes
+    expectedState.incidentWindowMinutes ?? expectedState.incident_window_minutes
   );
 
   const cadenceToleranceMinutes = readNonNegInt(
@@ -236,9 +233,7 @@ export function extractP1StatusUpdatesSubmission(
     if (!isPlainObject(entry)) continue;
 
     const postedAtSimMinutes = readNonNegInt(
-      entry.postedAtSimMinutes ??
-        entry.posted_at_sim_minutes ??
-        entry.postedAt
+      entry.postedAtSimMinutes ?? entry.posted_at_sim_minutes ?? entry.postedAt
     );
     if (postedAtSimMinutes === null) continue;
 
@@ -453,7 +448,9 @@ export function evaluateP1StatusUpdates(
       ok: false,
       feedback: `Post stakeholder status updates at the required cadence (${requiredTimes
         .map(formatSimClock)
-        .join(', ')}). Each update must include impact, ETA, and next-update time.`,
+        .join(
+          ', '
+        )}). Each update must include impact, ETA, and next-update time.`,
     };
   }
 

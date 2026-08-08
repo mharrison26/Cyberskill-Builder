@@ -105,16 +105,13 @@ export function CustomerReplyTicket({
 }: CustomerReplyTicketProps) {
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
-  const email = useMemo(
-    () => parseCustomerEmail(initialState),
-    [initialState]
-  );
+  const email = useMemo(() => parseCustomerEmail(initialState), [initialState]);
   const minReplyLength = resolveMinReplyLength(expectedState);
 
   const workPrompt =
     typeof initialState.prompt === 'string' && initialState.prompt.trim()
       ? initialState.prompt.trim()
-      : 'Draft a professional reply that acknowledges the customer\'s frustration, states clear next steps in plain language, and keeps a calm tone.';
+      : "Draft a professional reply that acknowledges the customer's frustration, states clear next steps in plain language, and keeps a calm tone.";
 
   const [reply, setReply] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});

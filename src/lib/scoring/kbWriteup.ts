@@ -135,7 +135,9 @@ function formatTicketContext(
   if (typeof notes === 'string' && notes.trim()) {
     parts.push(`resolutionNotes: ${notes.trim()}`);
   } else if (Array.isArray(notes)) {
-    const items = notes.filter((entry) => typeof entry === 'string') as string[];
+    const items = notes.filter(
+      (entry) => typeof entry === 'string'
+    ) as string[];
     if (items.length > 0) {
       parts.push(`resolutionNotes: ${items.join('; ')}`);
     }

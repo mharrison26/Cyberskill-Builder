@@ -527,7 +527,10 @@ registerTicketScorer('service_restart', scriptRemediationTicketScorer);
 registerTicketScorer('network_diagnostics', networkDiagnosticsTicketScorer);
 registerTicketScorer('pi04', networkDiagnosticsTicketScorer);
 registerTicketScorer('traceroute_fault', networkDiagnosticsTicketScorer);
-registerTicketScorer('command_output_diagnosis', networkDiagnosticsTicketScorer);
+registerTicketScorer(
+  'command_output_diagnosis',
+  networkDiagnosticsTicketScorer
+);
 registerTicketScorer('sla_queue_sim', slaQueueSimTicketScorer);
 registerTicketScorer('queue_simulation', slaQueueSimTicketScorer);
 registerTicketScorer('timed_queue', slaQueueSimTicketScorer);

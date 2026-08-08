@@ -93,9 +93,9 @@ describe('extractCoachingFeedbackSubmission', () => {
 
 describe('extractJuniorNotesFromInitialState', () => {
   it('reads juniorNotes string and nested body', () => {
-    expect(extractJuniorNotesFromInitialState(ticket().initial_state)).toContain(
-      'reset stuff'
-    );
+    expect(
+      extractJuniorNotesFromInitialState(ticket().initial_state)
+    ).toContain('reset stuff');
 
     expect(
       extractJuniorNotesFromInitialState({
@@ -146,9 +146,8 @@ describe('coachingFeedbackTicketScorer', () => {
   });
 
   it('returns needs_revision when API key is missing', async () => {
-    const { MissingAnthropicApiKeyError } = await import(
-      '@/lib/grading/callClaudeGrading'
-    );
+    const { MissingAnthropicApiKeyError } =
+      await import('@/lib/grading/callClaudeGrading');
     vi.mocked(callClaudeGrading).mockRejectedValue(
       new MissingAnthropicApiKeyError()
     );

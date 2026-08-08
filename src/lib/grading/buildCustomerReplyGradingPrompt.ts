@@ -26,7 +26,8 @@ ${submission.scenarioBrief.trim()}
 `
     : '';
 
-  const emailSubject = submission.customerEmailSubject?.trim() || '(not provided)';
+  const emailSubject =
+    submission.customerEmailSubject?.trim() || '(not provided)';
   const emailBody =
     submission.customerEmailBody?.trim() || '(customer email not provided)';
 

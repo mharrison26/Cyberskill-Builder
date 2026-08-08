@@ -235,7 +235,8 @@ export function parseMockDirectoryExpectedState(
 export function extractMockDirectorySubmission(
   submission: TicketSubmission
 ): MockDirectorySubmission | null {
-  const raw = submission.actions ?? submission.actionLog ?? submission.action_log;
+  const raw =
+    submission.actions ?? submission.actionLog ?? submission.action_log;
   if (!Array.isArray(raw)) return null;
 
   const actions: MockDirectoryLoggedAction[] = [];

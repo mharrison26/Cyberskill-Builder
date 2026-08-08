@@ -91,7 +91,8 @@ function parseAdvanceSteps(clock: Record<string, unknown>): number[] {
       .filter((item): item is number => typeof item === 'number')
       .map((item) => Math.floor(item))
       .filter((item) => item > 0);
-    if (steps.length > 0) return [...new Set(steps)].sort((a, b) => a - b);
+    if (steps.length > 0)
+      return Array.from(new Set(steps)).sort((a, b) => a - b);
   }
   return [...P1_STATUS_UPDATES_DEFAULT_ADVANCE_STEPS];
 }
@@ -99,7 +100,11 @@ function parseAdvanceSteps(clock: Record<string, unknown>): number[] {
 function resolveRequiredTimesForUi(
   expectedState: Record<string, unknown>,
   initialState: Record<string, unknown>
-): { requiredTimes: number[]; toleranceMinutes: number; minFieldLength: number } {
+): {
+  requiredTimes: number[];
+  toleranceMinutes: number;
+  minFieldLength: number;
+} {
   const minFieldLength =
     typeof expectedState.minFieldLength === 'number' &&
     Number.isFinite(expectedState.minFieldLength) &&
@@ -123,7 +128,7 @@ function resolveRequiredTimesForUi(
       .filter((item) => item >= 0);
     if (times.length > 0) {
       return {
-        requiredTimes: [...new Set(times)].sort((a, b) => a - b),
+        requiredTimes: Array.from(new Set(times)).sort((a, b) => a - b),
         toleranceMinutes,
         minFieldLength,
       };
@@ -162,12 +167,12 @@ function resolveRequiredTimesForUi(
 function parseStakeholderSeed(
   channel: Record<string, unknown>
 ): ChannelMessage[] {
-  const raw =
-    channel.stakeholders ?? channel.seedMessages ?? channel.messages;
+  const raw = channel.stakeholders ?? channel.seedMessages ?? channel.messages;
   if (!Array.isArray(raw)) return [];
 
   const messages: ChannelMessage[] = [];
-  for (const [index, entry] of raw.entries()) {
+  for (let index = 0; index < raw.length; index += 1) {
+    const entry = raw[index];
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
     const record = entry as Record<string, unknown>;
     const body = readString(record, ['body', 'text', 'message']);
@@ -236,10 +241,7 @@ export function P1StatusUpdatesTicket({
     ['name', 'channelName'],
     '#incident-comms'
   );
-  const seedMessages = useMemo(
-    () => parseStakeholderSeed(channel),
-    [channel]
-  );
+  const seedMessages = useMemo(() => parseStakeholderSeed(channel), [channel]);
 
   const [simMinutes, setSimMinutes] = useState(startSimMinutes);
   const [updates, setUpdates] = useState<PostedUpdate[]>([]);
@@ -274,8 +276,7 @@ export function P1StatusUpdatesTicket({
     return requiredTimes.map((requiredTime) => {
       const hit = updates.some(
         (update) =>
-          Math.abs(update.postedAtSimMinutes - requiredTime) <=
-          toleranceMinutes
+          Math.abs(update.postedAtSimMinutes - requiredTime) <= toleranceMinutes
       );
       return { requiredTime, hit };
     });
@@ -362,7 +363,9 @@ export function P1StatusUpdatesTicket({
     clearOutcome();
 
     if (updates.length === 0) {
-      setSubmitError('Post at least one status update to the channel before submitting.');
+      setSubmitError(
+        'Post at least one status update to the channel before submitting.'
+      );
       return;
     }
 
@@ -516,9 +519,7 @@ export function P1StatusUpdatesTicket({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              Channel {channelName}
-            </CardTitle>
+            <CardTitle className="text-base">Channel {channelName}</CardTitle>
             <CardDescription>
               Mock stakeholder channel. Your posts appear with the simulated
               timestamp.
@@ -646,8 +647,7 @@ export function P1StatusUpdatesTicket({
               />
               <p className="text-xs text-muted-foreground">
                 Example: enter <code>30</code> for {formatSimClock(30)}. This
-                must match the next required cadence slot when scoring
-                promises.
+                must match the next required cadence slot when scoring promises.
               </p>
               {draftErrors.nextUpdateAtSimMinutes ? (
                 <p role="alert" className="text-sm text-destructive">
@@ -687,9 +687,7 @@ export function P1StatusUpdatesTicket({
               role="status"
             >
               <p className="font-medium">
-                {scoreStatus === 'resolved'
-                  ? 'Resolved'
-                  : 'Needs revision'}
+                {scoreStatus === 'resolved' ? 'Resolved' : 'Needs revision'}
               </p>
               <p className="mt-1 text-muted-foreground">{feedback}</p>
             </div>

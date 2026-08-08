@@ -83,7 +83,10 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function normalizeKey(value: unknown): string | null {
   if (typeof value !== 'string') return null;
-  const trimmed = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const trimmed = value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
   return trimmed || null;
 }
 

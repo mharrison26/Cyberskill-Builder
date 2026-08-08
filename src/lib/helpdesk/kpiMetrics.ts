@@ -108,7 +108,10 @@ export function parseResolvedTicketsCsv(csvText: string): ResolvedTicketRow[] {
     const createdAt = cells[createdIdx] ?? '';
     const resolvedAt = cells[resolvedIdx] ?? '';
     const slaMinutes = Number(cells[slaIdx]);
-    const category = (cells[catIdx] ?? '').trim().toLowerCase().replace(/\s+/g, '_');
+    const category = (cells[catIdx] ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_');
 
     if (!createdAt || !resolvedAt || !category) continue;
     if (!Number.isFinite(slaMinutes) || slaMinutes < 0) continue;
@@ -191,10 +194,7 @@ export function extractCsvFromInitialState(
   if (typeof initialState.csv === 'string' && initialState.csv.trim()) {
     return initialState.csv;
   }
-  if (
-    typeof initialState.csvText === 'string' &&
-    initialState.csvText.trim()
-  ) {
+  if (typeof initialState.csvText === 'string' && initialState.csvText.trim()) {
     return initialState.csvText;
   }
 

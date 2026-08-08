@@ -93,8 +93,11 @@ function readString(
   return fallback;
 }
 
-function resolveMinReportLength(expectedState: Record<string, unknown>): number {
-  const value = expectedState.minReportLength ?? expectedState.min_report_length;
+function resolveMinReportLength(
+  expectedState: Record<string, unknown>
+): number {
+  const value =
+    expectedState.minReportLength ?? expectedState.min_report_length;
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
     return Math.floor(value);
   }
@@ -108,7 +111,9 @@ function parseVolumeInput(raw: string): Record<string, number> | null {
     const parsed = JSON.parse(trimmed) as unknown;
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
       const out: Record<string, number> = {};
-      for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+      for (const [key, value] of Object.entries(
+        parsed as Record<string, unknown>
+      )) {
         const n = typeof value === 'number' ? value : Number(value);
         if (!Number.isFinite(n)) return null;
         out[key.trim().toLowerCase().replace(/\s+/g, '_')] = Math.round(n);
@@ -169,7 +174,11 @@ export function KpiReportTicket({
 
   const meta = useMemo(
     () => ({
-      ticketCode: readString(initialState, ['ticketCode', 'ticket_code'], 'HD-05'),
+      ticketCode: readString(
+        initialState,
+        ['ticketCode', 'ticket_code'],
+        'HD-05'
+      ),
       title: readString(
         initialState,
         ['title'],
@@ -212,7 +221,10 @@ export function KpiReportTicket({
 
   function validate(): boolean {
     const next: FormErrors = {};
-    if (!averageResolutionHours.trim() || Number.isNaN(Number(averageResolutionHours))) {
+    if (
+      !averageResolutionHours.trim() ||
+      Number.isNaN(Number(averageResolutionHours))
+    ) {
       next.averageResolutionHours = 'Enter average resolution hours (number).';
     }
     if (
@@ -221,7 +233,10 @@ export function KpiReportTicket({
     ) {
       next.slaCompliancePercent = 'Enter SLA compliance percent (number).';
     }
-    if (!medianResolutionHours.trim() || Number.isNaN(Number(medianResolutionHours))) {
+    if (
+      !medianResolutionHours.trim() ||
+      Number.isNaN(Number(medianResolutionHours))
+    ) {
       next.medianResolutionHours = 'Enter median resolution hours (number).';
     }
     if (!parseVolumeInput(volumeByCategory)) {
@@ -403,9 +418,10 @@ export function KpiReportTicket({
         <div className="space-y-3">
           <p className="max-w-prose text-sm text-muted-foreground">
             Use the lab sandbox to analyze the CSV. In this browser environment
-            run <code className="text-foreground">node analyze.mjs</code>. Python
-            track students can complete <code className="text-foreground">analyze.py</code>{' '}
-            with the same output contract. Write{' '}
+            run <code className="text-foreground">node analyze.mjs</code>.
+            Python track students can complete{' '}
+            <code className="text-foreground">analyze.py</code> with the same
+            output contract. Write{' '}
             <code className="text-foreground">output/kpis.json</code> and{' '}
             <code className="text-foreground">report.md</code>, then submit from
             the sandbox — or paste results into the form below.
@@ -497,7 +513,9 @@ export function KpiReportTicket({
             aria-invalid={Boolean(errors.volumeByCategory)}
           />
           {errors.volumeByCategory ? (
-            <p className="text-xs text-destructive">{errors.volumeByCategory}</p>
+            <p className="text-xs text-destructive">
+              {errors.volumeByCategory}
+            </p>
           ) : (
             <p className="text-xs text-muted-foreground">
               JSON object or comma-separated pairs. Categories in this CSV:{' '}
@@ -524,8 +542,8 @@ export function KpiReportTicket({
             <p className="text-xs text-destructive">{errors.report}</p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {report.trim().length}/{minReportLength} characters minimum. Mention
-              SLA, resolution time, and category volume.
+              {report.trim().length}/{minReportLength} characters minimum.
+              Mention SLA, resolution time, and category volume.
             </p>
           )}
         </div>

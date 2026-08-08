@@ -118,7 +118,12 @@ function resolveOptionList(
       if (!Array.isArray(raw)) continue;
       const opts = raw
         .filter((item): item is string => typeof item === 'string')
-        .map((item) => item.trim().toLowerCase().replace(/[\s-]+/g, '_'))
+        .map((item) =>
+          item
+            .trim()
+            .toLowerCase()
+            .replace(/[\s-]+/g, '_')
+        )
         .filter(Boolean);
       if (opts.length > 0) return opts;
     }

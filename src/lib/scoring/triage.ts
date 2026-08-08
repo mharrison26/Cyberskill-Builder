@@ -47,7 +47,10 @@ export type TriageExpectedState = {
   expectedCategory?: string;
   /** Optional override of the default impact × urgency matrix. */
   priorityMatrix?: Partial<
-    Record<TriageImpactLevel, Partial<Record<TriageUrgencyLevel, TriagePriority>>>
+    Record<
+      TriageImpactLevel,
+      Partial<Record<TriageUrgencyLevel, TriagePriority>>
+    >
   >;
   /** Allowed category values for this ticket (defaults to TRIAGE_CATEGORIES). */
   categoryOptions?: string[];
@@ -129,8 +132,7 @@ export function parseTriageExpectedState(
   );
 
   let categoryOptions: string[] | undefined;
-  const rawOptions =
-    expectedState.categoryOptions ?? expectedState.categories;
+  const rawOptions = expectedState.categoryOptions ?? expectedState.categories;
   if (Array.isArray(rawOptions)) {
     const opts = rawOptions
       .map((item) => normalizeCategory(item))
@@ -199,10 +201,14 @@ export function extractTriageSubmission(
   submission: TicketSubmission
 ): TriageSubmission | null {
   const priority = normalizePriority(
-    submission.priority ?? submission.assignedPriority ?? submission.priorityLevel
+    submission.priority ??
+      submission.assignedPriority ??
+      submission.priorityLevel
   );
   const category = normalizeCategory(
-    submission.category ?? submission.ticketCategory ?? submission.assignedCategory
+    submission.category ??
+      submission.ticketCategory ??
+      submission.assignedCategory
   );
 
   if (!priority || !category) {
@@ -273,8 +279,7 @@ export function evaluateTriage(
       parsed: null,
       structured: { ...baseStructured, reason: 'missing_fields' },
       ok: false,
-      feedback:
-        'Submission must include priority (P1–P4) and category.',
+      feedback: 'Submission must include priority (P1–P4) and category.',
     };
   }
 

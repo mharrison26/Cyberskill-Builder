@@ -161,8 +161,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const flagshipEligible = isFlagshipEligibleTicketType(
     context.ticket.ticket_type
   );
-  const markFlagship =
-    flagshipEligible && scoreResult.status === 'resolved';
+  const markFlagship = flagshipEligible && scoreResult.status === 'resolved';
 
   const { data: portfolioItem, error: portfolioError } = await context.supabase
     .from('portfolio_items')

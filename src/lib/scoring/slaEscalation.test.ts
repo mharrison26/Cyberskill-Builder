@@ -200,9 +200,8 @@ describe('slaEscalationTicketScorer', () => {
   });
 
   it('needs revision when API key is missing after deterministic pass', async () => {
-    const { MissingAnthropicApiKeyError } = await import(
-      '@/lib/grading/callClaudeGrading'
-    );
+    const { MissingAnthropicApiKeyError } =
+      await import('@/lib/grading/callClaudeGrading');
     vi.mocked(callClaudeGrading).mockRejectedValue(
       new MissingAnthropicApiKeyError()
     );

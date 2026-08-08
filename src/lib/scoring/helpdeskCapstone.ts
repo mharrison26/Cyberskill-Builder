@@ -132,9 +132,7 @@ export function extractAcknowledgment(submission: TicketSubmission): boolean {
   return false;
 }
 
-function extractSections(
-  raw: unknown
-): Record<string, string> | null {
+function extractSections(raw: unknown): Record<string, string> | null {
   if (!isPlainObject(raw)) return null;
   const sections: Record<string, string> = {};
   for (const [key, value] of Object.entries(raw)) {
@@ -190,8 +188,9 @@ export function evaluateProcessDocument(
     options?.minTitleLength ?? HELPDESK_PROCESS_DOC_MIN_TITLE_LENGTH;
   const minSectionLength =
     options?.minSectionLength ?? HELPDESK_PROCESS_DOC_MIN_SECTION_LENGTH;
-  const required =
-    options?.requiredSections ?? [...HELPDESK_PROCESS_DOC_SECTION_KEYS];
+  const required = options?.requiredSections ?? [
+    ...HELPDESK_PROCESS_DOC_SECTION_KEYS,
+  ];
 
   if (!doc) {
     return {

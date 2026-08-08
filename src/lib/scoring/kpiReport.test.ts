@@ -121,7 +121,8 @@ describe('extractKpiReportSubmission', () => {
     const parsed = extractKpiReportSubmission({
       averageResolutionHours: '7.27',
       slaCompliancePercent: '83%',
-      volumeByCategory: 'access:18, hardware:12, software:15, network:10, email:9, account:8',
+      volumeByCategory:
+        'access:18, hardware:12, software:15, network:10, email:9, account:8',
       report: GOOD_REPORT,
     });
     expect(parsed?.volumeByCategory).toEqual(EXPECTED.volumeByCategory);
@@ -171,9 +172,10 @@ describe('evaluateKpiReportDeterministic', () => {
       ticket()
     );
     expect(result.ok).toBe(false);
-    expect(result.structured.matches.find((m) => m.field === 'volumeByCategory')?.matched).toBe(
-      false
-    );
+    expect(
+      result.structured.matches.find((m) => m.field === 'volumeByCategory')
+        ?.matched
+    ).toBe(false);
   });
 
   it('rejects a too-short report', () => {

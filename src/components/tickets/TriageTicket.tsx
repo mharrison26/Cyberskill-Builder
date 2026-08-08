@@ -216,8 +216,8 @@ export function TriageTicket({
         <CardHeader>
           <CardTitle className="text-base">Raw support request</CardTitle>
           <CardDescription>
-            Read the inbound request, then assign priority and category using the
-            impact × urgency rubric in the scenario brief.
+            Read the inbound request, then assign priority and category using
+            the impact × urgency rubric in the scenario brief.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">

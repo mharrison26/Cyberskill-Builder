@@ -103,8 +103,7 @@ export function MockDirectoryPanel({
   const [scoreStatus, setScoreStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedUser =
-    users.find((user) => user.id === selectedUserId) ?? null;
+  const selectedUser = users.find((user) => user.id === selectedUserId) ?? null;
 
   const filteredUsers = useMemo(() => {
     const q = activeQuery.trim().toLowerCase();
@@ -390,9 +389,7 @@ export function MockDirectoryPanel({
                             type="button"
                             size="sm"
                             variant={
-                              selectedUserId === user.id
-                                ? 'default'
-                                : 'outline'
+                              selectedUserId === user.id ? 'default' : 'outline'
                             }
                             onClick={() => selectUser(user.id)}
                             disabled={readOnly || isSubmitting}

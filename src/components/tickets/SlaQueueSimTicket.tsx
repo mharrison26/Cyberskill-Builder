@@ -77,9 +77,7 @@ function emptyWork(): ItemWork {
   return { priority: '', category: '', resolution: '', resolvedAt: null };
 }
 
-function buildInitialWork(
-  items: SlaQueueSimItem[]
-): Record<string, ItemWork> {
+function buildInitialWork(items: SlaQueueSimItem[]): Record<string, ItemWork> {
   const map: Record<string, ItemWork> = {};
   for (const item of items) {
     map[item.id] = emptyWork();
@@ -313,11 +311,7 @@ export function SlaQueueSimTicket({
             {resolvedCount}/{items.length} resolved
           </span>
           {!simulationStartedAt ? (
-            <Button
-              type="button"
-              onClick={startSimulation}
-              disabled={readOnly}
-            >
+            <Button type="button" onClick={startSimulation} disabled={readOnly}>
               Start simulation
             </Button>
           ) : (
@@ -412,9 +406,7 @@ export function SlaQueueSimTicket({
           <CardHeader>
             <CardTitle className="text-base">{selected.subject}</CardTitle>
             <CardDescription>
-              {selected.requester
-                ? `From ${selected.requester} · `
-                : null}
+              {selected.requester ? `From ${selected.requester} · ` : null}
               Assign priority and category, choose a resolution, then mark
               resolved before the SLA expires.
             </CardDescription>

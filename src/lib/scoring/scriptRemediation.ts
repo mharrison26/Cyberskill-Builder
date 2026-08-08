@@ -170,9 +170,7 @@ function resolveScript(
     return { path: null, content: '', expectedMissing: true };
   }
 
-  const candidates = Object.keys(files)
-    .filter(looksLikeScriptPath)
-    .sort();
+  const candidates = Object.keys(files).filter(looksLikeScriptPath).sort();
 
   // Prefer remediation-ish names.
   const preferred = candidates.find((p) =>

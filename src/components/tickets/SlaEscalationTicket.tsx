@@ -109,7 +109,9 @@ function parsePolicySections(
     readString(initialState, ['policyText', 'policy_text'])
   );
   if (policyText) {
-    return [{ id: 'policy', title: 'SLA / escalation policy', text: policyText }];
+    return [
+      { id: 'policy', title: 'SLA / escalation policy', text: policyText },
+    ];
   }
 
   return [];
@@ -224,7 +226,9 @@ export function SlaEscalationTicket({
       };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Failed to submit escalation decision.');
+        throw new Error(
+          payload.error ?? 'Failed to submit escalation decision.'
+        );
       }
 
       setScoreStatus(payload.status ?? null);
@@ -295,12 +299,16 @@ export function SlaEscalationTicket({
           {scenario.requester ? (
             <p>
               <span className="font-medium text-foreground">Requester: </span>
-              <span className="text-muted-foreground">{scenario.requester}</span>
+              <span className="text-muted-foreground">
+                {scenario.requester}
+              </span>
             </p>
           ) : null}
           {scenario.priorityHint ? (
             <p>
-              <span className="font-medium text-foreground">Priority hint: </span>
+              <span className="font-medium text-foreground">
+                Priority hint:{' '}
+              </span>
               <span className="text-muted-foreground">
                 {scenario.priorityHint}
               </span>
@@ -400,8 +408,8 @@ export function SlaEscalationTicket({
                 placeholder="Cite the policy section (Tier-1 scope or a mandatory escalate trigger) and connect it to facts from the scenario…"
               />
               <p className="text-xs text-muted-foreground">
-                {justification.trim().length}/{minJustificationLength} characters
-                minimum
+                {justification.trim().length}/{minJustificationLength}{' '}
+                characters minimum
               </p>
               {errors.justification ? (
                 <p className="text-sm text-destructive" role="alert">
@@ -419,9 +427,7 @@ export function SlaEscalationTicket({
             </Button>
             {scoreStatus ? (
               <Badge
-                variant={
-                  scoreStatus === 'resolved' ? 'default' : 'secondary'
-                }
+                variant={scoreStatus === 'resolved' ? 'default' : 'secondary'}
               >
                 {scoreStatus.replace(/_/g, ' ')}
               </Badge>

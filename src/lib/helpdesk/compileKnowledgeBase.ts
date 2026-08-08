@@ -105,7 +105,7 @@ export function parseKbSourceTicketTypes(
       .filter((t): t is string => typeof t === 'string')
       .map((t) => ticketTypeBase(t))
       .filter(Boolean);
-    if (types.length > 0) return [...new Set(types)];
+    if (types.length > 0) return Array.from(new Set(types));
   }
 
   // Also accept GRC-style sourceArtifacts with ticketTypes arrays.
@@ -125,7 +125,7 @@ export function parseKbSourceTicketTypes(
         }
       }
     }
-    if (types.length > 0) return [...new Set(types)];
+    if (types.length > 0) return Array.from(new Set(types));
   }
 
   return [...DEFAULT_KB_SOURCE_TICKET_TYPES];
@@ -136,7 +136,8 @@ export function parseMinArticles(
   initialState?: Record<string, unknown> | null
 ): number {
   const fromExpected =
-    isPlainObject(expectedState) && typeof expectedState.minArticles === 'number'
+    isPlainObject(expectedState) &&
+    typeof expectedState.minArticles === 'number'
       ? expectedState.minArticles
       : null;
   const fromInitial =
@@ -153,13 +154,11 @@ function articleTitle(
   submission: Record<string, unknown> | null
 ): string {
   const fromInitial = isPlainObject(ticket.initial_state)
-    ? asNonEmptyString(ticket.initial_state.title) ??
+    ? (asNonEmptyString(ticket.initial_state.title) ??
       asNonEmptyString(ticket.initial_state.ticketCode) ??
-      asNonEmptyString(ticket.initial_state.ticket_code)
+      asNonEmptyString(ticket.initial_state.ticket_code))
     : null;
-  const fromSubmission = submission
-    ? asNonEmptyString(submission.title)
-    : null;
+  const fromSubmission = submission ? asNonEmptyString(submission.title) : null;
   if (fromSubmission) return fromSubmission;
   if (fromInitial) return fromInitial;
   const brief = ticket.scenario_brief.trim();
@@ -233,18 +232,15 @@ export async function compileStudentKnowledgeBase(
   }
 
   const matchingTickets = ((tickets ?? []) as Array<Record<string, unknown>>)
-    .map(
-      (row): TicketRow => ({
-        id: row.id as string,
-        ticket_type: row.ticket_type as string,
-        scenario_brief: (row.scenario_brief as string) ?? '',
-        initial_state: isPlainObject(row.initial_state)
-          ? row.initial_state
-          : null,
-        sort_order:
-          typeof row.sort_order === 'number' ? row.sort_order : 0,
-      })
-    )
+    .map((row): TicketRow => ({
+      id: row.id as string,
+      ticket_type: row.ticket_type as string,
+      scenario_brief: (row.scenario_brief as string) ?? '',
+      initial_state: isPlainObject(row.initial_state)
+        ? row.initial_state
+        : null,
+      sort_order: typeof row.sort_order === 'number' ? row.sort_order : 0,
+    }))
     .filter((t) => typeSet.has(ticketTypeBase(t.ticket_type)))
     .sort((a, b) => a.sort_order - b.sort_order);
 
