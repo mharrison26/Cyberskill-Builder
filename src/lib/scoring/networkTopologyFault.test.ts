@@ -295,8 +295,8 @@ describe('networkTopologyFaultTicketScorer', () => {
 
     expect(result.status).toBe('needs_revision');
     expect(result.feedback).toContain('ANTHROPIC_API_KEY');
-    expect(
-      (result.structuredResult as { reason?: string }).reason
-    ).toBe('grading_unavailable_missing_api_key');
+    expect((result.structuredResult as { reason?: string }).reason).toBe(
+      'grading_unavailable_missing_api_key'
+    );
   });
 });

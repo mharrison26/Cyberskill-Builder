@@ -204,8 +204,7 @@ describe('evaluateConfigDiff', () => {
           id: 'user_created',
           type: 'file_contains',
           path: 'etc/passwd',
-          pattern:
-            'arivera:x:1005:1005:Alex Rivera:/home/arivera:/bin/bash',
+          pattern: 'arivera:x:1005:1005:Alex Rivera:/home/arivera:/bin/bash',
         },
         {
           id: 'group_membership',
@@ -229,8 +228,7 @@ describe('evaluateConfigDiff', () => {
           'etc/passwd':
             'root:x:0:0:root:/root:/bin/bash\n' +
             'arivera:x:1005:1005:Alex Rivera:/home/arivera:/bin/bash\n',
-          'etc/group':
-            'root:x:0:\ndevelopers:x:2001:jsmith,mchen,arivera\n',
+          'etc/group': 'root:x:0:\ndevelopers:x:2001:jsmith,mchen,arivera\n',
           'srv/projects/shared/README': 'Shared engineering project tree\n',
         },
         fileModes: {

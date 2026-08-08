@@ -116,7 +116,13 @@ describe('extractBackupDrPlanSubmission', () => {
   });
 
   it('allows omitting optional planNotes', () => {
-    const { planNotes: _notes, ...requiredOnly } = solidSubmission;
+    const requiredOnly = {
+      backupFrequency: solidSubmission.backupFrequency,
+      retention: solidSubmission.retention,
+      rpoTargets: solidSubmission.rpoTargets,
+      rtoTargets: solidSubmission.rtoTargets,
+      restoreTestingCadence: solidSubmission.restoreTestingCadence,
+    };
     const parsed = extractBackupDrPlanSubmission(requiredOnly);
     expect(parsed?.planNotes).toBeUndefined();
     expect(parsed?.backupFrequency).toBe(solidSubmission.backupFrequency);

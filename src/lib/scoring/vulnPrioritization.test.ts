@@ -282,10 +282,7 @@ describe('evaluateVulnPrioritization', () => {
   it('resolves a near-correct schedule above the 80% threshold', () => {
     const near = [...CANONICAL_ORDER];
     [near[0], near[1]] = [near[1]!, near[0]!];
-    const result = evaluateVulnPrioritization(
-      { orderedIds: near },
-      ticket()
-    );
+    const result = evaluateVulnPrioritization({ orderedIds: near }, ticket());
     expect(result.structured.percentage).toBeGreaterThan(80);
     expect(result.ok).toBe(true);
     expect(result.structured.exactMatch).toBe(false);

@@ -27,12 +27,7 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
     expected_state: {
       minReportFieldLength: 60,
       passThresholdPercent: 100,
-      guidanceTopics: [
-        'timeline',
-        'root-cause',
-        'remediation',
-        'prevention',
-      ],
+      guidanceTopics: ['timeline', 'root-cause', 'remediation', 'prevention'],
       rules: [
         {
           id: 'nginx_listen_fixed',
@@ -90,9 +85,7 @@ afterEach(() => {
 describe('isOutageCapstoneTicketType', () => {
   it('recognizes aliases', () => {
     expect(isOutageCapstoneTicketType('outage_capstone')).toBe(true);
-    expect(isOutageCapstoneTicketType('incident_response_capstone')).toBe(
-      true
-    );
+    expect(isOutageCapstoneTicketType('incident_response_capstone')).toBe(true);
     expect(isOutageCapstoneTicketType('sysadmin_outage_capstone')).toBe(true);
     expect(isOutageCapstoneTicketType('linux.outage_capstone')).toBe(true);
     expect(isOutageCapstoneTicketType('cis_hardening')).toBe(false);
@@ -122,8 +115,7 @@ describe('outageCapstoneTicketScorer', () => {
     const result = await outageCapstoneTicketScorer.score(
       {
         files: {
-          'etc/nginx/sites-enabled/app.conf':
-            'server { listen 9999; }\n',
+          'etc/nginx/sites-enabled/app.conf': 'server { listen 9999; }\n',
           'var/lib/app/disk.fill': 'DISK_FULL_SIMULATION\n',
           'var/lib/app/status': 'state=down\ndisk=full\n',
         },

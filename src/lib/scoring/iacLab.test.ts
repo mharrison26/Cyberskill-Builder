@@ -121,9 +121,9 @@ describe('extractHostsValues / extractModuleInvocations', () => {
   it('parses hosts and classic module maps', () => {
     expect(extractHostsValues(classicPlaybook)).toContain('webservers');
     const inv = extractModuleInvocations(classicPlaybook);
-    expect(inv.some((i) => i.module === 'package' && i.args.name === 'nginx')).toBe(
-      true
-    );
+    expect(
+      inv.some((i) => i.module === 'package' && i.args.name === 'nginx')
+    ).toBe(true);
     expect(
       inv.some(
         (i) =>
@@ -215,11 +215,11 @@ describe('iacLabTicketScorer', () => {
   });
 
   it('fails on wrong hosts group', async () => {
-    const bad = classicPlaybook.replace('hosts: webservers', 'hosts: dbservers');
-    const result = evaluateIacLab(
-      { files: { 'playbook.yml': bad } },
-      ticket()
+    const bad = classicPlaybook.replace(
+      'hosts: webservers',
+      'hosts: dbservers'
     );
+    const result = evaluateIacLab({ files: { 'playbook.yml': bad } }, ticket());
     expect(result.percentage).toBeLessThan(100);
     expect(
       result.declarationResults.find((d) => d.id === 'hosts_webservers')?.passed

@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  buildDeterministicInfraFollowUpQuestions,
-} from '@/lib/infra/generateFollowUpQuestions';
+import { buildDeterministicInfraFollowUpQuestions } from '@/lib/infra/generateFollowUpQuestions';
 import { isInfraDesignCapstoneTicketType } from '@/lib/infra/ticketCodes';
 import { isFlagshipEligibleTicketType } from '@/lib/helpdesk/ticketCodes';
 import type { ScorableTicket } from '@/lib/scoring';
@@ -89,9 +87,7 @@ describe('infra design capstone ticket codes', () => {
 
 describe('extractInfraDesignDocument', () => {
   it('reads nested and flat shapes', () => {
-    expect(
-      extractInfraDesignDocument({ designDoc })
-    ).toMatchObject(designDoc);
+    expect(extractInfraDesignDocument({ designDoc })).toMatchObject(designDoc);
     expect(
       extractInfraDesignDocument({
         title: designDoc.title,
@@ -128,7 +124,9 @@ describe('evaluateInfraDesignCapstoneDeterministic', () => {
     );
     expect(short.ok).toBe(false);
     expect(short.structured.reason).toBe('design_doc_incomplete');
-    expect(short.structured.minBodyLength).toBe(INFRA_DESIGN_DOC_MIN_BODY_LENGTH);
+    expect(short.structured.minBodyLength).toBe(
+      INFRA_DESIGN_DOC_MIN_BODY_LENGTH
+    );
 
     const noQs = evaluateInfraDesignCapstoneDeterministic(
       { designDoc, answers: {} },
@@ -205,9 +203,8 @@ describe('createInfraDesignCapstoneTicketScorer', () => {
   });
 
   it('resolves with length checks when API key missing', async () => {
-    const { MissingAnthropicApiKeyError } = await import(
-      '@/lib/grading/callClaudeGrading'
-    );
+    const { MissingAnthropicApiKeyError } =
+      await import('@/lib/grading/callClaudeGrading');
     vi.mocked(callClaudeGrading).mockRejectedValueOnce(
       new MissingAnthropicApiKeyError()
     );

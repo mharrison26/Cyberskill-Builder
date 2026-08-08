@@ -31,12 +31,16 @@ Office manager runs quarterly restore drills with a one-page runbook.
 describe('buildDeterministicInfraFollowUpQuestions', () => {
   it('returns 4–5 grounded questions', () => {
     const questions = buildDeterministicInfraFollowUpQuestions(designDoc);
-    expect(questions.length).toBeGreaterThanOrEqual(INFRA_FOLLOWUP_QUESTION_MIN);
+    expect(questions.length).toBeGreaterThanOrEqual(
+      INFRA_FOLLOWUP_QUESTION_MIN
+    );
     expect(questions.length).toBeLessThanOrEqual(INFRA_FOLLOWUP_QUESTION_MAX);
     expect(questions.every((q) => q.id && q.prompt.length > 20)).toBe(true);
-    expect(questions.some((q) => /ransomware|topology|budget|restore/i.test(q.prompt))).toBe(
-      true
-    );
+    expect(
+      questions.some((q) =>
+        /ransomware|topology|budget|restore/i.test(q.prompt)
+      )
+    ).toBe(true);
   });
 });
 

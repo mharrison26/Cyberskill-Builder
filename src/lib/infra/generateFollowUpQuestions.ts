@@ -146,7 +146,9 @@ export function buildDeterministicInfraFollowUpQuestions(
 ): InfraFollowUpQuestion[] {
   const title = doc.title.trim() || 'your design decision';
   const topologyFromBody = doc.body
-    .match(/(?:chose|choose|recommend(?:ed)?|selected)\s+([^.!?\n]{8,80})/i)?.[1]
+    .match(
+      /(?:chose|choose|recommend(?:ed)?|selected)\s+([^.!?\n]{8,80})/i
+    )?.[1]
     ?.trim();
   const topology = doc.topologyChoice?.trim() || topologyFromBody || null;
   const bodyLower = doc.body.toLowerCase();
@@ -236,13 +238,17 @@ export async function generateInfraFollowUpQuestionsFromDesignDoc(
     );
 
     if (!toolUse || toolUse.name !== QUESTIONS_TOOL_NAME) {
-      throw new Error('Claude did not return infra follow-up questions tool output.');
+      throw new Error(
+        'Claude did not return infra follow-up questions tool output.'
+      );
     }
 
     const input = toolUse.input as Record<string, unknown>;
     const questions = normalizeQuestions(input.questions);
     if (!questions) {
-      throw new Error('Claude returned an invalid infra follow-up questions payload.');
+      throw new Error(
+        'Claude returned an invalid infra follow-up questions payload.'
+      );
     }
 
     return {

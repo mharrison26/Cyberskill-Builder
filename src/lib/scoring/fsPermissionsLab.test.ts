@@ -144,9 +144,10 @@ describe('fsPermissionsLab scorer', () => {
     );
     expect(result.ok).toBe(false);
     expect(result.structured.matchedCount).toBe(2);
-    expect(result.structured.questionResults.find((r) => r.id === 'secret_mode')?.match).toBe(
-      false
-    );
+    expect(
+      result.structured.questionResults.find((r) => r.id === 'secret_mode')
+        ?.match
+    ).toBe(false);
   });
 
   it('honors passThresholdPercent below 100', () => {

@@ -460,8 +460,7 @@ export function parseCisHardeningChecklist(
             : typeof record.detail === 'string'
               ? record.detail.trim()
               : undefined,
-        hint:
-          typeof record.hint === 'string' ? record.hint.trim() : undefined,
+        hint: typeof record.hint === 'string' ? record.hint.trim() : undefined,
       };
     })
     .filter((item): item is CisHardeningChecklistItem => item !== null);

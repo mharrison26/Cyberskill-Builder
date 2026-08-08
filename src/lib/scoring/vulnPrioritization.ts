@@ -502,7 +502,11 @@ export function evaluateVulnPrioritization(
   const extras = parsed.orderedIds.filter((id) => !expectedSet.has(id));
   const uniqueCount = submittedSet.size;
 
-  if (missing.length > 0 || extras.length > 0 || uniqueCount !== parsed.orderedIds.length) {
+  if (
+    missing.length > 0 ||
+    extras.length > 0 ||
+    uniqueCount !== parsed.orderedIds.length
+  ) {
     const parts: string[] = [];
     if (uniqueCount !== parsed.orderedIds.length) {
       parts.push('Duplicate vulnerability IDs are not allowed.');

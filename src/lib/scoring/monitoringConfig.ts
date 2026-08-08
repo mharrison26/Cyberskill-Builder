@@ -254,9 +254,7 @@ export function parseMonitoringConfigExpectedState(
   return { requiredAlerts };
 }
 
-function parseAlertSubmission(
-  raw: unknown
-): MonitoringAlertSubmission | null {
+function parseAlertSubmission(raw: unknown): MonitoringAlertSubmission | null {
   if (!isPlainObject(raw)) return null;
   const alertType = normalizeAlertType(
     raw.alertType ?? raw.type ?? raw.alert_type ?? raw.metric
@@ -287,7 +285,9 @@ export function extractMonitoringConfigSubmission(
 
   return {
     type:
-      typeof submission.type === 'string' ? submission.type : 'monitoring_config',
+      typeof submission.type === 'string'
+        ? submission.type
+        : 'monitoring_config',
     alerts,
   };
 }
@@ -432,7 +432,9 @@ export function evaluateMonitoringConfig(
     const parts: string[] = [];
     for (const check of checks) {
       if (!check.present) {
-        parts.push(`Missing required alert: ${formatAlertLabel(check.alertType)}.`);
+        parts.push(
+          `Missing required alert: ${formatAlertLabel(check.alertType)}.`
+        );
         continue;
       }
       if (!check.thresholdOk) {

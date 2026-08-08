@@ -69,9 +69,7 @@ function extractStored(
   const designDoc = parseDesignDoc(submission);
   const raw = submission.questions;
   if (!Array.isArray(raw) || raw.length === 0) {
-    return designDoc
-      ? { designDoc, questions: [] }
-      : null;
+    return designDoc ? { designDoc, questions: [] } : null;
   }
 
   const questions: InfraFollowUpQuestion[] = [];
@@ -247,9 +245,8 @@ export async function POST(request: Request, { params }: RouteContext) {
   }
 
   try {
-    const generated = await generateInfraFollowUpQuestionsFromDesignDoc(
-      designDoc
-    );
+    const generated =
+      await generateInfraFollowUpQuestionsFromDesignDoc(designDoc);
     const now = new Date().toISOString();
     const startedAt = existing?.started_at ?? now;
 

@@ -99,10 +99,7 @@ export function parseInfraDesignCapstoneExpectedState(
   return expectedState as InfraDesignCapstoneExpectedState;
 }
 
-function resolveMin(
-  value: unknown,
-  fallback: number
-): number {
+function resolveMin(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
     return Math.floor(value);
   }
@@ -114,8 +111,7 @@ export function extractInfraDesignDocument(
 ): InfraDesignDocument | null {
   const nested = submission.designDoc;
   if (isPlainObject(nested)) {
-    const title =
-      typeof nested.title === 'string' ? nested.title.trim() : '';
+    const title = typeof nested.title === 'string' ? nested.title.trim() : '';
     const body = typeof nested.body === 'string' ? nested.body.trim() : '';
     const topologyChoice =
       typeof nested.topologyChoice === 'string' && nested.topologyChoice.trim()
@@ -274,7 +270,11 @@ export function evaluateInfraDesignCapstoneDeterministic(
   // Keep the type recognizer referenced so dead-code tools don't drop the import.
   void isInfraDesignCapstoneTicketType(ticket.ticket_type);
 
-  if (!designDoc || titleLength < minTitleLength || bodyLength < minBodyLength) {
+  if (
+    !designDoc ||
+    titleLength < minTitleLength ||
+    bodyLength < minBodyLength
+  ) {
     return {
       ok: false,
       designDoc,

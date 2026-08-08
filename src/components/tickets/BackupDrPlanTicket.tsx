@@ -174,8 +174,7 @@ function formatBusinessContext(initialState: Record<string, unknown>): {
         continue;
       }
       const record = asRecord(entry);
-      const name =
-        stringField(record, 'name', 'system') ?? 'System';
+      const name = stringField(record, 'name', 'system') ?? 'System';
       const detailParts = [
         stringField(record, 'description', 'notes'),
         stringField(record, 'criticality'),
@@ -183,9 +182,7 @@ function formatBusinessContext(initialState: Record<string, unknown>): {
         stringField(record, 'location'),
       ].filter(Boolean);
       lines.push(
-        detailParts.length > 0
-          ? `${name}: ${detailParts.join(' — ')}`
-          : name
+        detailParts.length > 0 ? `${name}: ${detailParts.join(' — ')}` : name
       );
     }
   }
@@ -246,8 +243,7 @@ export function BackupDrPlanTicket({
       if (!value) {
         nextErrors[meta.key] = `${meta.label} is required.`;
       } else if (value.length < minFieldLength) {
-        nextErrors[meta.key] =
-          `Must be at least ${minFieldLength} characters.`;
+        nextErrors[meta.key] = `Must be at least ${minFieldLength} characters.`;
       }
     }
     setErrors(nextErrors);

@@ -201,7 +201,10 @@ describe('monitoringConfig scorer', () => {
   });
 
   it('fails when alerts are missing from the submission', () => {
-    const result = evaluateMonitoringConfig({ type: 'monitoring_config' }, ticket());
+    const result = evaluateMonitoringConfig(
+      { type: 'monitoring_config' },
+      ticket()
+    );
     expect(result.ok).toBe(false);
     expect(result.feedback).toContain('at least one alert');
   });

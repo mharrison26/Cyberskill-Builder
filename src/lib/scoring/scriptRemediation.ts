@@ -177,9 +177,7 @@ function resolveScript(
 
   // Prefer remediation / lab-script names.
   const preferred = candidates.find((p) =>
-    /fix|remediat|spooler|restart|clear|stale|report|login|inactive/i.test(
-      p
-    )
+    /fix|remediat|spooler|restart|clear|stale|report|login|inactive/i.test(p)
   );
   const path = preferred ?? candidates[0] ?? null;
   if (!path) return { path: null, content: '', expectedMissing: false };

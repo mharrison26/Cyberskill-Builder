@@ -56,8 +56,10 @@ function exposureLabel(exposure: VulnerabilityItem['exposure']): string {
 }
 
 function cvssTone(cvss: number): string {
-  if (cvss >= 9) return 'border-destructive/30 bg-destructive/10 text-destructive';
-  if (cvss >= 7) return 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
+  if (cvss >= 9)
+    return 'border-destructive/30 bg-destructive/10 text-destructive';
+  if (cvss >= 7)
+    return 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
   if (cvss >= 4) return 'border-border bg-muted/50 text-foreground';
   return 'border-border bg-muted/30 text-muted-foreground';
 }

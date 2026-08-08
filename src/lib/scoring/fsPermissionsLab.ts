@@ -104,7 +104,8 @@ function asAcceptList(value: unknown): string[] {
   }
   if (Array.isArray(value)) {
     return value.filter(
-      (entry): entry is string => typeof entry === 'string' && entry.trim() !== ''
+      (entry): entry is string =>
+        typeof entry === 'string' && entry.trim() !== ''
     );
   }
   if (isPlainObject(value)) {
@@ -206,7 +207,9 @@ export function extractFsPermissionsLabSubmission(
 
   return {
     type:
-      typeof submission.type === 'string' ? submission.type : 'fs_permissions_lab',
+      typeof submission.type === 'string'
+        ? submission.type
+        : 'fs_permissions_lab',
     answers,
   };
 }

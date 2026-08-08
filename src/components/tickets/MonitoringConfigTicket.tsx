@@ -96,7 +96,12 @@ function resolveAlertTypeOptions(
   if (Array.isArray(raw)) {
     const opts = raw
       .filter((item): item is string => typeof item === 'string')
-      .map((item) => item.trim().toLowerCase().replace(/[\s-]+/g, '_'))
+      .map((item) =>
+        item
+          .trim()
+          .toLowerCase()
+          .replace(/[\s-]+/g, '_')
+      )
       .filter((item): item is MonitoringAlertType =>
         (MONITORING_ALERT_TYPES as readonly string[]).includes(item)
       );
@@ -112,7 +117,12 @@ function resolveRouteOptions(
   if (Array.isArray(raw)) {
     const opts = raw
       .filter((item): item is string => typeof item === 'string')
-      .map((item) => item.trim().toLowerCase().replace(/[\s-]+/g, '_'))
+      .map((item) =>
+        item
+          .trim()
+          .toLowerCase()
+          .replace(/[\s-]+/g, '_')
+      )
       .filter((item): item is MonitoringAlertRoute =>
         (MONITORING_ALERT_ROUTES as readonly string[]).includes(item)
       );
@@ -194,7 +204,9 @@ export function MonitoringConfigTicket({
 
   function removeAlert(key: string) {
     clearOutcome();
-    setAlerts((prev) => (prev.length <= 1 ? prev : prev.filter((r) => r.key !== key)));
+    setAlerts((prev) =>
+      prev.length <= 1 ? prev : prev.filter((r) => r.key !== key)
+    );
   }
 
   function validate(): boolean {
@@ -288,7 +300,9 @@ export function MonitoringConfigTicket({
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           {context ? (
-            <p className="whitespace-pre-wrap text-muted-foreground">{context}</p>
+            <p className="whitespace-pre-wrap text-muted-foreground">
+              {context}
+            </p>
           ) : null}
 
           {services.length > 0 ? (
@@ -300,13 +314,17 @@ export function MonitoringConfigTicket({
                     key={service.name}
                     className="rounded-md border border-border bg-muted/30 px-3 py-2"
                   >
-                    <p className="font-medium text-foreground">{service.name}</p>
+                    <p className="font-medium text-foreground">
+                      {service.name}
+                    </p>
                     {service.role ? (
                       <p className="text-muted-foreground">{service.role}</p>
                     ) : null}
                     {service.slo ? (
                       <p className="mt-1 text-muted-foreground">
-                        <span className="font-medium text-foreground">SLO: </span>
+                        <span className="font-medium text-foreground">
+                          SLO:{' '}
+                        </span>
                         {service.slo}
                       </p>
                     ) : null}
@@ -331,8 +349,7 @@ export function MonitoringConfigTicket({
           <CardContent className="space-y-4">
             {alerts.map((row, index) => {
               const hint =
-                row.alertType &&
-                MONITORING_ALERT_THRESHOLD_HINTS[row.alertType]
+                row.alertType && MONITORING_ALERT_THRESHOLD_HINTS[row.alertType]
                   ? MONITORING_ALERT_THRESHOLD_HINTS[row.alertType]
                   : 'Numeric threshold for the selected alert type';
 
@@ -356,7 +373,9 @@ export function MonitoringConfigTicket({
 
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="space-y-2">
-                      <Label htmlFor={`alert-type-${row.key}`}>Alert type</Label>
+                      <Label htmlFor={`alert-type-${row.key}`}>
+                        Alert type
+                      </Label>
                       <select
                         id={`alert-type-${row.key}`}
                         value={row.alertType}
@@ -364,8 +383,8 @@ export function MonitoringConfigTicket({
                         className={selectClassName}
                         onChange={(event) =>
                           updateAlert(row.key, {
-                            alertType: event.target
-                              .value as MonitoringAlertType | '',
+                            alertType: event.target.value as
+                              MonitoringAlertType | '',
                           })
                         }
                       >
@@ -407,8 +426,8 @@ export function MonitoringConfigTicket({
                         className={selectClassName}
                         onChange={(event) =>
                           updateAlert(row.key, {
-                            route: event.target
-                              .value as MonitoringAlertRoute | '',
+                            route: event.target.value as
+                              MonitoringAlertRoute | '',
                           })
                         }
                       >

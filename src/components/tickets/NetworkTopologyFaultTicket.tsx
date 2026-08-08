@@ -326,8 +326,8 @@ export function NetworkTopologyFaultTicket({
             </CardTitle>
             <CardDescription>
               Choose the fault location, then justify with subnetting / TCP-IP
-              evidence from the diagram and output (min{' '}
-              {minJustificationLength} characters).
+              evidence from the diagram and output (min {minJustificationLength}{' '}
+              characters).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

@@ -4,10 +4,7 @@ import type {
   TicketScorer,
   TicketSubmission,
 } from '@/lib/scoring/index';
-import {
-  CONFIG_FAULT_DIAGNOSIS_MIN_IMPACT_LENGTH,
-  isConfigFaultDiagnosisTicketType,
-} from '@/lib/scoring/ticketUi';
+import { CONFIG_FAULT_DIAGNOSIS_MIN_IMPACT_LENGTH } from '@/lib/scoring/ticketUi';
 
 /**
  * Config fault diagnosis scoring (named.conf / dhcpd.conf line ID).

@@ -185,8 +185,9 @@ describe('cis_hardening ticket wiring', () => {
     expect(paths).toContain('etc/ssh/sshd_config');
     expect(paths).toContain('etc/shadow');
     expect(paths).toContain('etc/xinetd.d/telnet');
-    expect(extractPreloadFiles(ticket().initial_state as Record<string, unknown>))
-      .toHaveProperty('etc/ssh/sshd_config');
+    expect(
+      extractPreloadFiles(ticket().initial_state as Record<string, unknown>)
+    ).toHaveProperty('etc/ssh/sshd_config');
   });
 });
 
@@ -215,7 +216,9 @@ describe('cis_hardening config-diff rules', () => {
         fileModes: HARDENED.fileModes,
       })
     );
-    expect(parsed?.files['etc/ssh/sshd_config']).toContain('PermitRootLogin no');
+    expect(parsed?.files['etc/ssh/sshd_config']).toContain(
+      'PermitRootLogin no'
+    );
     expect(parsed?.fileModes['etc/shadow']).toBe('640');
   });
 });

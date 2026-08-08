@@ -280,7 +280,10 @@ export function InfraDesignCapstoneTicket({
       data-ticket-id={ticket.id}
     >
       <div className="space-y-1">
-        <h2 id="infra-design-capstone-heading" className="text-base font-semibold">
+        <h2
+          id="infra-design-capstone-heading"
+          className="text-base font-semibold"
+        >
           Infrastructure design decision (SA-07 / PI-07)
         </h2>
         <p className="text-sm text-muted-foreground">{scenarioHint}</p>
@@ -293,7 +296,9 @@ export function InfraDesignCapstoneTicket({
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading capstone progress…</p>
+        <p className="text-sm text-muted-foreground">
+          Loading capstone progress…
+        </p>
       ) : null}
 
       {loadError ? (

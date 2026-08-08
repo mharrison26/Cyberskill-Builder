@@ -259,10 +259,7 @@ export function resolveFaultLocationLabel(
 ): string | undefined {
   const root = asRecord(initialState);
   const raw =
-    root.faultLocations ??
-    root.fault_locations ??
-    root.devices ??
-    root.options;
+    root.faultLocations ?? root.fault_locations ?? root.devices ?? root.options;
 
   if (!Array.isArray(raw)) return undefined;
 
@@ -296,7 +293,9 @@ export function evaluateNetworkTopologyFaultDeterministic(
   ok: boolean;
   feedback: string;
 } {
-  const expected = parseNetworkTopologyFaultExpectedState(ticket.expected_state);
+  const expected = parseNetworkTopologyFaultExpectedState(
+    ticket.expected_state
+  );
   const expectedFaultLocation = expected.faultLocation ?? null;
   const minJustificationLength =
     typeof expected.minJustificationLength === 'number' &&

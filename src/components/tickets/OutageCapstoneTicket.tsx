@@ -65,8 +65,7 @@ function promptFromTicket(ticket: OutageCapstoneTicketProps['ticket']): string {
 
 function minReportLength(ticket: OutageCapstoneTicketProps['ticket']): number {
   const expected = asRecord(ticket.expected_state);
-  const raw =
-    expected.minReportFieldLength ?? expected.min_report_field_length;
+  const raw = expected.minReportFieldLength ?? expected.min_report_field_length;
   if (typeof raw === 'number' && Number.isFinite(raw) && raw > 0) {
     return Math.floor(raw);
   }
@@ -358,7 +357,9 @@ export function OutageCapstoneTicket({
         `/api/tickets/${ticket.id}/sandbox/snapshot`,
         { method: 'POST' }
       );
-      const snapshotBody = (await snapshotResponse.json().catch(() => ({}))) as {
+      const snapshotBody = (await snapshotResponse
+        .json()
+        .catch(() => ({}))) as {
         error?: string;
         files?: Record<string, string>;
         fileModes?: Record<string, string>;
@@ -534,14 +535,17 @@ export function OutageCapstoneTicket({
         </div>
       </div>
 
-      <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
+      <form
+        onSubmit={(event) => void handleSubmit(event)}
+        className="space-y-4"
+      >
         <div>
           <h3 className="text-base font-semibold">Post-incident report</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Required sections are graded against a pinned quality rubric
-            (timeline, root cause, remediation, prevention). Each field needs
-            at least {minLength} characters. Remediation state and report
-            quality are both hard gates.
+            (timeline, root cause, remediation, prevention). Each field needs at
+            least {minLength} characters. Remediation state and report quality
+            are both hard gates.
           </p>
         </div>
 
@@ -594,10 +598,7 @@ export function OutageCapstoneTicket({
           </div>
         ) : null}
 
-        <Button
-          type="submit"
-          disabled={readOnly || isSubmitting || !session}
-        >
+        <Button type="submit" disabled={readOnly || isSubmitting || !session}>
           {isSubmitting ? 'Submitting…' : 'Submit remediation + report'}
         </Button>
       </form>

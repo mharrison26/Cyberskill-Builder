@@ -114,7 +114,9 @@ export function FlySandboxTicket({
 
       socket.addEventListener('open', () => {
         if (!cancelled) setTerminalReady(true);
-        terminal.writeln('\r\n[sandbox] Connected to ephemeral Linux shell.\r\n');
+        terminal.writeln(
+          '\r\n[sandbox] Connected to ephemeral Linux shell.\r\n'
+        );
       });
       socket.addEventListener('message', (event) => {
         if (typeof event.data === 'string') {
@@ -208,7 +210,12 @@ export function FlySandboxTicket({
         reused?: boolean;
       };
 
-      if (!response.ok || !body.websocketUrl || !body.sessionId || !body.machineId) {
+      if (
+        !response.ok ||
+        !body.websocketUrl ||
+        !body.sessionId ||
+        !body.machineId
+      ) {
         setLaunchError(body.error ?? 'Failed to launch sandbox');
         return;
       }
@@ -254,7 +261,9 @@ export function FlySandboxTicket({
         `/api/tickets/${ticket.id}/sandbox/snapshot`,
         { method: 'POST' }
       );
-      const snapshotBody = (await snapshotResponse.json().catch(() => ({}))) as {
+      const snapshotBody = (await snapshotResponse
+        .json()
+        .catch(() => ({}))) as {
         error?: string;
         files?: Record<string, string>;
         fileModes?: Record<string, string>;
@@ -318,7 +327,11 @@ export function FlySandboxTicket({
             disabled={readOnly || isLaunching || Boolean(session)}
             onClick={() => void handleLaunch()}
           >
-            {isLaunching ? 'Launching…' : session ? 'Sandbox running' : 'Launch sandbox'}
+            {isLaunching
+              ? 'Launching…'
+              : session
+                ? 'Sandbox running'
+                : 'Launch sandbox'}
           </Button>
           <Button
             type="button"
@@ -341,12 +354,18 @@ export function FlySandboxTicket({
       </div>
 
       {launchError ? (
-        <p className="border-b border-border px-4 py-2 text-sm text-destructive" role="alert">
+        <p
+          className="border-b border-border px-4 py-2 text-sm text-destructive"
+          role="alert"
+        >
           {launchError}
         </p>
       ) : null}
       {submitError ? (
-        <p className="border-b border-border px-4 py-2 text-sm text-destructive" role="alert">
+        <p
+          className="border-b border-border px-4 py-2 text-sm text-destructive"
+          role="alert"
+        >
           {submitError}
         </p>
       ) : null}
@@ -376,7 +395,9 @@ export function FlySandboxTicket({
                     {item.title}
                   </p>
                   {item.description ? (
-                    <p className="mt-1 text-muted-foreground">{item.description}</p>
+                    <p className="mt-1 text-muted-foreground">
+                      {item.description}
+                    </p>
                   ) : null}
                   {item.hint ? (
                     <p className="mt-1 font-mono text-xs text-muted-foreground">

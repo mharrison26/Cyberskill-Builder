@@ -676,10 +676,7 @@ registerTicketScorer('cis_hardening', configDiffTicketScorer);
 registerTicketScorer('linux_hardening', configDiffTicketScorer);
 registerTicketScorer('sysadmin_hardening', configDiffTicketScorer);
 registerTicketScorer('outage_capstone', outageCapstoneTicketScorer);
-registerTicketScorer(
-  'incident_response_capstone',
-  outageCapstoneTicketScorer
-);
+registerTicketScorer('incident_response_capstone', outageCapstoneTicketScorer);
 registerTicketScorer('sysadmin_outage_capstone', outageCapstoneTicketScorer);
 registerTicketScorer('sla_queue_sim', slaQueueSimTicketScorer);
 registerTicketScorer('queue_simulation', slaQueueSimTicketScorer);

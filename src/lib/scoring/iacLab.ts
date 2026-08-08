@@ -95,9 +95,7 @@ export type IacServiceDeclaration = {
 };
 
 export type IacDeclaration =
-  | IacHostsDeclaration
-  | IacPackageDeclaration
-  | IacServiceDeclaration;
+  IacHostsDeclaration | IacPackageDeclaration | IacServiceDeclaration;
 
 export type IacLabExpectedState = {
   playbookPath?: string;
@@ -274,7 +272,7 @@ export function extractModuleInvocations(
     if (!match) continue;
 
     const indent = leadingIndent(line);
-    const module = normalizeModuleName(match[3]!);
+    const moduleName = normalizeModuleName(match[3]!);
     const inline = (match[4] ?? '').trim();
     const args: Record<string, string> = { ...parseInlineArgs(inline) };
 
@@ -292,9 +290,7 @@ export function extractModuleInvocations(
       // Stop if another list item / task starts at a sibling-ish indent with `- `
       if (/^\s*-\s+\S/.test(next) && nextIndent <= indent + 2) {
         // Child list under module args (rare) — still parse key:value under it
-        const childKv = next.match(
-          /^\s*-\s+([A-Za-z_][\w-]*)\s*:\s*(.+?)\s*$/
-        );
+        const childKv = next.match(/^\s*-\s+([A-Za-z_][\w-]*)\s*:\s*(.+?)\s*$/);
         if (childKv) {
           args[childKv[1]!.toLowerCase()] = normalizeScalar(childKv[2]!);
           j++;
@@ -325,7 +321,7 @@ export function extractModuleInvocations(
       j++;
     }
 
-    invocations.push({ module, args });
+    invocations.push({ module: moduleName, args });
     i = j - 1;
   }
 
@@ -427,7 +423,12 @@ export function evaluateHostsDeclaration(
 ): IacDeclarationResult {
   const want = normalizeScalar(declaration.hosts);
   const passed = hostsValues.some(
-    (h) => h === want || h.split(/[,:&]/).map((p) => p.trim()).includes(want)
+    (h) =>
+      h === want ||
+      h
+        .split(/[,:&]/)
+        .map((p) => p.trim())
+        .includes(want)
   );
   return {
     id: declaration.id,
@@ -448,7 +449,9 @@ export function evaluatePackageDeclaration(
     : undefined;
 
   const match = invocations.find((inv) => {
-    if (!modulesAllow(inv.module, declaration.modules, DEFAULT_PACKAGE_MODULES)) {
+    if (
+      !modulesAllow(inv.module, declaration.modules, DEFAULT_PACKAGE_MODULES)
+    ) {
       return false;
     }
     if (!packageNameMatches(inv.args, declaration.name)) return false;
@@ -515,7 +518,8 @@ export function evaluateServiceDeclaration(
 function parseDeclaration(raw: unknown): IacDeclaration | null {
   if (!isPlainObject(raw)) return null;
   const id = typeof raw.id === 'string' ? raw.id.trim() : '';
-  const kind = typeof raw.kind === 'string' ? raw.kind.trim().toLowerCase() : '';
+  const kind =
+    typeof raw.kind === 'string' ? raw.kind.trim().toLowerCase() : '';
   if (!id || !kind) return null;
 
   if (kind === 'hosts') {
