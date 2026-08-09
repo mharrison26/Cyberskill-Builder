@@ -1,5 +1,13 @@
 /** Client-safe helpers / types for the risk-based audit plan ticket. */
 
+export const RISK_BASED_AUDIT_PLAN_TICKET_TYPES = [
+  'risk_based_audit_plan',
+  'annual_audit_plan_capstone',
+] as const;
+
+export type RiskBasedAuditPlanTicketType =
+  (typeof RISK_BASED_AUDIT_PLAN_TICKET_TYPES)[number];
+
 export type RiskRating = 'critical' | 'high' | 'medium' | 'low';
 
 export type RiskRegisterArea = {
@@ -11,6 +19,20 @@ export type RiskRegisterArea = {
   materialityNotes: string;
   knownIssues: string;
 };
+
+function ticketTypeBase(ticketType: string): string {
+  const t = ticketType.trim().toLowerCase();
+  return t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+}
+
+export function isRiskBasedAuditPlanTicketType(ticketType: string): boolean {
+  const base = ticketTypeBase(ticketType);
+  return (
+    base === 'risk_based_audit_plan' ||
+    base === 'annual_audit_plan_capstone' ||
+    (RISK_BASED_AUDIT_PLAN_TICKET_TYPES as readonly string[]).includes(base)
+  );
+}
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

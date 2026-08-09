@@ -65,7 +65,7 @@ import { isIncidentNotificationTicketType } from '@/lib/scoring/incidentNotifica
 import { isItgcAccessRevocationTicketType } from '@/lib/scoring/itgcAccessRevocation';
 import { isPoamStatusUpdateTicketType } from '@/lib/scoring/poamStatusUpdate';
 import { isProcessControlTestTicketType } from '@/lib/scoring/processControlTest';
-import { isRiskBasedAuditPlanTicketType } from '@/lib/scoring/riskBasedAuditPlan';
+import { isRiskBasedAuditPlanTicketType } from '@/lib/scoring/riskBasedAuditPlanShared';
 import { isSoc2ChangeManagementTestTicketType } from '@/lib/scoring/soc2ChangeManagementTest';
 import { isSspGapReviewTicketType } from '@/lib/scoring/sspGapReview';
 import { isSlaQueueSimTicketType } from '@/lib/scoring/slaQueueSim';
