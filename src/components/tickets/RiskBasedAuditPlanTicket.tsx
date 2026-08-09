@@ -18,7 +18,7 @@ import {
   parseRiskRegister,
   type RiskRegisterArea,
   type RiskRating,
-} from '@/lib/scoring/riskBasedAuditPlan';
+} from '@/lib/scoring/riskBasedAuditPlanShared';
 import {
   RISK_BASED_AUDIT_PLAN_DEFAULT_CAPACITY,
   RISK_BASED_AUDIT_PLAN_MIN_CAPACITY_NOTES_LENGTH,
