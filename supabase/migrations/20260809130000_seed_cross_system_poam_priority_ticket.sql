@@ -182,5 +182,14 @@ SELECT
   ),
   '722', -- ISSO / security control assessor-adjacent DCWF (optional)
   240
-FROM seed_tenants st
-CROSS JOIN grc;
+FROM (
+  SELECT id
+  FROM public.tenants
+  WHERE id IN (
+    '00000000-0000-4000-8000-000000000001'::uuid,
+    '00000000-0000-4000-8000-000000000003'::uuid
+  )
+) AS st
+CROSS JOIN (
+  SELECT id AS track_id FROM public.tracks WHERE slug = 'grc'
+) AS grc;
