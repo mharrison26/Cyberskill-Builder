@@ -1,6 +1,9 @@
 import type { Ticket, TicketProgressStatus } from '@/types';
 
-import { normalizeTicketStatus } from '@/lib/tickets/status';
+import {
+  isClosedTicketStatus,
+  normalizeTicketStatus,
+} from '@/lib/tickets/status';
 
 /** Lightweight engagement row used by console / ticket stage nav. */
 export type EngagementSummary = {
@@ -65,7 +68,7 @@ export function isEngagementTicket(
 }
 
 /**
- * Stage N is unlocked when N === 1, or stage N-1 progress is `resolved`.
+ * Stage N is unlocked when N === 1, or stage N-1 progress is resolved/reviewed.
  * Preview / admin mode can force-unlock via `forceUnlock`.
  */
 export function isEngagementStageUnlocked(
@@ -79,7 +82,7 @@ export function isEngagementStageUnlocked(
 
   const prior = stages.find((s) => s.stage === stage - 1);
   if (!prior) return false;
-  return normalizeTicketStatus(prior.status) === 'resolved';
+  return isClosedTicketStatus(normalizeTicketStatus(prior.status));
 }
 
 /** Sort engagement tickets by stage (then sort_order / id for stability). */
@@ -131,8 +134,12 @@ export function buildEngagementFlowView(args: {
     };
   });
 
-  const resolvedCount = stages.filter((s) => s.status === 'resolved').length;
-  const firstOpen = stages.find((s) => s.unlocked && s.status !== 'resolved');
+  const resolvedCount = stages.filter(
+    (s) => s.status === 'resolved' || s.status === 'reviewed'
+  ).length;
+  const firstOpen = stages.find(
+    (s) => s.unlocked && s.status !== 'resolved' && s.status !== 'reviewed'
+  );
   const currentStage =
     firstOpen?.stage ?? stages[stages.length - 1]?.stage ?? 1;
 

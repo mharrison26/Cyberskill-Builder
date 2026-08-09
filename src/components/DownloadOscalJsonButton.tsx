@@ -19,14 +19,14 @@ export function DownloadOscalJsonButton({
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="default"
       size="sm"
       className={cn(className)}
-      aria-label="Download OSCAL JSON"
+      aria-label="Download verifiable record (OSCAL JSON)"
       onClick={() => downloadOscalJson(finding)}
     >
       <Download aria-hidden="true" />
-      Download OSCAL JSON
+      Download verifiable record (OSCAL JSON)
     </Button>
   );
 }

@@ -12,6 +12,15 @@ export type PublicTrackEnrollment = {
   trackSlug: string;
 };
 
+export type PublicPortfolioDefense = {
+  id: string;
+  url: string;
+  mediaType: 'audio' | 'video';
+  durationSeconds: number;
+  isPublic: true;
+  createdAt: string;
+};
+
 export type PublicPortfolioItem = {
   id: string;
   itemKind: PortfolioItemKind;
@@ -32,6 +41,8 @@ export type PublicPortfolioItem = {
   // ticket_resolution fields
   scoreStatus: PortfolioScoreStatus | null;
   ticketType: string | null;
+  /** Public verbal defense when the student marked the recording public. */
+  defense: PublicPortfolioDefense | null;
 };
 
 /** @deprecated Prefer PublicPortfolioItem; kept for FindingCard mapping. */
@@ -118,6 +129,51 @@ export async function getPublicPortfolioItems(
     return [];
   }
 
+  const itemIds = (data ?? []).map((row) => row.id as string);
+  const defenseByItemId = new Map<string, PublicPortfolioDefense>();
+
+  if (itemIds.length > 0) {
+    const itemIdSet = new Set(itemIds);
+    const { data: defenses, error: defenseError } = await supabase
+      .from('defense_recordings')
+      .select(
+        'id, artifact_id, portfolio_item_id, storage_path, media_type, duration_seconds, created_at'
+      )
+      .eq('student_id', studentId)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false });
+
+    if (defenseError) {
+      console.warn('[getPublicPortfolioItems] defenses:', defenseError.message);
+    }
+
+    for (const row of defenses ?? []) {
+      const portfolioKey = row.portfolio_item_id as string | null;
+      const artifactKey = row.artifact_id as string;
+      const key =
+        portfolioKey && itemIdSet.has(portfolioKey)
+          ? portfolioKey
+          : itemIdSet.has(artifactKey)
+            ? artifactKey
+            : null;
+      if (!key || defenseByItemId.has(key)) continue;
+
+      const storagePath = row.storage_path as string;
+      const { data: signed } = await supabase.storage
+        .from('defenses')
+        .createSignedUrl(storagePath, 60 * 60);
+
+      defenseByItemId.set(key, {
+        id: row.id as string,
+        url: signed?.signedUrl ?? '',
+        mediaType: row.media_type === 'video' ? 'video' : 'audio',
+        durationSeconds: (row.duration_seconds as number) ?? 0,
+        isPublic: true,
+        createdAt: row.created_at as string,
+      });
+    }
+  }
+
   return (data ?? []).map((row) => {
     const itemKind = row.item_kind as PortfolioItemKind;
     const structured =
@@ -126,6 +182,7 @@ export async function getPublicPortfolioItems(
       row.work_role_codes as
         WorkRoleCodeEmbed | WorkRoleCodeEmbed[] | null | undefined
     );
+    const defense = defenseByItemId.get(row.id as string) ?? null;
 
     if (itemKind === 'oscal_finding') {
       const observation = structured as OscalObservation;
@@ -155,6 +212,7 @@ export async function getPublicPortfolioItems(
         observation,
         scoreStatus: null,
         ticketType: null,
+        defense,
       };
     }
 
@@ -182,6 +240,7 @@ export async function getPublicPortfolioItems(
       observation: null,
       scoreStatus,
       ticketType: row.ticket_type ?? null,
+      defense,
     };
   });
 }

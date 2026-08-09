@@ -82,3 +82,19 @@ jobs:
       - name: Accessibility (skipped)
         if: ${{ env.A11Y_TEST_EMAIL == '' || env.A11Y_TEST_PASSWORD == '' || env.NEXT_PUBLIC_SUPABASE_URL == '' || env.NEXT_PUBLIC_SUPABASE_ANON_KEY == '' }}
         run: echo "Skipping accessibility checks — set A11Y_TEST_EMAIL, A11Y_TEST_PASSWORD, NEXT_PUBLIC_SUPABASE_URL, and NEXT_PUBLIC_SUPABASE_ANON_KEY GitHub secrets to enable"
+
+  # Free Semgrep CLI (works on private repos; no GitHub Advanced Security required).
+  # ERROR ≈ high — fail the job. WARNING/INFO ≈ medium/low — reported only (no --error).
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Semgrep scan (advisory — all severities)
+        run: semgrep --config=p/ci
+
+      - name: Semgrep scan (fail on high / ERROR only)
+        run: semgrep --config=p/ci --severity=ERROR --error

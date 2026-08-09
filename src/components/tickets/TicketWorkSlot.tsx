@@ -72,6 +72,7 @@ import { isSlaQueueSimTicketType } from '@/lib/scoring/slaQueueSim';
 import { isTransactionAnomalyTicketType } from '@/lib/scoring/transactionAnomaly';
 import { isVulnPrioritizationTicketType } from '@/lib/scoring/vulnPrioritization';
 import {
+  initialStateToFiles,
   isCisHardeningTicketType,
   isConfigFaultDiagnosisTicketType,
   isControlImplementationAdequacyTicketType,
@@ -85,10 +86,18 @@ import {
   isOutageCapstoneTicketType,
   isP1StatusUpdatesTicketType,
   isPoamTicketType,
+  isScriptRemediationTicketType,
+  isScriptingTicketType,
   isSlaEscalationTicketType,
 } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
+
+export {
+  initialStateToFiles,
+  isScriptRemediationTicketType,
+  isScriptingTicketType,
+};
 
 type TicketWorkSlotProps = {
   ticket: Pick<
@@ -100,61 +109,9 @@ type TicketWorkSlotProps = {
   className?: string;
 };
 
-/** Normalize ticket.initial_state into a flat path → contents map for CodeSandbox. */
-export function initialStateToFiles(
-  initialState: Record<string, unknown>
-): Record<string, string> {
-  const nested = initialState.files;
-  const source =
-    typeof nested === 'object' && nested !== null && !Array.isArray(nested)
-      ? (nested as Record<string, unknown>)
-      : initialState;
-
-  const files: Record<string, string> = {};
-  for (const [path, value] of Object.entries(source)) {
-    if (
-      path === 'files' ||
-      path === 'expected_config' ||
-      path === 'expected_state' ||
-      path === 'rules'
-    ) {
-      continue;
-    }
-    if (typeof value === 'string') {
-      files[path] = value;
-    }
-  }
-  return files;
-}
-
 function ticketTypeBase(ticketType: string): string {
   const t = ticketType.trim().toLowerCase();
   return t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
-}
-
-export function isScriptingTicketType(ticketType: string): boolean {
-  const base = ticketTypeBase(ticketType);
-  return (
-    base === 'scripting' ||
-    base === 'python' ||
-    base === 'python_lab' ||
-    base === 'shell' ||
-    base === 'oscal_generator' ||
-    base === 'capstone_oscal'
-  );
-}
-
-/** WebContainer script lab: spooler fix or fixture-based scripting lab. */
-export function isScriptRemediationTicketType(ticketType: string): boolean {
-  const base = ticketTypeBase(ticketType);
-  return (
-    base === 'script_remediation' ||
-    base === 'spooler_fix' ||
-    base === 'sandbox_script' ||
-    base === 'service_restart' ||
-    base === 'scripting_lab' ||
-    base === 'script_fixtures'
-  );
 }
 
 /** Ansible / IaC lab: structural playbook scoring via CodeSandbox file submit. */

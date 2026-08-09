@@ -1,10 +1,13 @@
 import type { Ticket, TicketProgressStatus } from '@/types';
 
-import { normalizeTicketStatus } from '@/lib/tickets/status';
+import {
+  isClosedTicketStatus,
+  normalizeTicketStatus,
+} from '@/lib/tickets/status';
 
 /**
  * Active tier = lowest tier that still has at least one unresolved ticket.
- * If every ticket is resolved, returns the highest tier present (or 1).
+ * If every ticket is resolved/reviewed, returns the highest tier present (or 1).
  */
 export function getActiveTicketTier(
   tickets: Pick<Ticket, 'id' | 'tier'>[],
@@ -18,8 +21,8 @@ export function getActiveTicketTier(
 
   for (const tier of tiers) {
     const tierTickets = tickets.filter((t) => t.tier === tier);
-    const allResolved = tierTickets.every(
-      (t) => normalizeTicketStatus(progressByTicketId.get(t.id)) === 'resolved'
+    const allResolved = tierTickets.every((t) =>
+      isClosedTicketStatus(normalizeTicketStatus(progressByTicketId.get(t.id)))
     );
     if (!allResolved) return tier;
   }

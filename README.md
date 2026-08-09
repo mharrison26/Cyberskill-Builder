@@ -323,6 +323,20 @@ Filter in Sentry with e.g. `feature:scoring` or `pi:PI-05`. Helpers live in `src
 
 You may instead store the same value as a repository **secret** named `UPTIME_URL` (the workflow accepts either). The job fails on any non-200 response.
 
+## Static analysis (Semgrep)
+
+CI runs the free Semgrep CLI (`p/ci` ruleset) on every pull request (see the `semgrep` job in `.github/workflows/ci.yml`). High-severity findings (`ERROR`) fail the job; medium/low (`WARNING` / `INFO`) are reported but do not fail the build.
+
+**Local** (requires [Semgrep](https://semgrep.dev/docs/getting-started/cli) via `brew install semgrep` or `pip install semgrep`):
+
+```bash
+# Same ruleset as CI — report all severities (does not exit non-zero on findings)
+semgrep --config=p/ci
+
+# Fail the shell only on high-severity (ERROR) findings
+semgrep --config=p/ci --severity=ERROR --error
+```
+
 ## Learn more
 
 - [Next.js Documentation](https://nextjs.org/docs)
