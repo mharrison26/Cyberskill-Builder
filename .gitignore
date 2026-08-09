@@ -41,3 +41,8 @@ supabase/.temp/
 # Local migration scratch (never commit)
 .tmp-migrations/
 .tmp-mig-apply/
+
+# Env files (keep committed *.example templates)
+.env
+.env.*
+!.env*.example
