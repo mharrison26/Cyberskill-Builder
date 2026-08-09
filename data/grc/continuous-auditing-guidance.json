@@ -1,0 +1,144 @@
+{
+  "document": "Continuous Auditing Design Guidance",
+  "title": "Educational continuous auditing design guidance (frequency, data sources, exception handling)",
+  "source_url": "internal://continuous-auditing-guidance",
+  "notes": "Pinned educational summary for RAG-style grading of student continuous auditing designs. Inspired by commonly taught continuous auditing / continuous monitoring audit concepts (e.g. IIA GTAG-style themes) without reproducing copyrighted text. Graders must use only retrieved section text, not parametric knowledge of IIA or vendor products.",
+  "disclaimer": "Educational guidance only. Not a substitute for IIA Global Technology Audit Guides, organizational audit methodology, or engagement-specific instructions.",
+  "sections": [
+    {
+      "id": "continuous-auditing-definition",
+      "title": "What continuous auditing is",
+      "topics": ["continuous auditing", "definition", "ongoing assurance", "automation"],
+      "keywords": [
+        "continuous auditing",
+        "ongoing assurance",
+        "automated",
+        "exception report",
+        "repetitive testing",
+        "near real-time",
+        "control area"
+      ],
+      "text": "Continuous auditing is an audit approach that uses technology to perform control and risk assessments on a more frequent, often automated or semi-automated basis, instead of relying solely on periodic manual sample testing. A continuous auditing design for one control area typically defines what will be tested or monitored, how often, which data feeds the test, and how exceptions are investigated and closed. The goal is timely detection of control failures or anomalies so management and auditors can respond before issues accumulate until the next annual test. Continuous auditing complements—not replaces—judgment-based audit procedures; designs should still produce auditable evidence and clear ownership."
+    },
+    {
+      "id": "frequency-design",
+      "title": "Frequency must be risk-based and explicit",
+      "topics": ["frequency", "cadence", "risk", "volatility"],
+      "keywords": [
+        "frequency",
+        "daily",
+        "weekly",
+        "monthly",
+        "cadence",
+        "risk-based",
+        "volatility",
+        "timely",
+        "annual",
+        "periodic"
+      ],
+      "text": "A defensible continuous auditing design states an explicit run frequency (for example daily, weekly, or monthly) tied to control risk and data volatility. Higher-risk or high-volume control areas (access revocation, unauthorized production changes, payment exceptions) usually warrant more frequent automated checks than static, low-change processes. Frequency should improve on purely annual manual testing when residual risk or transaction volume justifies it. Vague statements such as \"monitor regularly\" or \"as needed\" are insufficient. The design should also note whether frequency is calendar-based, event-triggered, or both, and whether results are reviewed on the same cadence as the automated run."
+    },
+    {
+      "id": "data-source-design",
+      "title": "Data source must be specific and reliable",
+      "topics": ["data source", "system of record", "evidence", "population"],
+      "keywords": [
+        "data source",
+        "system of record",
+        "HRIS",
+        "IAM",
+        "ERP",
+        "change log",
+        "ticket system",
+        "export",
+        "population",
+        "reliability"
+      ],
+      "text": "The design must name concrete data sources that define the population and the attributes under test (for example HRIS termination effective dates joined to IAM disable timestamps; change-management tickets joined to production deploy logs; AP invoice and payment files with approval flags). Prefer systems of record over informal spreadsheets when available. Describe how data is obtained (API, scheduled export, log feed, database query) and any completeness or freshness assumptions. Weak designs list only generic phrases such as \"system logs\" or \"IT reports\" without identifying which systems, fields, or joins support the continuous test."
+    },
+    {
+      "id": "exception-handling",
+      "title": "Exception-handling process is required",
+      "topics": ["exception", "investigation", "remediation", "closure"],
+      "keywords": [
+        "exception",
+        "exception handling",
+        "investigate",
+        "triage",
+        "remediation",
+        "closure",
+        "owner",
+        "ticket",
+        "false positive",
+        "root cause"
+      ],
+      "text": "Continuous auditing produces value only when exceptions are triaged, investigated, remediated or accepted, and closed with evidence. A complete design describes the exception-handling process: who receives the exception report, how items are prioritized, expected investigation steps, documentation standards, and how resolution is evidenced (ticket, re-test, management attestation). Include how recurring exceptions escalate and how root-cause trends feed control improvement. Designs that stop at \"generate a report\" without a handling process do not meet this guidance."
+    },
+    {
+      "id": "automation-and-owners",
+      "title": "Automation method and ownership",
+      "topics": ["automation", "owners", "RACI", "tooling"],
+      "keywords": [
+        "automation",
+        "script",
+        "query",
+        "scheduler",
+        "owner",
+        "audit",
+        "IT",
+        "control owner",
+        "RACI",
+        "responsibility"
+      ],
+      "text": "Strong designs briefly describe the automation method (scheduled SQL/query, scripted join of exports, GRC analytics rule, SIEM or ITSM report) and name owners for running/maintaining the job versus reviewing exceptions (for example Internal Audit owns the analytic; IAM or change manager owns remediation). Ownership should be specific enough that the process survives staff turnover. Automation should preserve auditability: retain parameters, run timestamps, and result sets for review."
+    },
+    {
+      "id": "escalation-and-false-positives",
+      "title": "Escalation and false-positive handling",
+      "topics": ["escalation", "false positive", "threshold", "tuning"],
+      "keywords": [
+        "escalation",
+        "false positive",
+        "threshold",
+        "tuning",
+        "SLA",
+        "management",
+        "noise",
+        "whitelist",
+        "suppress"
+      ],
+      "text": "Designs should address escalation when exceptions are overdue, high-risk, or indicate systemic failure (for example escalate to control owner and audit lead after defined days, or immediately for privileged access left active). They should also address false-positive handling: how benign exceptions are documented, whether suppressions or allow-lists are approved and time-bound, and how rules/thresholds are tuned so noise does not erode review discipline. Unmanaged false positives undermine continuous auditing effectiveness."
+    },
+    {
+      "id": "vs-annual-manual-testing",
+      "title": "Improve on annual manual sample testing",
+      "topics": ["annual test", "manual", "sample", "coverage"],
+      "keywords": [
+        "annual",
+        "manual test",
+        "sample",
+        "coverage",
+        "pain point",
+        "lag",
+        "full population",
+        "exception report"
+      ],
+      "text": "Continuous auditing designs for a single control area should explicitly improve on annual (or infrequent) manual sample testing pain points: delayed detection, limited sample coverage, labor-intensive evidence collection, and point-in-time blind spots. Prefer approaches that evaluate a full or near-full population on a defined cadence and surface only exceptions for human review. The student should connect the chosen frequency, data source, and exception process to those pain points rather than restating a traditional annual walkthrough."
+    },
+    {
+      "id": "design-completeness",
+      "title": "Minimum complete design elements",
+      "topics": ["completeness", "design", "requirements"],
+      "keywords": [
+        "control area",
+        "frequency",
+        "data source",
+        "exception-handling",
+        "complete",
+        "required fields",
+        "design"
+      ],
+      "text": "At minimum, a continuous auditing design for one control area must specify: (1) the control area in scope; (2) an explicit frequency; (3) a concrete data source (or joined sources) that feeds the test; and (4) an exception-handling process covering triage, investigation, ownership, and closure. Optional but valuable elements include automation method, named owners, escalation paths, and false-positive tuning. Graders should treat missing or trivial frequency, data source, or exception-handling content as incomplete relative to this guidance."
+    }
+  ]
+}

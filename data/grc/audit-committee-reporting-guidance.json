@@ -1,0 +1,120 @@
+{
+  "document": "Audit Committee / Executive Reporting Guidance",
+  "title": "Executive summary and audit-committee communication standards (educational)",
+  "source_url": "internal://audit-committee-reporting-guidance",
+  "notes": "Pinned educational guidance for generating audit-committee-style questions and grading executive summaries compiled from engagement findings. Graders and question generators must use only retrieved section text plus the student's own summary and prior findings excerpts.",
+  "disclaimer": "Educational guidance only. Not a substitute for IIA standards, SEC / PCAOB expectations, board governance policies, or engagement-specific reporting requirements.",
+  "sections": [
+    {
+      "id": "exec-summary-purpose",
+      "title": "Purpose of an audit executive summary",
+      "topics": ["executive summary", "audience", "board", "audit committee"],
+      "keywords": [
+        "executive summary",
+        "audit committee",
+        "board",
+        "concise",
+        "decision makers",
+        "highlights"
+      ],
+      "text": "An audit executive summary translates detailed findings into a short narrative for the audit committee and other decision makers who will not read every workpaper. It should state the engagement objective and scope in one or two sentences, highlight the most significant findings with enough context to understand severity, and surface residual risk and management actions. It is not a dump of testing detail, CCCER field labels, or sample worksheets. Prefer plain language over jargon while remaining accurate to the evidence."
+    },
+    {
+      "id": "materiality-and-severity",
+      "title": "Materiality, severity, and prioritization",
+      "topics": ["materiality", "severity", "prioritization", "risk"],
+      "keywords": [
+        "material",
+        "severity",
+        "high risk",
+        "prioritize",
+        "significant",
+        "residual risk"
+      ],
+      "text": "Committee readers need to know which findings matter most. Strong summaries prioritize by business impact, control failure mode, and residual risk — not by the order tests were performed. Call out quantitative exceptions when available (for example 6 of 15 terminations missed the SLA). Avoid treating every observation as equally critical. If no material exceptions were noted, say so clearly rather than padding with minor observations."
+    },
+    {
+      "id": "root-cause-accountability",
+      "title": "Root cause and accountability",
+      "topics": ["root cause", "accountability", "ownership", "management"],
+      "keywords": [
+        "root cause",
+        "accountability",
+        "owner",
+        "management",
+        "process gap",
+        "responsibility"
+      ],
+      "text": "Audit committees routinely probe why a control failed and who owns remediation. Executive summaries should connect conditions to plausible root or contributing causes grounded in the findings (process gaps, missing automation, unclear ownership, training, design vs operating effectiveness). Name accountable functions when the findings support it (HR, IAM, Change Advisory Board) without assigning personal blame beyond the evidence. Vague statements such as \"management should improve\" without ownership are weak."
+    },
+    {
+      "id": "remediation-timeline",
+      "title": "Remediation timeline and milestones",
+      "topics": ["remediation", "timeline", "milestones", "due date"],
+      "keywords": [
+        "remediation",
+        "timeline",
+        "due date",
+        "milestone",
+        "corrective action",
+        "target date"
+      ],
+      "text": "Committees ask whether remediation is realistic and timed. Summaries should reference management's intended corrective actions and any stated target dates or interim compensating controls. If dates are missing from the underlying findings, note that as a gap the committee may challenge. Distinguish completed remediation from planned remediation. Overly optimistic timelines without milestones invite follow-up questions."
+    },
+    {
+      "id": "residual-risk",
+      "title": "Residual risk and acceptance",
+      "topics": ["residual risk", "acceptance", "compensating controls", "monitoring"],
+      "keywords": [
+        "residual risk",
+        "risk acceptance",
+        "compensating control",
+        "monitoring",
+        "until remediated"
+      ],
+      "text": "After findings and planned actions, state what residual risk remains until remediation completes and whether compensating controls or monitoring mitigate that risk in the interim. Committees expect clarity on whether operations can continue with the known gap, what would trigger escalation if dates slip, and how residual risk will be reassessed. Silence on residual risk is a common weakness in learner summaries."
+    },
+    {
+      "id": "ac-question-quality",
+      "title": "Audit-committee question quality",
+      "topics": ["questions", "probe", "governance", "challenge"],
+      "keywords": [
+        "audit committee question",
+        "probe",
+        "challenge",
+        "follow-up",
+        "governance",
+        "oversight"
+      ],
+      "text": "Strong audit-committee questions are pointed, specific to the findings in the executive summary, and aimed at governance oversight — not generic interview prompts. Prefer questions that press on root cause, remediation realism and dates, accountability for owners, residual risk acceptance, and monitoring if milestones slip. Weak questions restate the finding, ask for definitions of basic terms, or invent systems and facts not present in the summary."
+    },
+    {
+      "id": "evidence-fidelity",
+      "title": "Fidelity to prior findings",
+      "topics": ["evidence", "consistency", "findings", "accuracy"],
+      "keywords": [
+        "consistent",
+        "findings",
+        "evidence",
+        "accurate",
+        "do not invent",
+        "AUD-06"
+      ],
+      "text": "The executive summary and any generated committee questions must stay faithful to the prior findings package (for example AUD-06 findings summary or CCCER exception write-ups). Do not invent new exceptions, systems, dollar impacts, or owners that are not supported by those findings. Compression is expected; fabrication is not. When findings are incomplete, the summary may note open questions rather than filling gaps with speculation."
+    },
+    {
+      "id": "tone-and-length",
+      "title": "Tone and length for committee packs",
+      "topics": ["tone", "length", "clarity", "brevity"],
+      "keywords": [
+        "brief",
+        "concise",
+        "tone",
+        "professional",
+        "board pack",
+        "length"
+      ],
+      "text": "Committee packs favor brevity with substance. A short executive summary should usually fit in a few tight paragraphs: context, key findings with severity, root cause themes, remediation posture, and residual risk. Professional, neutral tone is preferred over alarmist or marketing language. Bullet lists are acceptable when they improve scanability, but each bullet should still convey a complete idea tied to evidence."
+    }
+  ]
+}

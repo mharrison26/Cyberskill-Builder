@@ -1,0 +1,555 @@
+{
+  "transactions": [
+    {
+      "id": "APT-0001",
+      "date": "2026-05-01",
+      "vendor": "Brightleaf Office",
+      "invoiceId": "INV-9001",
+      "amount": 412.37,
+      "currency": "USD",
+      "description": "Printer toner restock",
+      "department": "Facilities"
+    },
+    {
+      "id": "APT-0002",
+      "date": "2026-05-04",
+      "vendor": "Cascade Networks",
+      "invoiceId": "INV-9002",
+      "amount": 1288.64,
+      "currency": "USD",
+      "description": "Switch stack maintenance",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0003",
+      "date": "2026-05-05",
+      "vendor": "HarborForge Consulting",
+      "invoiceId": "INV-9003",
+      "amount": 755.19,
+      "currency": "USD",
+      "description": "Quarterly advisory retainer",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0004",
+      "date": "2026-05-06",
+      "vendor": "Summit Hardware Co",
+      "invoiceId": "INV-9004",
+      "amount": 2399.45,
+      "currency": "USD",
+      "description": "Laptop refresh batch",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0005",
+      "date": "2026-05-07",
+      "vendor": "Northwind Catering",
+      "invoiceId": "INV-9005",
+      "amount": 186.22,
+      "currency": "USD",
+      "description": "Team lunch catering",
+      "department": "HR"
+    },
+    {
+      "id": "APT-0006",
+      "date": "2026-05-08",
+      "vendor": "Pinecrest Legal LLP",
+      "invoiceId": "INV-9006",
+      "amount": 3400.88,
+      "currency": "USD",
+      "description": "Contract review hours",
+      "department": "Legal"
+    },
+    {
+      "id": "APT-0007",
+      "date": "2026-05-11",
+      "vendor": "Riverstone Cloud",
+      "invoiceId": "INV-9007",
+      "amount": 919.53,
+      "currency": "USD",
+      "description": "SaaS seat expansion",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0008",
+      "date": "2026-05-12",
+      "vendor": "Oakmont Travel Desk",
+      "invoiceId": "INV-9008",
+      "amount": 642.17,
+      "currency": "USD",
+      "description": "Conference travel booking",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0009",
+      "date": "2026-05-13",
+      "vendor": "Brightleaf Office",
+      "invoiceId": "INV-9009",
+      "amount": 1544.61,
+      "currency": "USD",
+      "description": "Desk chairs replacement",
+      "department": "Facilities"
+    },
+    {
+      "id": "APT-0010",
+      "date": "2026-05-14",
+      "vendor": "Cascade Networks",
+      "invoiceId": "INV-9010",
+      "amount": 277.4,
+      "currency": "USD",
+      "description": "Network cable plant",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0011",
+      "date": "2026-05-15",
+      "vendor": "HarborForge Consulting",
+      "invoiceId": "INV-9011",
+      "amount": 1102.93,
+      "currency": "USD",
+      "description": "SOC workshop facilitation",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0012",
+      "date": "2026-05-18",
+      "vendor": "Summit Hardware Co",
+      "invoiceId": "INV-9012",
+      "amount": 488.76,
+      "currency": "USD",
+      "description": "Badge printer supplies",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0013",
+      "date": "2026-05-19",
+      "vendor": "Northwind Catering",
+      "invoiceId": "INV-9013",
+      "amount": 3210.55,
+      "currency": "USD",
+      "description": "Firewall appliance support",
+      "department": "HR"
+    },
+    {
+      "id": "APT-0014",
+      "date": "2026-05-20",
+      "vendor": "Pinecrest Legal LLP",
+      "invoiceId": "INV-9014",
+      "amount": 167.89,
+      "currency": "USD",
+      "description": "Executive offsite meals",
+      "department": "Legal"
+    },
+    {
+      "id": "APT-0015",
+      "date": "2026-05-21",
+      "vendor": "Riverstone Cloud",
+      "invoiceId": "INV-9015",
+      "amount": 2899.12,
+      "currency": "USD",
+      "description": "Outside counsel memo",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0016",
+      "date": "2026-05-22",
+      "vendor": "Oakmont Travel Desk",
+      "invoiceId": "INV-9016",
+      "amount": 733.48,
+      "currency": "USD",
+      "description": "Object storage overage",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0017",
+      "date": "2026-05-25",
+      "vendor": "Brightleaf Office",
+      "invoiceId": "INV-9017",
+      "amount": 1455.3,
+      "currency": "USD",
+      "description": "Staff relocation flights",
+      "department": "Facilities"
+    },
+    {
+      "id": "APT-0018",
+      "date": "2026-05-26",
+      "vendor": "Cascade Networks",
+      "invoiceId": "INV-9018",
+      "amount": 521.06,
+      "currency": "USD",
+      "description": "Cleaning contract add-on",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0019",
+      "date": "2026-05-27",
+      "vendor": "HarborForge Consulting",
+      "invoiceId": "INV-9019",
+      "amount": 1988.71,
+      "currency": "USD",
+      "description": "APAC circuit upgrade",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0020",
+      "date": "2026-05-28",
+      "vendor": "Summit Hardware Co",
+      "invoiceId": "INV-9020",
+      "amount": 864.25,
+      "currency": "USD",
+      "description": "Board packet printing",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0021",
+      "date": "2026-05-29",
+      "vendor": "Northwind Catering",
+      "invoiceId": "INV-9021",
+      "amount": 1333.58,
+      "currency": "USD",
+      "description": "ERP connector license",
+      "department": "HR"
+    },
+    {
+      "id": "APT-0022",
+      "date": "2026-05-01",
+      "vendor": "Pinecrest Legal LLP",
+      "invoiceId": "INV-9022",
+      "amount": 249.91,
+      "currency": "USD",
+      "description": "Wellness stipend batch",
+      "department": "Legal"
+    },
+    {
+      "id": "APT-0023",
+      "date": "2026-05-04",
+      "vendor": "Riverstone Cloud",
+      "invoiceId": "INV-9023",
+      "amount": 1766.04,
+      "currency": "USD",
+      "description": "Penetration test follow-up",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0024",
+      "date": "2026-05-05",
+      "vendor": "Oakmont Travel Desk",
+      "invoiceId": "INV-9024",
+      "amount": 390.67,
+      "currency": "USD",
+      "description": "Courier overnight fees",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0025",
+      "date": "2026-05-06",
+      "vendor": "Brightleaf Office",
+      "invoiceId": "INV-9025",
+      "amount": 2111.39,
+      "currency": "USD",
+      "description": "Backup appliance parts",
+      "department": "Facilities"
+    },
+    {
+      "id": "APT-0026",
+      "date": "2026-05-07",
+      "vendor": "Cascade Networks",
+      "invoiceId": "INV-9026",
+      "amount": 678.14,
+      "currency": "USD",
+      "description": "Interview panel catering",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0027",
+      "date": "2026-05-08",
+      "vendor": "HarborForge Consulting",
+      "invoiceId": "INV-9027",
+      "amount": 4555.82,
+      "currency": "USD",
+      "description": "M&A diligence support",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0028",
+      "date": "2026-05-11",
+      "vendor": "Summit Hardware Co",
+      "invoiceId": "INV-9028",
+      "amount": 812.46,
+      "currency": "USD",
+      "description": "CDN burst traffic",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0029",
+      "date": "2026-05-12",
+      "vendor": "Northwind Catering",
+      "invoiceId": "INV-9029",
+      "amount": 1204.73,
+      "currency": "USD",
+      "description": "Sales kickoff lodging",
+      "department": "HR"
+    },
+    {
+      "id": "APT-0030",
+      "date": "2026-05-13",
+      "vendor": "Pinecrest Legal LLP",
+      "invoiceId": "INV-9030",
+      "amount": 333.28,
+      "currency": "USD",
+      "description": "Ergonomic keyboard set",
+      "department": "Legal"
+    },
+    {
+      "id": "APT-0031",
+      "date": "2026-05-14",
+      "vendor": "Riverstone Cloud",
+      "invoiceId": "INV-9031",
+      "amount": 967.51,
+      "currency": "USD",
+      "description": "Identity broker renewal",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0032",
+      "date": "2026-05-15",
+      "vendor": "Oakmont Travel Desk",
+      "invoiceId": "INV-9032",
+      "amount": 141.7,
+      "currency": "USD",
+      "description": "New-hire welcome kits",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0033",
+      "date": "2026-05-18",
+      "vendor": "Brightleaf Office",
+      "invoiceId": "INV-9033",
+      "amount": 2588.96,
+      "currency": "USD",
+      "description": "SIEM content pack",
+      "department": "Facilities"
+    },
+    {
+      "id": "APT-0034",
+      "date": "2026-05-19",
+      "vendor": "Cascade Networks",
+      "invoiceId": "INV-9034",
+      "amount": 704.33,
+      "currency": "USD",
+      "description": "Notary and filing fees",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0035",
+      "date": "2026-05-20",
+      "vendor": "HarborForge Consulting",
+      "invoiceId": "INV-9035",
+      "amount": 1822.07,
+      "currency": "USD",
+      "description": "Multi-region failover test",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0036",
+      "date": "2026-05-21",
+      "vendor": "Summit Hardware Co",
+      "invoiceId": "INV-9036",
+      "amount": 459.62,
+      "currency": "USD",
+      "description": "Airport transfers",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0037",
+      "date": "2026-05-05",
+      "vendor": "Cascade Networks",
+      "invoiceId": "INV-9101",
+      "amount": 1000.0,
+      "currency": "USD",
+      "description": "Emergency network cutover fee",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0038",
+      "date": "2026-05-12",
+      "vendor": "HarborForge Consulting",
+      "invoiceId": "INV-9102",
+      "amount": 5000.0,
+      "currency": "USD",
+      "description": "Executive advisory lump sum",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0039",
+      "date": "2026-05-19",
+      "vendor": "Riverstone Cloud",
+      "invoiceId": "INV-9103",
+      "amount": 2500.0,
+      "currency": "USD",
+      "description": "Cloud credits true-up",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0040",
+      "date": "2026-05-26",
+      "vendor": "Summit Hardware Co",
+      "invoiceId": "INV-9104",
+      "amount": 750.0,
+      "currency": "USD",
+      "description": "Spare hardware contingency",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0041",
+      "date": "2026-05-02",
+      "vendor": "Brightleaf Office",
+      "invoiceId": "INV-9201",
+      "amount": 388.44,
+      "currency": "USD",
+      "description": "Weekend facilities unlock",
+      "department": "Facilities"
+    },
+    {
+      "id": "APT-0042",
+      "date": "2026-05-03",
+      "vendor": "Oakmont Travel Desk",
+      "invoiceId": "INV-9202",
+      "amount": 1299.18,
+      "currency": "USD",
+      "description": "Sunday travel rebook",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0043",
+      "date": "2026-05-09",
+      "vendor": "Cascade Networks",
+      "invoiceId": "INV-9203",
+      "amount": 622.75,
+      "currency": "USD",
+      "description": "Saturday NOC coverage",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0044",
+      "date": "2026-05-16",
+      "vendor": "Northwind Catering",
+      "invoiceId": "INV-9204",
+      "amount": 210.56,
+      "currency": "USD",
+      "description": "Weekend event catering",
+      "department": "HR"
+    },
+    {
+      "id": "APT-0045",
+      "date": "2026-05-24",
+      "vendor": "HarborForge Consulting",
+      "invoiceId": "INV-9205",
+      "amount": 1744.89,
+      "currency": "USD",
+      "description": "Sunday incident retainer",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0046",
+      "date": "2026-05-08",
+      "vendor": "HarborForge Consulting",
+      "invoiceId": "INV-DUP-01",
+      "amount": 1840.5,
+      "currency": "USD",
+      "description": "Controls walkthrough hours",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0047",
+      "date": "2026-05-15",
+      "vendor": "HarborForge Consulting",
+      "invoiceId": "INV-DUP-01",
+      "amount": 1840.5,
+      "currency": "USD",
+      "description": "Controls walkthrough hours",
+      "department": "Finance"
+    },
+    {
+      "id": "APT-0048",
+      "date": "2026-05-20",
+      "vendor": "Riverstone Cloud",
+      "invoiceId": "INV-DUP-02",
+      "amount": 960.25,
+      "currency": "USD",
+      "description": "Object storage expansion",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0049",
+      "date": "2026-05-27",
+      "vendor": "Riverstone Cloud",
+      "invoiceId": "INV-DUP-02",
+      "amount": 960.25,
+      "currency": "USD",
+      "description": "Object storage expansion",
+      "department": "IT"
+    },
+    {
+      "id": "APT-0050",
+      "date": "2026-05-28",
+      "vendor": "Pinecrest Legal LLP",
+      "invoiceId": "INV-9037",
+      "amount": 1188.42,
+      "currency": "USD",
+      "description": "Policy redline package",
+      "department": "Legal"
+    },
+    {
+      "id": "APT-0051",
+      "date": "2026-05-10",
+      "vendor": "Summit Hardware Co",
+      "invoiceId": "INV-9105",
+      "amount": 3000.0,
+      "currency": "USD",
+      "description": "Weekend emergency hardware buy",
+      "department": "IT"
+    }
+  ],
+  "anomalyTransactionIds": [
+    "APT-0037",
+    "APT-0038",
+    "APT-0039",
+    "APT-0040",
+    "APT-0041",
+    "APT-0042",
+    "APT-0043",
+    "APT-0044",
+    "APT-0045",
+    "APT-0046",
+    "APT-0047",
+    "APT-0048",
+    "APT-0049",
+    "APT-0051"
+  ],
+  "anomalyCount": 14,
+  "byRule": {
+    "duplicate_payment": [
+      "APT-0046",
+      "APT-0047",
+      "APT-0048",
+      "APT-0049"
+    ],
+    "round_dollar": [
+      "APT-0037",
+      "APT-0038",
+      "APT-0039",
+      "APT-0040",
+      "APT-0051"
+    ],
+    "weekend": [
+      "APT-0041",
+      "APT-0042",
+      "APT-0043",
+      "APT-0044",
+      "APT-0045",
+      "APT-0051"
+    ]
+  },
+  "csv": "transaction_id,date,vendor,invoice_id,amount,currency,description,department\r\nAPT-0001,2026-05-01,Brightleaf Office,INV-9001,412.37,USD,Printer toner restock,Facilities\r\nAPT-0002,2026-05-04,Cascade Networks,INV-9002,1288.64,USD,Switch stack maintenance,IT\r\nAPT-0003,2026-05-05,HarborForge Consulting,INV-9003,755.19,USD,Quarterly advisory retainer,Finance\r\nAPT-0004,2026-05-06,Summit Hardware Co,INV-9004,2399.45,USD,Laptop refresh batch,IT\r\nAPT-0005,2026-05-07,Northwind Catering,INV-9005,186.22,USD,Team lunch catering,HR\r\nAPT-0006,2026-05-08,Pinecrest Legal LLP,INV-9006,3400.88,USD,Contract review hours,Legal\r\nAPT-0007,2026-05-11,Riverstone Cloud,INV-9007,919.53,USD,SaaS seat expansion,IT\r\nAPT-0008,2026-05-12,Oakmont Travel Desk,INV-9008,642.17,USD,Conference travel booking,Finance\r\nAPT-0009,2026-05-13,Brightleaf Office,INV-9009,1544.61,USD,Desk chairs replacement,Facilities\r\nAPT-0010,2026-05-14,Cascade Networks,INV-9010,277.40,USD,Network cable plant,IT\r\nAPT-0011,2026-05-15,HarborForge Consulting,INV-9011,1102.93,USD,SOC workshop facilitation,Finance\r\nAPT-0012,2026-05-18,Summit Hardware Co,INV-9012,488.76,USD,Badge printer supplies,IT\r\nAPT-0013,2026-05-19,Northwind Catering,INV-9013,3210.55,USD,Firewall appliance support,HR\r\nAPT-0014,2026-05-20,Pinecrest Legal LLP,INV-9014,167.89,USD,Executive offsite meals,Legal\r\nAPT-0015,2026-05-21,Riverstone Cloud,INV-9015,2899.12,USD,Outside counsel memo,IT\r\nAPT-0016,2026-05-22,Oakmont Travel Desk,INV-9016,733.48,USD,Object storage overage,Finance\r\nAPT-0017,2026-05-25,Brightleaf Office,INV-9017,1455.30,USD,Staff relocation flights,Facilities\r\nAPT-0018,2026-05-26,Cascade Networks,INV-9018,521.06,USD,Cleaning contract add-on,IT\r\nAPT-0019,2026-05-27,HarborForge Consulting,INV-9019,1988.71,USD,APAC circuit upgrade,Finance\r\nAPT-0020,2026-05-28,Summit Hardware Co,INV-9020,864.25,USD,Board packet printing,IT\r\nAPT-0021,2026-05-29,Northwind Catering,INV-9021,1333.58,USD,ERP connector license,HR\r\nAPT-0022,2026-05-01,Pinecrest Legal LLP,INV-9022,249.91,USD,Wellness stipend batch,Legal\r\nAPT-0023,2026-05-04,Riverstone Cloud,INV-9023,1766.04,USD,Penetration test follow-up,IT\r\nAPT-0024,2026-05-05,Oakmont Travel Desk,INV-9024,390.67,USD,Courier overnight fees,Finance\r\nAPT-0025,2026-05-06,Brightleaf Office,INV-9025,2111.39,USD,Backup appliance parts,Facilities\r\nAPT-0026,2026-05-07,Cascade Networks,INV-9026,678.14,USD,Interview panel catering,IT\r\nAPT-0027,2026-05-08,HarborForge Consulting,INV-9027,4555.82,USD,M&A diligence support,Finance\r\nAPT-0028,2026-05-11,Summit Hardware Co,INV-9028,812.46,USD,CDN burst traffic,IT\r\nAPT-0029,2026-05-12,Northwind Catering,INV-9029,1204.73,USD,Sales kickoff lodging,HR\r\nAPT-0030,2026-05-13,Pinecrest Legal LLP,INV-9030,333.28,USD,Ergonomic keyboard set,Legal\r\nAPT-0031,2026-05-14,Riverstone Cloud,INV-9031,967.51,USD,Identity broker renewal,IT\r\nAPT-0032,2026-05-15,Oakmont Travel Desk,INV-9032,141.70,USD,New-hire welcome kits,Finance\r\nAPT-0033,2026-05-18,Brightleaf Office,INV-9033,2588.96,USD,SIEM content pack,Facilities\r\nAPT-0034,2026-05-19,Cascade Networks,INV-9034,704.33,USD,Notary and filing fees,IT\r\nAPT-0035,2026-05-20,HarborForge Consulting,INV-9035,1822.07,USD,Multi-region failover test,Finance\r\nAPT-0036,2026-05-21,Summit Hardware Co,INV-9036,459.62,USD,Airport transfers,IT\r\nAPT-0037,2026-05-05,Cascade Networks,INV-9101,1000.00,USD,Emergency network cutover fee,IT\r\nAPT-0038,2026-05-12,HarborForge Consulting,INV-9102,5000.00,USD,Executive advisory lump sum,Finance\r\nAPT-0039,2026-05-19,Riverstone Cloud,INV-9103,2500.00,USD,Cloud credits true-up,IT\r\nAPT-0040,2026-05-26,Summit Hardware Co,INV-9104,750.00,USD,Spare hardware contingency,IT\r\nAPT-0041,2026-05-02,Brightleaf Office,INV-9201,388.44,USD,Weekend facilities unlock,Facilities\r\nAPT-0042,2026-05-03,Oakmont Travel Desk,INV-9202,1299.18,USD,Sunday travel rebook,Finance\r\nAPT-0043,2026-05-09,Cascade Networks,INV-9203,622.75,USD,Saturday NOC coverage,IT\r\nAPT-0044,2026-05-16,Northwind Catering,INV-9204,210.56,USD,Weekend event catering,HR\r\nAPT-0045,2026-05-24,HarborForge Consulting,INV-9205,1744.89,USD,Sunday incident retainer,Finance\r\nAPT-0046,2026-05-08,HarborForge Consulting,INV-DUP-01,1840.50,USD,Controls walkthrough hours,Finance\r\nAPT-0047,2026-05-15,HarborForge Consulting,INV-DUP-01,1840.50,USD,Controls walkthrough hours,Finance\r\nAPT-0048,2026-05-20,Riverstone Cloud,INV-DUP-02,960.25,USD,Object storage expansion,IT\r\nAPT-0049,2026-05-27,Riverstone Cloud,INV-DUP-02,960.25,USD,Object storage expansion,IT\r\nAPT-0050,2026-05-28,Pinecrest Legal LLP,INV-9037,1188.42,USD,Policy redline package,Legal\r\nAPT-0051,2026-05-10,Summit Hardware Co,INV-9105,3000.00,USD,Weekend emergency hardware buy,IT\r\n"
+}

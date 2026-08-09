@@ -12,18 +12,20 @@ import type {
   TicketScorer,
   TicketSubmission,
 } from '@/lib/scoring/index';
+import type { Fips199ImpactLevel } from '@/lib/scoring/ticketUi';
 
 /**
- * Tier 3 continuous monitoring strategy memo scoring.
+ * Tier 3 continuous monitoring strategy memo scoring (ISSO-01 system-level).
  *
  * Deterministic:
  *   - cadence rows for required control families
  *   - tool→family coverage for DefectDojo, CloudSploit, Scuba
  *   - escalation/reporting narrative meets minimum length
+ *   - proposed cadences are risk-appropriate to the system's FIPS 199 impact
  *
  * RAG / LLM (F26 pattern):
  *   - retrieve pinned SP 800-137 guidance text
- *   - grade memo against retrieved text only
+ *   - grade memo against retrieved text only (incl. impact-based frequencies)
  */
 
 export {
@@ -39,6 +41,45 @@ import {
   DEFAULT_CONMON_CONTROL_FAMILIES,
   CONMON_TOOLS,
 } from '@/lib/scoring/ticketUi';
+
+/** High-volatility / high-risk families that need tighter monitoring. */
+export const CONMON_HIGH_VOLATILITY_FAMILIES = [
+  'CM',
+  'SI',
+  'RA',
+] as const;
+
+/** Elevated families tightened further on High-impact systems. */
+export const CONMON_ELEVATED_FAMILIES = [
+  'AC',
+  'AU',
+  'IA',
+  'SC',
+] as const;
+
+/**
+ * Max monitoring interval (days) for high-volatility families by impact.
+ * SP 800-137: high-impact systems monitored more frequently than moderate/low;
+ * volatile controls (e.g. CM) assessed more frequently, preferably automated.
+ */
+export const CONMON_VOLATILE_MAX_INTERVAL_DAYS: Record<
+  Fips199ImpactLevel,
+  number
+> = {
+  high: 7,
+  moderate: 31,
+  low: 92,
+};
+
+/** Max interval for elevated families (AC/AU/IA/SC) by impact. */
+export const CONMON_ELEVATED_MAX_INTERVAL_DAYS: Record<
+  Fips199ImpactLevel,
+  number
+> = {
+  high: 31,
+  moderate: 92,
+  low: 365,
+};
 
 export type ConMonFamilyCadence = {
   family: string;
@@ -59,6 +100,10 @@ export type ConMonStrategyExpectedState = {
   minEscalationLength?: number;
   guidanceTopics?: string[];
   topKGuidanceSections?: number;
+  /** Override system impact used for cadence appropriateness (low|moderate|high). */
+  impactLevel?: Fips199ImpactLevel | string;
+  /** Skip deterministic impact-cadence gate (RAG still grades impact factors). */
+  skipCadenceAppropriateness?: boolean;
 };
 
 export type ConMonStrategySubmission = {
@@ -66,6 +111,14 @@ export type ConMonStrategySubmission = {
   familyCadences: ConMonFamilyCadence[];
   toolCoverage: ConMonToolCoverage[];
   escalationReporting: string;
+};
+
+export type ConMonCadenceAppropriatenessIssue = {
+  family: string;
+  cadence: string;
+  parsedIntervalDays: number | null;
+  maxIntervalDays: number;
+  message: string;
 };
 
 export type ConMonStrategyStructuredResult = {
@@ -77,6 +130,9 @@ export type ConMonStrategyStructuredResult = {
   escalationLength: number;
   minEscalationLength: number;
   fieldLengthOk: boolean;
+  impactLevel: Fips199ImpactLevel | null;
+  cadenceAppropriatenessOk: boolean;
+  cadenceIssues: ConMonCadenceAppropriatenessIssue[];
   guidancePath: string | null;
   retrievedSectionIds: string[];
   grading?: {
@@ -114,6 +170,180 @@ function normalizeTool(tool: string): string {
   }
   if (trimmed === 'scuba' || trimmed === 'cisa scuba') return 'Scuba';
   return tool.trim();
+}
+
+/**
+ * Parse FIPS 199 impact from free text like "Moderate (FIPS 199)" or "high".
+ */
+export function resolveConMonImpactLevel(
+  value: unknown
+): Fips199ImpactLevel | null {
+  if (typeof value !== 'string') return null;
+  const lower = value.trim().toLowerCase();
+  if (!lower) return null;
+  if (/\bhigh\b/.test(lower)) return 'high';
+  if (/\bmoderate\b/.test(lower) || /\bmedium\b/.test(lower)) {
+    return 'moderate';
+  }
+  if (/\blow\b/.test(lower)) return 'low';
+  return null;
+}
+
+/**
+ * Resolve system FIPS 199 impact from expected_state override or initial_state.
+ */
+export function resolveSystemImpactLevel(
+  ticket: ScorableTicket
+): Fips199ImpactLevel | null {
+  const expected = parseConMonStrategyExpectedState(ticket.expected_state);
+  const fromExpected = resolveConMonImpactLevel(expected.impactLevel);
+  if (fromExpected) return fromExpected;
+
+  const initial = isPlainObject(ticket.initial_state)
+    ? ticket.initial_state
+    : {};
+  const direct =
+    resolveConMonImpactLevel(initial.impactLevel) ??
+    resolveConMonImpactLevel(initial.impact_level) ??
+    resolveConMonImpactLevel(initial.impact);
+  if (direct) return direct;
+
+  const profile = initial.systemProfile ?? initial.system_profile;
+  if (typeof profile === 'string') {
+    return resolveConMonImpactLevel(profile);
+  }
+  if (isPlainObject(profile)) {
+    return (
+      resolveConMonImpactLevel(profile.impactLevel) ??
+      resolveConMonImpactLevel(profile.impact_level) ??
+      resolveConMonImpactLevel(profile.impact) ??
+      resolveConMonImpactLevel(profile.fips199) ??
+      resolveConMonImpactLevel(profile.categorization)
+    );
+  }
+  return null;
+}
+
+/**
+ * Infer the most frequent monitoring interval (days) from free-text cadence.
+ * Returns null when no recognizable frequency language is present.
+ */
+export function parseCadenceIntervalDays(cadence: string): number | null {
+  const text = cadence.trim().toLowerCase();
+  if (!text) return null;
+
+  const matches: number[] = [];
+
+  if (
+    /\b(continuous|ongoing|real[\s-]?time|near[\s-]?real[\s-]?time|automated\s+checks?)\b/.test(
+      text
+    )
+  ) {
+    matches.push(1);
+  }
+  if (/\b(daily|every\s+day|each\s+day|24\s*h(ours?)?)\b/.test(text)) {
+    matches.push(1);
+  }
+  if (/\b(weekly|every\s+week|each\s+week)\b/.test(text)) {
+    matches.push(7);
+  }
+  if (
+    /\b(bi[\s-]?weekly|every\s+two\s+weeks|fortnightly)\b/.test(text)
+  ) {
+    matches.push(14);
+  }
+  if (/\b(monthly|every\s+month|each\s+month)\b/.test(text)) {
+    matches.push(31);
+  }
+  if (/\b(quarterly|every\s+quarter|each\s+quarter)\b/.test(text)) {
+    matches.push(92);
+  }
+  if (
+    /\b(semi[\s-]?annual(?:ly)?|bi[\s-]?annual(?:ly)?|twice\s+(a|per)\s+year)\b/.test(
+      text
+    )
+  ) {
+    matches.push(183);
+  }
+  if (/\b(annual(?:ly)?|yearly|every\s+year|once\s+(a|per)\s+year)\b/.test(text)) {
+    matches.push(365);
+  }
+
+  if (matches.length === 0) return null;
+  return Math.min(...matches);
+}
+
+function maxIntervalForFamily(
+  family: string,
+  impact: Fips199ImpactLevel
+): number | null {
+  const normalized = normalizeFamily(family);
+  if (
+    (CONMON_HIGH_VOLATILITY_FAMILIES as readonly string[]).includes(normalized)
+  ) {
+    return CONMON_VOLATILE_MAX_INTERVAL_DAYS[impact];
+  }
+  if ((CONMON_ELEVATED_FAMILIES as readonly string[]).includes(normalized)) {
+    return CONMON_ELEVATED_MAX_INTERVAL_DAYS[impact];
+  }
+  return null;
+}
+
+function intervalLabel(days: number): string {
+  if (days <= 1) return 'continuous/daily';
+  if (days <= 7) return 'weekly or more frequent';
+  if (days <= 14) return 'biweekly or more frequent';
+  if (days <= 31) return 'monthly or more frequent';
+  if (days <= 92) return 'quarterly or more frequent';
+  if (days <= 183) return 'semi-annual or more frequent';
+  return 'at least annual';
+}
+
+/**
+ * Check that family cadences are risk-appropriate for the system's impact level.
+ * Only enforces thresholds for volatile/elevated families; others rely on RAG.
+ */
+export function evaluateCadenceAppropriateness(
+  familyCadences: ConMonFamilyCadence[],
+  impactLevel: Fips199ImpactLevel | null
+): {
+  ok: boolean;
+  issues: ConMonCadenceAppropriatenessIssue[];
+} {
+  if (!impactLevel) {
+    return { ok: true, issues: [] };
+  }
+
+  const issues: ConMonCadenceAppropriatenessIssue[] = [];
+
+  for (const row of familyCadences) {
+    const maxDays = maxIntervalForFamily(row.family, impactLevel);
+    if (maxDays == null) continue;
+
+    const parsed = parseCadenceIntervalDays(row.cadence);
+    if (parsed == null) {
+      issues.push({
+        family: normalizeFamily(row.family),
+        cadence: row.cadence,
+        parsedIntervalDays: null,
+        maxIntervalDays: maxDays,
+        message: `${normalizeFamily(row.family)}: state a clear frequency (e.g. continuous, weekly, monthly) so cadence can be checked against ${impactLevel}-impact expectations (${intervalLabel(maxDays)}).`,
+      });
+      continue;
+    }
+
+    if (parsed > maxDays) {
+      issues.push({
+        family: normalizeFamily(row.family),
+        cadence: row.cadence,
+        parsedIntervalDays: parsed,
+        maxIntervalDays: maxDays,
+        message: `${normalizeFamily(row.family)}: cadence is too infrequent for a ${impactLevel}-impact system (need ${intervalLabel(maxDays)} for this volatile/high-risk family).`,
+      });
+    }
+  }
+
+  return { ok: issues.length === 0, issues };
 }
 
 export function parseConMonStrategyExpectedState(
@@ -291,6 +521,7 @@ export function evaluateConMonStrategyDeterministic(
       ? Math.floor(expected.minEscalationLength)
       : CONMON_STRATEGY_MIN_ESCALATION_LENGTH;
 
+  const impactLevel = resolveSystemImpactLevel(ticket);
   const parsed = extractConMonStrategySubmission(submission);
 
   if (!parsed) {
@@ -303,6 +534,9 @@ export function evaluateConMonStrategyDeterministic(
       escalationLength: 0,
       minEscalationLength,
       fieldLengthOk: false,
+      impactLevel,
+      cadenceAppropriatenessOk: false,
+      cadenceIssues: [],
       guidancePath: null,
       retrievedSectionIds: [],
       reason: 'missing_fields',
@@ -345,6 +579,11 @@ export function evaluateConMonStrategyDeterministic(
   const fieldLengthOk =
     shortCadenceFields.length === 0 && shortToolFields.length === 0;
 
+  const skipCadenceCheck = expected.skipCadenceAppropriateness === true;
+  const cadenceCheck = skipCadenceCheck
+    ? { ok: true, issues: [] as ConMonCadenceAppropriatenessIssue[] }
+    : evaluateCadenceAppropriateness(parsed.familyCadences, impactLevel);
+
   const structured: ConMonStrategyStructuredResult = {
     style: 'conmon_strategy',
     familiesCovered,
@@ -354,6 +593,9 @@ export function evaluateConMonStrategyDeterministic(
     escalationLength,
     minEscalationLength,
     fieldLengthOk,
+    impactLevel,
+    cadenceAppropriatenessOk: cadenceCheck.ok,
+    cadenceIssues: cadenceCheck.issues,
     guidancePath: null,
     retrievedSectionIds: [],
   };
@@ -398,6 +640,20 @@ export function evaluateConMonStrategyDeterministic(
     };
   }
 
+  if (!cadenceCheck.ok) {
+    structured.reason = 'cadence_not_impact_appropriate';
+    const detail = cadenceCheck.issues
+      .slice(0, 3)
+      .map((issue) => issue.message)
+      .join(' ');
+    return {
+      parsed,
+      structured,
+      ok: false,
+      feedback: `Monitoring cadences are not risk-appropriate for this system's ${impactLevel ?? 'stated'} FIPS 199 impact level. ${detail}`,
+    };
+  }
+
   return {
     parsed,
     structured,
@@ -432,12 +688,15 @@ async function gradeMemoWithSp800137(
     requiredSectionIds,
   });
 
+  const impactLevel = resolveSystemImpactLevel(ticket);
+
   const prompt = buildConMonStrategyGradingPrompt(retrieved, {
     familyCadencesText: formatFamilyCadences(parsed.familyCadences),
     toolCoverageText: formatToolCoverage(parsed.toolCoverage),
     escalationReporting: parsed.escalationReporting,
     scenarioBrief: ticket.scenario_brief,
     systemProfileText: formatSystemProfile(ticket.initial_state),
+    impactLevel,
   });
 
   const grading = await callClaudeGrading(prompt);

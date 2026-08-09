@@ -1,0 +1,92 @@
+{
+  "document": "FIPS PUB 199",
+  "title": "Standards for Security Categorization of Federal Information and Information Systems",
+  "source_url": "https://csrc.nist.gov/pubs/fips/199/final",
+  "notes": "Pinned educational excerpts for RAG-style grading of FIPS 199 impact categorization tickets. Graders must use only retrieved section text, not parametric knowledge of FIPS 199 or SP 800-60.",
+  "disclaimer": "Educational paraphrase for training. Not a substitute for the official FIPS 199 publication.",
+  "sections": [
+    {
+      "id": "security-objectives",
+      "title": "Confidentiality, integrity, and availability objectives",
+      "topics": ["confidentiality", "integrity", "availability", "cia", "security objectives"],
+      "keywords": [
+        "confidentiality",
+        "integrity",
+        "availability",
+        "security objectives",
+        "unauthorized disclosure",
+        "unauthorized modification",
+        "disruption of access"
+      ],
+      "text": "FIPS 199 defines three security objectives for information and information systems. Confidentiality is preserving authorized restrictions on information access and disclosure, including means for protecting personal privacy and proprietary information. A loss of confidentiality is the unauthorized disclosure of information. Integrity is guarding against improper information modification or destruction, and includes ensuring information non-repudiation and authenticity. A loss of integrity is the unauthorized modification or destruction of information. Availability is ensuring timely and reliable access to and use of information. A loss of availability is the disruption of access to or use of information or an information system. Security categorization assigns a potential impact value of Low, Moderate, or High to each of these three objectives."
+    },
+    {
+      "id": "impact-definitions",
+      "title": "Low, Moderate, and High potential impact definitions",
+      "topics": ["low", "moderate", "high", "potential impact", "adverse effects"],
+      "keywords": [
+        "low",
+        "moderate",
+        "high",
+        "potential impact",
+        "limited adverse effect",
+        "serious adverse effect",
+        "severe",
+        "catastrophic",
+        "mission capability",
+        "financial loss",
+        "harm to individuals"
+      ],
+      "text": "The potential impact is Low if the loss of confidentiality, integrity, or availability could be expected to have a limited adverse effect on organizational operations, organizational assets, or individuals. Limited adverse effects include degradation of mission capability to an extent and duration that the organization can perform its primary functions, but the effectiveness of the functions is noticeably reduced; minor damage to organizational assets; minor financial loss; or minor harm to individuals. The potential impact is Moderate if the loss could be expected to have a serious adverse effect: significant degradation of mission capability to an extent and duration that the organization can perform its primary functions, but the effectiveness of the functions is significantly reduced; significant damage to organizational assets; significant financial loss; or significant harm to individuals that does not involve loss of life or serious life-threatening injuries. The potential impact is High if the loss could be expected to have a severe or catastrophic adverse effect: severe degradation or loss of mission capability to an extent and duration that the organization cannot perform one or more of its primary functions; major damage to organizational assets; major financial loss; or severe or catastrophic harm to individuals involving loss of life or serious life-threatening injuries."
+    },
+    {
+      "id": "information-types",
+      "title": "Categorize by information types and mission context",
+      "topics": ["information types", "mission", "business processes", "data types", "system"],
+      "keywords": [
+        "information types",
+        "data types",
+        "mission",
+        "business process",
+        "system categorization",
+        "information processed",
+        "stored",
+        "transmitted",
+        "SP 800-60"
+      ],
+      "text": "Security categorization begins by identifying the information types processed, stored, or transmitted by the system and the mission or business processes the system supports. Each information type is assessed for the potential impact of a loss of confidentiality, integrity, and availability in the organization's operational context. Public or non-sensitive operational telemetry may justify Low confidentiality, while PII, credential status, or proprietary operational details often justify Moderate confidentiality when unauthorized disclosure would cause serious privacy or operational harm. Integrity impact rises when incorrect or corrupted data would drive wrong operational decisions with serious or catastrophic consequences. Availability impact depends on how quickly loss of the system would degrade primary functions and whether workable fallbacks exist. Student justifications should tie each C/I/A level to concrete data types and mission effects described in the scenario, not to generic labels."
+    },
+    {
+      "id": "high-water-mark",
+      "title": "System categorization high-water mark",
+      "topics": ["high-water mark", "overall", "system security category", "aggregate"],
+      "keywords": [
+        "high-water mark",
+        "overall",
+        "system categorization",
+        "security category",
+        "highest potential impact",
+        "aggregate",
+        "SC"
+      ],
+      "text": "The security category of an information system is expressed as the high-water mark of the potential impact values assigned to the confidentiality, integrity, and availability security objectives. In other words, the overall system impact level equals the highest of the three objective impact values. For example, if confidentiality is Moderate, integrity is High, and availability is Moderate, the system security category is High. Students must apply this high-water mark rule when stating the overall categorization and should briefly explain that the overall level is driven by the most severe objective impact, not by averaging the three values."
+    },
+    {
+      "id": "justification-quality",
+      "title": "What a sound FIPS 199 justification includes",
+      "topics": ["justification", "rationale", "evidence", "adverse effects"],
+      "keywords": [
+        "justification",
+        "rationale",
+        "cite",
+        "adverse effect",
+        "scenario facts",
+        "mission impact",
+        "PII",
+        "fallback",
+        "life safety"
+      ],
+      "text": "A sound FIPS 199 categorization justification (1) states Low, Moderate, or High for confidentiality, integrity, and availability using the potential-impact definitions; (2) cites scenario-specific information types and mission consequences for each objective; (3) distinguishes serious adverse effects (Moderate) from severe or catastrophic effects including loss of life or inability to perform a primary function (High); (4) accounts for fallbacks when judging availability; and (5) applies the high-water mark for the overall system category. Weak justifications use only generic phrases such as 'data is important' or 'system is critical' without linking to FIPS 199 impact language or scenario facts. Graders should reward explicit ties between data types, adverse-effect severity, and the selected levels."
+    }
+  ]
+}

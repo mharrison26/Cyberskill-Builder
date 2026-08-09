@@ -29,12 +29,15 @@ import { AO_REVIEW_MIN_ANSWER_LENGTH } from '@/lib/scoring/ticketUi';
 
 export type AoReviewStructuredResult = {
   style: 'ao_review';
+  /** Track flagship portfolio item on resolve (ISSO-05 / GRC-11). */
+  flagshipEligible: true;
   questionCount: number;
   answeredCount: number;
   shortAnswerIds: string[];
   missingAnswerIds: string[];
   minAnswerLength: number;
   packageComplete: boolean;
+  packageSource?: CompiledAuthorizationPackage['packageSource'];
   guidancePath: string | null;
   retrievedSectionIds: string[];
   grading?: {
@@ -124,6 +127,7 @@ export function evaluateAoReviewDeterministic(
 
   const structured: AoReviewStructuredResult = {
     style: 'ao_review',
+    flagshipEligible: true,
     questionCount: questions.length,
     answeredCount,
     shortAnswerIds,
@@ -236,7 +240,7 @@ export function createAoReviewTicketScorer(
             reason: 'compile_failed',
           },
           feedback:
-            'Could not load your compiled authorization package for grading. Complete GRC-03/04/09 and the package ticket, then retry.',
+            'Could not load your compiled authorization package for grading. Complete ISSO-04 / GRC-03–09 (or use the seeded sample package), then retry.',
         };
       }
 
@@ -266,7 +270,9 @@ export function createAoReviewTicketScorer(
 
         const structured: AoReviewStructuredResult = {
           ...deterministic.structured,
+          flagshipEligible: true,
           packageComplete: pkg.complete,
+          packageSource: pkg.packageSource,
           guidancePath: guidance.catalogPath,
           retrievedSectionIds: [
             ...guidance.sections.map((s) => s.id),
@@ -295,7 +301,7 @@ export function createAoReviewTicketScorer(
         return {
           status: 'resolved',
           structuredResult: structured,
-          feedback: `${grading.feedback}${gapHint}`,
+          feedback: `${grading.feedback}${gapHint}\n\nAO risk-acceptance review complete. This resolution is marked as your track flagship portfolio item (ISSO-05).`,
         };
       } catch (error) {
         if (error instanceof MissingAnthropicApiKeyError) {
@@ -303,11 +309,13 @@ export function createAoReviewTicketScorer(
             status: 'resolved',
             structuredResult: {
               ...deterministic.structured,
+              flagshipEligible: true,
               packageComplete: pkg.complete,
+              packageSource: pkg.packageSource,
               reason: 'rag_feedback_unavailable_missing_api_key',
             },
             feedback:
-              'AO answers accepted (length checks passed). AI risk-acceptance grading is unavailable (ANTHROPIC_API_KEY not configured).',
+              'AO answers accepted (length checks passed). AI risk-acceptance grading is unavailable (ANTHROPIC_API_KEY not configured). This resolution is marked as your track flagship portfolio item (ISSO-05).',
           };
         }
 
@@ -325,11 +333,13 @@ export function createAoReviewTicketScorer(
           status: 'resolved',
           structuredResult: {
             ...deterministic.structured,
+            flagshipEligible: true,
             packageComplete: pkg.complete,
+            packageSource: pkg.packageSource,
             reason: 'rag_feedback_error',
           },
           feedback:
-            'AO answers accepted (length checks passed). Could not complete AI risk-acceptance grading right now.',
+            'AO answers accepted (length checks passed). Could not complete AI risk-acceptance grading right now. This resolution is marked as your track flagship portfolio item (ISSO-05).',
         };
       }
     },

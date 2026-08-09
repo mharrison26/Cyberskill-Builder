@@ -1,0 +1,109 @@
+{
+  "document": "ISSO-to-ISSM escalation criteria (pinned educational excerpts)",
+  "title": "When Information System Security Officers escalate risk to the ISSM",
+  "source_url": "https://csrc.nist.gov/projects/risk-management",
+  "notes": "Pinned educational excerpts for ISSO training on cross-system risk escalation. Graders must use retrieved section text plus the student scenario and memo — not parametric knowledge of RMF role practice.",
+  "sections": [
+    {
+      "id": "escalation-criteria",
+      "title": "ISSM escalation criteria overview",
+      "topics": ["escalation-criteria", "issm", "isso", "risk escalation"],
+      "keywords": [
+        "escalation criteria",
+        "escalate to issm",
+        "information system security manager",
+        "isso authority",
+        "cross-system",
+        "enterprise risk"
+      ],
+      "text": "An Information System Security Officer (ISSO) owns day-to-day security for assigned system(s) within the authorization boundary and can drive system-level remediation, POA&M updates, and compensating controls that fit that boundary and budget. Escalation to the Information System Security Manager (ISSM) is warranted when the risk cannot be closed or adequately contained within a single ISSO's authority — especially when impact crosses systems or owners, residual risk exceeds organizational tolerance for the systems involved, remediation needs enterprise resources or change governance, or ISSOs disagree on priority or approach. Escalation is a governance action that surfaces shared risk to the role accountable for coordinating security across systems, not a substitute for documenting the finding."
+    },
+    {
+      "id": "cross-system-impact",
+      "title": "Cross-system and multi-ISSO impact",
+      "topics": ["cross-system-impact", "shared services", "multi-isso"],
+      "keywords": [
+        "cross-system",
+        "multiple systems",
+        "shared identity",
+        "shared idp",
+        "different issos",
+        "common control",
+        "enterprise service"
+      ],
+      "text": "Escalate when a weakness in a shared or enterprise service (for example a corporate identity provider, enterprise PKI, shared logging platform, or common network control) creates concurrent risk across systems with different ISSOs, FIPS 199 categorizations, or authorization packages. Single-ISSO containment is usually inadequate when compromise or misconfiguration of the shared component can degrade confidentiality, integrity, or availability for more than one authorized system at once. Strong escalation memos name each affected system, its ISSO, impact level, and how the shared dependency propagates risk across boundaries."
+    },
+    {
+      "id": "resource-authority",
+      "title": "Resources and authority beyond the ISSO",
+      "topics": ["resource-authority", "budget", "change board", "enterprise"],
+      "keywords": [
+        "resource needs",
+        "beyond isso authority",
+        "enterprise budget",
+        "change board",
+        "cab",
+        "enterprise change",
+        "funding",
+        "vendor contract"
+      ],
+      "text": "Escalate when the corrective action requires resources, contracts, or change authority the ISSO does not control — for example enterprise identity budget, organization-wide configuration baselines, CAB/enterprise change board approval, shared-service owner prioritization, or multi-system outage windows. An ISSO may document the weakness and apply local compensating controls, but cannot unilaterally fund or schedule enterprise remediation that other system owners and the ISSM must coordinate. Memos should state what the ISSO can do locally versus what requires ISSM-level resource or governance decisions."
+    },
+    {
+      "id": "residual-risk-tolerance",
+      "title": "Residual risk above organizational tolerance",
+      "topics": ["residual risk", "risk tolerance", "authorization"],
+      "keywords": [
+        "residual risk",
+        "above tolerance",
+        "risk tolerance",
+        "high impact",
+        "authorization",
+        "unacceptable risk"
+      ],
+      "text": "Escalate when residual risk after feasible ISSO-level compensating controls remains above organizational tolerance for one or more affected systems — especially High-impact systems or Moderate systems where the shared weakness can elevate enterprise exposure. ISSO-level handling is appropriate when local remediation or time-bound compensating controls reduce residual risk to an acceptable level within that ISSO's boundary and the issue does not force conflicting risk decisions across authorizations. Escalation packages should describe current residual risk, interim mitigations, and why tolerance is exceeded without ISSM coordination."
+    },
+    {
+      "id": "conflicting-isso-priorities",
+      "title": "Conflicting ISSO priorities or approaches",
+      "topics": ["conflicting priorities", "coordination", "multi-isso"],
+      "keywords": [
+        "conflicting isso",
+        "priority conflict",
+        "disagreement",
+        "coordination",
+        "competing remediation",
+        "different owners"
+      ],
+      "text": "Escalate when two or more ISSOs cannot align on remediation timing, compensating-control adequacy, or operational tradeoffs because their systems have different mission priorities, maintenance windows, or risk appetites. The ISSM is the appropriate coordinator when local negotiation stalls and continued independent action would leave a shared vulnerability inconsistently mitigated. Memos should summarize the conflict factually (who owns what, where priorities diverge) without blaming peer ISSOs."
+    },
+    {
+      "id": "isso-level-handling",
+      "title": "When to retain and handle at ISSO level",
+      "topics": ["isso level", "do not escalate", "system-scoped"],
+      "keywords": [
+        "handle at isso",
+        "isso level",
+        "single system",
+        "within authority",
+        "local remediation",
+        "do not escalate"
+      ],
+      "text": "Retain at ISSO level when the risk is confined to one authorization boundary, remediation is within the ISSO's technical and budgetary authority, residual risk can be driven within tolerance with local controls or a realistic POA&M, and no other ISSO's system depends on the flawed component in a way that creates concurrent enterprise exposure. Unnecessary escalation of purely system-scoped issues dilutes ISSM attention. Non-escalation rationales should still document the finding, planned actions, owners, and monitoring so the decision is auditable."
+    },
+    {
+      "id": "escalation-memo",
+      "title": "Escalation memo (or non-escalation rationale) quality",
+      "topics": ["memo", "rationale", "justification"],
+      "keywords": [
+        "escalation memo",
+        "rationale",
+        "justification",
+        "affected systems",
+        "requested decision",
+        "interim controls"
+      ],
+      "text": "A strong escalation memo (or non-escalation rationale) ties scenario facts to escalation criteria: which systems and ISSOs are affected; how impact crosses boundaries or stays local; what resources or change authority are required; residual risk relative to tolerance; interim compensating controls; and the specific decision requested of the ISSM (or why ISSO-level handling is sufficient). Weak memos assert 'this is important' without naming cross-system impact, authority limits, or concrete next actions. Graders should reward criterion-grounded, scenario-specific writing over generic RMF vocabulary."
+    }
+  ]
+}

@@ -47,6 +47,14 @@ export type CompiledAuthorizationPackage = {
   complete: boolean;
   missingCodes: GrcTicketCode[];
   compiledAt: string;
+  /**
+   * Where package content came from:
+   * - prior_submission: all present artifacts from student work
+   * - seed: only seeded sample ATO excerpts (no live artifacts)
+   * - mixed: live artifacts preferred, gaps filled from seedPackage
+   * Optional for callers that construct packages in tests / sibling scorers.
+   */
+  packageSource?: 'prior_submission' | 'seed' | 'mixed' | 'empty';
 };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -207,7 +215,179 @@ export type CompileStudentPackageInput = {
 };
 
 /**
+ * Parse seeded ATO package excerpts from ticket initial_state so AO review
+ * remains playable when the student has not completed ISSO-04 / GRC-03–09 yet.
+ *
+ * Accepts `seedPackage.artifacts` or a top-level `compiledPackage.artifacts`
+ * array of { code, label?, status?, summary?, payload?, textCorpus? }.
+ */
+export function parseSeedPackageFromTicketState(
+  initialState: Record<string, unknown> | null | undefined
+): CompiledArtifact[] {
+  if (!isPlainObject(initialState)) return [];
+
+  const seedRoot = isPlainObject(initialState.seedPackage)
+    ? initialState.seedPackage
+    : isPlainObject(initialState.compiledPackage)
+      ? initialState.compiledPackage
+      : isPlainObject(initialState.seed_package)
+        ? initialState.seed_package
+        : null;
+
+  const rawArtifacts = seedRoot
+    ? seedRoot.artifacts
+    : Array.isArray(initialState.seedArtifacts)
+      ? initialState.seedArtifacts
+      : null;
+
+  if (!Array.isArray(rawArtifacts)) return [];
+
+  const artifacts: CompiledArtifact[] = [];
+  for (const entry of rawArtifacts) {
+    if (!isPlainObject(entry)) continue;
+    const codeRaw =
+      typeof entry.code === 'string' && entry.code.trim()
+        ? entry.code.trim().toUpperCase()
+        : '';
+    if (!codeRaw) continue;
+
+    const code = codeRaw as GrcTicketCode;
+    const label =
+      typeof entry.label === 'string' && entry.label.trim()
+        ? entry.label.trim()
+        : code;
+    const ticketTypes = Array.isArray(entry.ticketTypes)
+      ? entry.ticketTypes.filter((t): t is string => typeof t === 'string')
+      : [];
+    const statusRaw =
+      entry.status === 'present' ||
+      entry.status === 'missing' ||
+      entry.status === 'incomplete'
+        ? entry.status
+        : 'present';
+    const summary =
+      typeof entry.summary === 'string' && entry.summary.trim()
+        ? entry.summary.trim()
+        : `${label} (seeded sample)`;
+    const payload = isPlainObject(entry.payload) ? entry.payload : null;
+    const textCorpus =
+      typeof entry.textCorpus === 'string' && entry.textCorpus.trim()
+        ? entry.textCorpus
+        : typeof entry.text_corpus === 'string' && entry.text_corpus.trim()
+          ? entry.text_corpus
+          : corpusForArtifact(code, payload);
+
+    artifacts.push({
+      code,
+      label,
+      ticketTypes,
+      status: statusRaw,
+      ticketId: null,
+      progressStatus: 'seeded',
+      summary,
+      payload,
+      textCorpus,
+    });
+  }
+
+  return artifacts;
+}
+
+/**
+ * Prefer live student artifacts; fill missing codes from seedPackage so the
+ * ISSO-05 / GRC-11 AO review stays solvable standalone.
+ */
+export function mergeLivePackageWithSeed(
+  live: CompiledAuthorizationPackage,
+  seedArtifacts: CompiledArtifact[]
+): CompiledAuthorizationPackage {
+  if (seedArtifacts.length === 0) {
+    return {
+      ...live,
+      packageSource:
+        live.artifacts.some((a) => a.status === 'present')
+          ? 'prior_submission'
+          : 'empty',
+    };
+  }
+
+  const seedByCode = new Map(seedArtifacts.map((a) => [a.code, a]));
+  let usedSeed = false;
+  let usedLive = false;
+
+  const artifacts = live.artifacts.map((artifact) => {
+    if (artifact.status === 'present' && artifact.payload) {
+      usedLive = true;
+      return artifact;
+    }
+    const seeded = seedByCode.get(artifact.code);
+    if (seeded && seeded.status === 'present') {
+      usedSeed = true;
+      return {
+        ...seeded,
+        // Keep the live ticket id / progress when available for UI context.
+        ticketId: artifact.ticketId ?? seeded.ticketId,
+        progressStatus: artifact.progressStatus ?? seeded.progressStatus,
+        summary: `${seeded.summary} (seeded — complete ISSO-04 / prior tickets for your live package)`,
+      };
+    }
+    if (artifact.payload || artifact.status !== 'missing') {
+      usedLive = true;
+    }
+    return artifact;
+  });
+
+  // Include seed-only artifacts not in the live source list (e.g. SAR excerpt).
+  for (const seeded of seedArtifacts) {
+    if (!artifacts.some((a) => a.code === seeded.code)) {
+      usedSeed = true;
+      artifacts.push(seeded);
+    }
+  }
+
+  const missingCodes = artifacts
+    .filter((a) => a.status !== 'present')
+    .map((a) => a.code);
+
+  let packageSource: CompiledAuthorizationPackage['packageSource'] = 'empty';
+  if (usedLive && usedSeed) packageSource = 'mixed';
+  else if (usedLive) packageSource = 'prior_submission';
+  else if (usedSeed) packageSource = 'seed';
+
+  return {
+    ...live,
+    artifacts,
+    complete: missingCodes.length === 0,
+    missingCodes,
+    packageSource,
+  };
+}
+
+/** Pure helper for tests / preview: seed-only package from initial_state. */
+export function compileSeedAuthorizationPackage(
+  initialState: Record<string, unknown> | null | undefined,
+  options?: { trackId?: string; studentId?: string }
+): CompiledAuthorizationPackage {
+  const artifacts = parseSeedPackageFromTicketState(initialState);
+  const missingCodes = artifacts
+    .filter((a) => a.status !== 'present')
+    .map((a) => a.code);
+
+  return {
+    trackId: options?.trackId ?? 'seed',
+    studentId: options?.studentId ?? 'seed',
+    artifacts,
+    complete: artifacts.length > 0 && missingCodes.length === 0,
+    missingCodes,
+    compiledAt: new Date().toISOString(),
+    packageSource: artifacts.length > 0 ? 'seed' : 'empty',
+  };
+}
+
+/**
  * Load the student's GRC-03 / GRC-04 / GRC-09 artifacts into one package.
+ * Falls back to `initial_state.seedPackage` excerpts when live work is missing
+ * (ISSO-04 compiled package / ISSO-05 AO review preview path).
  */
 export async function compileStudentPackage(
   input: CompileStudentPackageInput
@@ -414,14 +594,20 @@ export async function compileStudentPackage(
     .filter((a) => a.status !== 'present')
     .map((a) => a.code);
 
-  return {
+  const live: CompiledAuthorizationPackage = {
     trackId: input.trackId,
     studentId: input.studentId,
     artifacts,
     complete: missingCodes.length === 0,
     missingCodes,
     compiledAt: new Date().toISOString(),
+    packageSource: artifacts.some((a) => a.status === 'present')
+      ? 'prior_submission'
+      : 'empty',
   };
+
+  const seedArtifacts = parseSeedPackageFromTicketState(input.initialState);
+  return mergeLivePackageWithSeed(live, seedArtifacts);
 }
 
 /** Flatten package into a single RAG query / prompt block. */

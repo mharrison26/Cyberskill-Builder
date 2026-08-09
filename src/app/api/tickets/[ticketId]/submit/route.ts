@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { isAoReviewTicketType } from '@/lib/capstone/ticketCodes';
+import { isAuditCommitteeBriefTicketType } from '@/lib/grc/ticketCodes';
 import { isFlagshipEligibleTicketType } from '@/lib/helpdesk/ticketCodes';
 import { isInfraDesignCapstoneTicketType } from '@/lib/infra/ticketCodes';
 import { captureFeatureException } from '@/lib/observability/sentry';
@@ -94,6 +95,43 @@ function mergeInfraDesignCapstoneSubmission(
   };
 }
 
+/** Preserve generated AC questions + prior-findings narrative when the client omits them. */
+function mergeAuditCommitteeBriefSubmission(
+  submission: TicketSubmission,
+  existingSubmission: Record<string, unknown> | null | undefined
+): TicketSubmission {
+  if (!isPlainObject(existingSubmission)) {
+    return submission;
+  }
+
+  const existingQuestions = existingSubmission.questions;
+  const incomingQuestions = submission.questions;
+  const questions =
+    Array.isArray(incomingQuestions) && incomingQuestions.length > 0
+      ? incomingQuestions
+      : existingQuestions;
+
+  const incomingSummary =
+    typeof submission.executiveSummary === 'string' &&
+    submission.executiveSummary.trim()
+      ? submission.executiveSummary
+      : typeof submission.summary === 'string' && submission.summary.trim()
+        ? submission.summary
+        : existingSubmission.executiveSummary;
+
+  return {
+    ...existingSubmission,
+    ...submission,
+    executiveSummary: incomingSummary,
+    questions,
+    priorFindingsNarrative:
+      typeof submission.priorFindingsNarrative === 'string' &&
+      submission.priorFindingsNarrative.trim()
+        ? submission.priorFindingsNarrative
+        : existingSubmission.priorFindingsNarrative,
+  };
+}
+
 export async function POST(request: Request, { params }: RouteContext) {
   const { ticketId } = params;
   const supabase = await createClient();
@@ -129,7 +167,12 @@ export async function POST(request: Request, { params }: RouteContext) {
     ? mergeAoReviewSubmission(parsedSubmission, existingSubmission)
     : isInfraDesignCapstoneTicketType(context.ticket.ticket_type)
       ? mergeInfraDesignCapstoneSubmission(parsedSubmission, existingSubmission)
-      : parsedSubmission;
+      : isAuditCommitteeBriefTicketType(context.ticket.ticket_type)
+        ? mergeAuditCommitteeBriefSubmission(
+            parsedSubmission,
+            existingSubmission
+          )
+        : parsedSubmission;
 
   const scorer = resolveTicketScorer(context.ticket.ticket_type);
 

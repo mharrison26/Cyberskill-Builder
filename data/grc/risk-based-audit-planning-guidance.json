@@ -1,0 +1,121 @@
+{
+  "document": "Risk-Based Internal Audit Planning Guidance",
+  "title": "Risk-based annual audit planning principles (educational, IIA-aligned)",
+  "source_url": "internal://risk-based-audit-planning-guidance",
+  "notes": "Pinned educational guidance for RAG-style grading of student annual audit plans derived from a risk register. Graders must use only retrieved section text plus the ticket risk register context, not parametric knowledge of IIA standards or organizational policy.",
+  "disclaimer": "Educational guidance only. Summarizes common risk-based internal audit planning practices aligned with IIA concepts. Not a substitute for the International Standards for the Professional Practice of Internal Auditing, organizational audit methodology, or engagement-specific instructions.",
+  "sections": [
+    {
+      "id": "risk-based-priority",
+      "title": "Prioritize residual risk and assurance need",
+      "topics": ["priority", "residual risk", "risk-based", "assurance"],
+      "keywords": [
+        "residual risk",
+        "inherent risk",
+        "prioritize",
+        "risk-based",
+        "assurance",
+        "highest risk",
+        "audit plan",
+        "risk rating"
+      ],
+      "text": "A risk-based annual audit plan allocates limited audit capacity to areas with the greatest residual risk and assurance need. Residual risk (risk remaining after considering existing controls) should weigh more heavily than inherent risk alone. Areas rated Critical or High residual risk, especially those with open issues or material financial/operational impact, should generally appear among the highest priorities unless the plan documents a compelling assurance alternative (for example, recent external audit coverage of the same controls with no open findings). Ranking lower-risk administrative areas ahead of higher residual-risk areas without justification does not meet risk-based planning expectations."
+    },
+    {
+      "id": "coverage-and-recency",
+      "title": "Consider audit coverage history and recency",
+      "topics": ["coverage", "last audit", "recency", "cycle"],
+      "keywords": [
+        "last audit",
+        "coverage",
+        "recency",
+        "never audited",
+        "stale",
+        "audit cycle",
+        "overdue",
+        "assurance gap"
+      ],
+      "text": "Risk ratings should be interpreted together with coverage history. Areas that have never been audited, or that have not been audited for several years relative to their risk, create assurance gaps that often elevate priority even when residual risk is Moderate. Conversely, an area audited very recently with clean results and no material change may be deferred if capacity is constrained—provided higher-risk or stale-coverage areas are not displaced. The plan should show that last-audit dates and known coverage gaps influenced ordering."
+    },
+    {
+      "id": "capacity-tradeoffs",
+      "title": "Capacity constraints force explicit tradeoffs",
+      "topics": ["capacity", "tradeoff", "resource", "scope"],
+      "keywords": [
+        "capacity",
+        "tradeoff",
+        "resource",
+        "audits per year",
+        "cannot cover",
+        "defer",
+        "out of plan",
+        "constraint"
+      ],
+      "text": "Internal audit rarely has capacity to cover every risk register area in one year. A strong plan selects a feasible number of engagements (matching stated capacity), explains why selected areas earn a slot, and acknowledges what is deferred and why. Capacity notes should be specific: which lower-priority or lower-risk areas are deferred, whether continuous monitoring or management self-assessment provides interim comfort, and what would trigger accelerating a deferred area (for example, a control failure, regulatory change, or major system go-live)."
+    },
+    {
+      "id": "justification-quality",
+      "title": "Each selected area needs a risk-linked justification",
+      "topics": ["justification", "rationale", "why", "evidence"],
+      "keywords": [
+        "justification",
+        "rationale",
+        "why",
+        "because",
+        "residual",
+        "known issues",
+        "materiality",
+        "impact"
+      ],
+      "text": "For each planned audit area, the rationale should cite concrete risk-register factors: residual (and where relevant inherent) ratings, materiality or impact notes, known issues or open findings, and last-audit recency. Generic statements such as \"important area\" or \"should be audited\" are insufficient. Strong justifications connect the ranking position to those factors (for example, Critical residual risk plus orphaned privileged accounts and no audit since 2023). Justifications should also be consistent with the overall ordered list—higher slots should generally reflect stronger combined risk and assurance-need arguments."
+    },
+    {
+      "id": "known-issues-and-change",
+      "title": "Weight known issues, control failures, and change",
+      "topics": ["known issues", "findings", "change", "control failure"],
+      "keywords": [
+        "known issues",
+        "open findings",
+        "control failure",
+        "exceptions",
+        "system change",
+        "go-live",
+        "remediation",
+        "management action"
+      ],
+      "text": "Known issues, open management actions, recent control exceptions, and significant process or system change increase the need for independent assurance. Plans should elevate areas where the register documents unresolved issues, emergency-change patterns, stale third-party assurance, or pending go-lives that alter the control environment. Ignoring documented issues while prioritizing quiet, low-risk processes indicates the plan is not risk-responsive."
+    },
+    {
+      "id": "avoid-low-risk-bias",
+      "title": "Avoid prioritizing low residual-risk convenience audits",
+      "topics": ["low risk", "bias", "convenience", "over-prioritize"],
+      "keywords": [
+        "low risk",
+        "low residual",
+        "convenience",
+        "over-prioritize",
+        "administrative",
+        "travel",
+        "facilities",
+        "brand"
+      ],
+      "text": "Low residual-risk areas (for example routine travel and expense, facilities physical security with recent clean coverage, or brand/communications) should not occupy scarce plan slots ahead of Critical/High residual-risk areas with stale coverage or open issues. Including a low-risk area can be acceptable only with a clear, exceptional rationale (regulatory mandate, board request, or fraud indicator) and only after higher-risk assurance needs are addressed within capacity. A plan that fills capacity with low-risk topics while omitting several high residual-risk areas fails risk-based planning principles."
+    },
+    {
+      "id": "board-and-objectives",
+      "title": "Link the plan to organizational objectives and oversight needs",
+      "topics": ["objectives", "board", "governance", "strategy"],
+      "keywords": [
+        "objectives",
+        "board",
+        "audit committee",
+        "governance",
+        "strategy",
+        "mission",
+        "stakeholders",
+        "oversight"
+      ],
+      "text": "Risk-based planning connects audit topics to what could prevent the organization from achieving its objectives and to what the board or audit committee needs independent assurance on. When the organization profile emphasizes regulated payments, customer data, uptime, or third-party dependence, the plan should visibly protect those objectives through selected engagements. Narrative should show awareness of the entity context, not only isolated risk labels."
+    }
+  ]
+}

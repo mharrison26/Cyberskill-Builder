@@ -1,0 +1,155 @@
+{
+  "document": "IIA / GAO Audit Finding Writing Guidance",
+  "title": "Condition–Criteria–Cause–Effect–Recommendation (CCCER) finding elements (educational)",
+  "source_url": "internal://audit-finding-cccer-guidance",
+  "notes": "Pinned educational excerpts synthesizing IIA performance standards for communicating results and GAO Yellow Book / Green Book concepts for finding elements. Graders must use only retrieved section text, not parametric knowledge of IIA or GAO publications.",
+  "disclaimer": "Educational guidance only. Not a substitute for the International Standards for the Professional Practice of Internal Auditing, GAO Government Auditing Standards (Yellow Book), Standards for Internal Control in the Federal Government (Green Book), or engagement-specific methodology.",
+  "sections": [
+    {
+      "id": "finding-elements-overview",
+      "title": "Core finding elements",
+      "topics": ["cccer", "finding", "elements", "structure"],
+      "keywords": [
+        "condition",
+        "criteria",
+        "cause",
+        "effect",
+        "recommendation",
+        "finding elements",
+        "CCCER",
+        "audit finding"
+      ],
+      "text": "A complete audit finding typically communicates five linked elements: Condition (what is), Criteria (what should be), Cause (why the difference exists), Effect (why it matters / consequence or risk), and Recommendation (what management should do). Each element should be specific, evidence-based, and written so a reader who did not perform the testing can understand the exception. Vague statements such as \"access controls are weak\" or \"management should improve\" are not sufficient. Findings should be fair, accurate, and supported by the work performed."
+    },
+    {
+      "id": "condition",
+      "title": "Condition — the factual situation found",
+      "topics": ["condition", "observation", "evidence", "exception"],
+      "keywords": [
+        "condition",
+        "what is",
+        "observed",
+        "exception",
+        "finding",
+        "evidence",
+        "sample",
+        "testing"
+      ],
+      "text": "Condition describes the factual situation the auditor observed during testing — the \"what is.\" Strong condition statements name the population or sample tested, quantify exceptions where possible (for example 6 of 15 terminated users retained access beyond the SLA), identify affected systems or processes, and stay within the evidence. Avoid speculative language in the condition; speculation belongs in cause or effect only when supported. The condition should not merely restate the criteria or assert a conclusion without facts."
+    },
+    {
+      "id": "criteria",
+      "title": "Criteria — the standard or expectation",
+      "topics": ["criteria", "policy", "standard", "requirement"],
+      "keywords": [
+        "criteria",
+        "what should be",
+        "policy",
+        "standard",
+        "requirement",
+        "SLA",
+        "control objective",
+        "Yellow Book"
+      ],
+      "text": "Criteria state the \"what should be\" — the law, regulation, policy, control objective, contract, or professional standard against which the condition is measured. Name the source (for example HarborForge Access Revocation Standard requiring revocation within 5 calendar days of termination) and quote or paraphrase the relevant expectation precisely. Weak criteria say \"best practice\" or \"industry norms\" without a citable expectation. Criteria must be relevant to the tested control so the gap between condition and criteria is clear."
+    },
+    {
+      "id": "cause",
+      "title": "Cause — why the condition differs from criteria",
+      "topics": ["cause", "root cause", "why", "control failure"],
+      "keywords": [
+        "cause",
+        "root cause",
+        "why",
+        "process gap",
+        "training",
+        "automation",
+        "oversight",
+        "design deficiency"
+      ],
+      "text": "Cause explains why the condition differs from the criteria. Prefer a plausible root or contributing cause grounded in the evidence (for example HR termination tickets not routed to IAM within 24 hours; no automated deprovisioning job; supervisors approving access retention without compensating review). Restating the condition (\"access was not revoked\") is not a cause. Good cause analysis helps management target remediation and distinguishes design deficiencies from operating effectiveness failures when the facts support that distinction."
+    },
+    {
+      "id": "effect",
+      "title": "Effect — consequence, risk, or impact",
+      "topics": ["effect", "impact", "risk", "consequence"],
+      "keywords": [
+        "effect",
+        "impact",
+        "risk",
+        "consequence",
+        "unauthorized access",
+        "data exposure",
+        "compliance",
+        "material"
+      ],
+      "text": "Effect describes the consequence or risk of the condition — why the finding matters to the organization. Tie impact to confidentiality, integrity, availability, compliance obligations, financial misstatement risk, or operational disruption as appropriate to the engagement. Prefer concrete risks (former employees retaining production ERP access increases unauthorized transaction and data exfiltration risk) over generic harm language. Effect should follow logically from the condition and criteria; do not invent impacts unsupported by the scenario."
+    },
+    {
+      "id": "recommendation",
+      "title": "Recommendation — actionable remediation",
+      "topics": ["recommendation", "remediation", "management action"],
+      "keywords": [
+        "recommendation",
+        "remediate",
+        "corrective action",
+        "management",
+        "actionable",
+        "owner",
+        "timeline",
+        "control"
+      ],
+      "text": "Recommendations propose practical corrective actions that address the cause and close the gap to criteria. Strong recommendations are specific, actionable, and directed at management (for example implement automated IAM deprovisioning triggered by HRIS termination events; institute a weekly reconciliation of terminated users to active directory accounts; document and enforce a 5-day revocation SLA with exception escalation). Avoid vague advice such as \"strengthen controls\" or \"remind staff.\" Recommendations should be feasible and proportionate to the risk described in the effect."
+    },
+    {
+      "id": "iia-communication",
+      "title": "IIA-aligned communication of results",
+      "topics": ["IIA", "communication", "accuracy", "clarity"],
+      "keywords": [
+        "IIA",
+        "communication",
+        "accurate",
+        "objective",
+        "clear",
+        "concise",
+        "constructive",
+        "complete",
+        "timely"
+      ],
+      "text": "Internal audit communications of results should be accurate, objective, clear, concise, constructive, complete, and timely. Accuracy means findings are free of errors and distortions and are supported by sufficient appropriate evidence. Objectivity means balanced presentation without undue emphasis. Clarity and conciseness favor plain language and logical structure — CCCER supports that structure. Constructive communications help management understand issues and take action. Completeness means including all significant information needed for an informed reader to understand the finding, including criteria and effect, not only the exception list."
+    },
+    {
+      "id": "gao-yellow-book",
+      "title": "GAO Yellow Book finding-element expectations",
+      "topics": ["GAO", "Yellow Book", "performance audit", "elements"],
+      "keywords": [
+        "GAO",
+        "Yellow Book",
+        "Government Auditing Standards",
+        "performance audit",
+        "finding",
+        "criteria",
+        "condition",
+        "cause",
+        "effect"
+      ],
+      "text": "GAO Government Auditing Standards (Yellow Book) emphasize that findings for performance audits commonly include criteria, condition, cause, and effect, and that recommendations follow when auditors develop findings. Criteria provide context for evaluating evidence; condition is a situation that exists; cause is the reason for the condition or the factor responsible for the difference between condition and criteria; effect is a clear logical link to the potential impact. Auditors should place findings in perspective, relate them to the audit objectives, and develop recommendations that flow from the findings and address the causes."
+    },
+    {
+      "id": "linkage-and-evidence",
+      "title": "Logical linkage and evidence support",
+      "topics": ["linkage", "evidence", "logic", "support"],
+      "keywords": [
+        "linkage",
+        "logical",
+        "supported",
+        "evidence",
+        "trace",
+        "exception",
+        "workpaper",
+        "consistent"
+      ],
+      "text": "The five CCCER elements must form a logical chain: criteria define the bar; condition shows a concrete departure; cause explains the departure; effect shows consequence of that departure; recommendation addresses the cause so the condition will meet criteria going forward. Each claim should be traceable to testing evidence summarized for the student (exception users, dates, policy SLA). Contradictions — for example recommending training when evidence points to missing automation — weaken the finding. Do not invent users, dates, or policy requirements that are not in the provided exception scenario."
+    }
+  ]
+}

@@ -44,6 +44,8 @@ type CCCERFormProps = {
   submitError?: string | null;
   submitSuccess?: boolean;
   submitLabel?: string;
+  /** Override default CCCER_MIN_LENGTH (lessons use 20; tickets may require more). */
+  minLength?: number;
   className?: string;
 };
 
@@ -54,6 +56,7 @@ export function CCCERForm({
   submitError = null,
   submitSuccess = false,
   submitLabel = 'Submit finding',
+  minLength = CCCER_MIN_LENGTH,
   className,
 }: CCCERFormProps) {
   const [values, setValues] = useState<CCCERValues>({
@@ -73,9 +76,9 @@ export function CCCERForm({
       const value = values[field.key].trim();
       if (!value) {
         nextErrors[field.key] = `${field.label} is required.`;
-      } else if (value.length < CCCER_MIN_LENGTH) {
+      } else if (value.length < minLength) {
         nextErrors[field.key] =
-          `${field.label} must be at least ${CCCER_MIN_LENGTH} characters.`;
+          `${field.label} must be at least ${minLength} characters.`;
       }
     }
     setErrors(nextErrors);

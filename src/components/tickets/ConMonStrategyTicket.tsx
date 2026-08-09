@@ -151,6 +151,32 @@ export function ConMonStrategyTicket({
 }: ConMonStrategyTicketProps) {
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
+  const ticketCode =
+    typeof initialState.ticketCode === 'string' &&
+    initialState.ticketCode.trim()
+      ? initialState.ticketCode.trim()
+      : typeof initialState.ticket_code === 'string' &&
+          initialState.ticket_code.trim()
+        ? initialState.ticket_code.trim()
+        : null;
+  const impactLevelLabel = useMemo(() => {
+    const profileRecord = asRecord(initialState.systemProfile);
+    const raw =
+      (typeof initialState.impactLevel === 'string' &&
+        initialState.impactLevel) ||
+      (typeof expectedState.impactLevel === 'string' &&
+        expectedState.impactLevel) ||
+      (typeof profileRecord.impactLevel === 'string' &&
+        profileRecord.impactLevel) ||
+      (typeof profileRecord.impact === 'string' && profileRecord.impact) ||
+      null;
+    if (!raw) return null;
+    const match = raw.match(/\b(low|moderate|medium|high)\b/i);
+    if (!match) return raw.trim();
+    const level = match[1].toLowerCase();
+    if (level === 'medium') return 'Moderate';
+    return level.charAt(0).toUpperCase() + level.slice(1);
+  }, [initialState, expectedState]);
   const profile = useMemo(
     () => formatSystemProfile(initialState),
     [initialState]
@@ -302,18 +328,24 @@ export function ConMonStrategyTicket({
     >
       <div className="flex flex-wrap items-center gap-2">
         <h2 id="conmon-strategy-heading" className="text-lg font-semibold">
-          Continuous monitoring strategy memo
+          System-level ConMon plan (ISSO)
         </h2>
+        {ticketCode ? <Badge variant="secondary">{ticketCode}</Badge> : null}
         <Badge variant="outline">SP 800-137</Badge>
+        {impactLevelLabel ? (
+          <Badge variant="outline">FIPS 199 {impactLevelLabel}</Badge>
+        ) : null}
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{profile.title}</CardTitle>
           <CardDescription>
-            Use this fictional system profile to ground cadence, tooling, and
-            reporting decisions. Graded against retrieved NIST SP 800-137 ISCM
-            guidance.
+            Plan continuous monitoring for this one system from an ISSO
+            perspective—not an org-wide ISCM program. Set control-family
+            cadences that fit the system&apos;s FIPS 199 impact, map
+            DefectDojo / CloudSploit / Scuba coverage, and define
+            escalation/reporting. Graded against retrieved NIST SP 800-137.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -341,7 +373,10 @@ export function ConMonStrategyTicket({
             </CardTitle>
             <CardDescription>
               For each family, set how often you will monitor/assess and why
-              (volatility, impact, weaknesses, threats, reporting needs).
+              (volatility, this system&apos;s impact level, weaknesses,
+              threats, reporting needs). High-impact systems need more
+              frequent monitoring than moderate/low—especially for volatile
+              families such as CM, SI, and RA.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -554,7 +589,7 @@ export function ConMonStrategyTicket({
         ) : null}
 
         <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit ConMon strategy'}
+          {isSubmitting ? 'Submitting…' : 'Submit system ConMon plan'}
         </Button>
       </form>
     </section>

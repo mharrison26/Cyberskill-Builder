@@ -76,9 +76,13 @@ function buildGenerationPrompt(
   packageSectionsText: string,
   guidanceText: string
 ): string {
-  return `You are simulating an Authorizing Official (AO) reviewing a student's authorization package.
+  return `You are simulating an Authorizing Official (AO) reviewing a student's compiled ATO package (ISSO-04 / GRC-10).
 
-Generate ${AO_QUESTION_MIN}–${AO_QUESTION_MAX} pointed written questions about risk acceptance. Questions MUST be specific to the retrieved package excerpts (control gaps, POA&M items, SSP claims, OSCAL artifacts) — not generic interview questions.
+Generate ${AO_QUESTION_MIN}–${AO_QUESTION_MAX} pointed written questions. The set MUST cover BOTH:
+1) Residual risk acceptance (what risk remains, why it is tolerable, compensating controls, revisit conditions)
+2) POA&M adequacy (milestone realism, scheduled completion credibility, risk_accepted vs remediate disposition, ownership)
+
+Questions MUST be specific to the retrieved package excerpts (control gaps, POA&M items, SSP/SAR claims, OSCAL artifacts) — not generic interview questions.
 
 Use ONLY:
 1) Retrieved risk-acceptance guidance
@@ -99,10 +103,10 @@ ${packageSectionsText}
 ${pkg.artifacts
   .map((a) => `- ${a.code} ${a.label}: ${a.status} — ${a.summary}`)
   .join('\n')}
-
+${pkg.packageSource && pkg.packageSource !== 'prior_submission' ? `\nPackage source note: ${pkg.packageSource} (prefer live student package when present).\n` : ''}
 ## Instructions
 
-Return structured JSON via the ${QUESTIONS_TOOL_NAME} tool with ${AO_QUESTION_MIN}–${AO_QUESTION_MAX} questions. Each question should press on residual risk, remediation realism, SSP vs POA&M consistency, compensating controls, or monitoring/revisit conditions.`;
+Return structured JSON via the ${QUESTIONS_TOOL_NAME} tool with ${AO_QUESTION_MIN}–${AO_QUESTION_MAX} questions. At least two questions must focus on residual risk acceptance and at least two on POA&M adequacy. Remaining questions may press SSP vs POA&M consistency, compensating controls, or monitoring/revisit conditions.`;
 }
 
 function normalizeQuestions(raw: unknown): AoQuestion[] | null {

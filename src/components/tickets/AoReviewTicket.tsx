@@ -148,12 +148,14 @@ export function AoReviewTicket({
     >
       <div className="space-y-1">
         <h2 id="ao-review-heading" className="text-base font-semibold">
-          Authorizing Official review
+          Authorizing Official review (ISSO-05 flagship)
         </h2>
         <p className="text-sm text-muted-foreground">
-          Answer these risk-acceptance questions grounded in your compiled
-          authorization package. Questions are generated once and stored so they
-          do not change on every visit.
+          Answer 5–7 residual-risk and POA&M adequacy questions grounded in your
+          compiled ATO package (ISSO-04). Questions are RAG-generated once from
+          your package (or the seeded sample when prior work is missing) and
+          stored so they do not change on every visit. Resolving this ticket
+          marks it as your track flagship portfolio item.
         </p>
         {meta ? <p className="text-xs text-muted-foreground">{meta}</p> : null}
       </div>
