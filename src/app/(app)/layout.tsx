@@ -9,7 +9,8 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, activeTrack, trackLessons } = await getAppShellContext();
+  const { user, activeTrack, trackLessons, enrollments, workspaces } =
+    await getAppShellContext();
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
@@ -20,6 +21,7 @@ export default async function AppLayout({
           activeTrackSlug={activeTrack?.slug}
           activeTrackName={activeTrack?.name}
           trackLessons={trackLessons}
+          enrollments={enrollments}
           className="sticky top-0 h-screen"
         />
       </div>
@@ -30,6 +32,8 @@ export default async function AppLayout({
             activeTrackSlug={activeTrack?.slug}
             activeTrackName={activeTrack?.name}
             trackLessons={trackLessons}
+            enrollments={enrollments}
+            workspaces={workspaces}
           />
         ) : null}
         <div className="flex-1 space-y-4 p-4 md:p-6">

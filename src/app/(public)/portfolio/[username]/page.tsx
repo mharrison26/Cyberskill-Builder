@@ -55,7 +55,10 @@ export default async function PublicPortfolioPage({
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
       <header className="border-b border-border pb-8">
-        <h1 className="text-2xl font-semibold">{displayName}</h1>
+        <p className="text-sm font-medium text-muted-foreground">
+          Verifiable capability ledger
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold">{displayName}</h1>
         {user.username ? (
           <p className="mt-1 text-sm text-muted-foreground">@{user.username}</p>
         ) : null}
@@ -86,7 +89,7 @@ export default async function PublicPortfolioPage({
 
       <section className="mt-10" aria-labelledby="portfolio-heading">
         <h2 id="portfolio-heading" className="text-lg font-semibold">
-          Portfolio artifacts
+          Ledger entries
         </h2>
         {items.length > 0 ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -94,6 +97,7 @@ export default async function PublicPortfolioPage({
               item.itemKind === 'ticket_resolution' ? (
                 <TicketResolutionCard
                   key={item.id}
+                  id={item.id}
                   title={item.title}
                   scoreStatus={item.scoreStatus}
                   dcwfCode={item.dcwfCode}
@@ -102,10 +106,13 @@ export default async function PublicPortfolioPage({
                   tier={item.tier}
                   ticketType={item.ticketType}
                   isFlagship={item.isFlagship}
+                  createdAt={item.createdAt}
+                  defense={item.defense}
                 />
               ) : (
                 <FindingCard
                   key={item.id}
+                  id={item.id}
                   controlId={item.controlId ?? item.title}
                   findingState={toFindingStateDisplay(
                     item.findingState ?? 'accepted'
@@ -113,6 +120,8 @@ export default async function PublicPortfolioPage({
                   dcwfCode={item.dcwfCode}
                   dcwfTitle={item.dcwfTitle}
                   narrative={item.narrative}
+                  createdAt={item.createdAt}
+                  defense={item.defense}
                   oscalFinding={{
                     id: item.id,
                     control_id: item.controlId ?? item.title,

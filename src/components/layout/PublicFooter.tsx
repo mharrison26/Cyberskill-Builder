@@ -32,6 +32,14 @@ export function PublicFooter({ className }: PublicFooterProps) {
                 Terms
               </Link>
             </li>
+            <li>
+              <Link
+                href="/subprocessors"
+                className="text-muted-foreground hover:text-foreground focus:outline-none focus-visible:underline"
+              >
+                Subprocessors
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>

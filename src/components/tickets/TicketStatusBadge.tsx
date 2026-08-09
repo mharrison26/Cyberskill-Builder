@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   CheckCircle2,
   CircleDashed,
   LoaderCircle,
@@ -18,6 +19,7 @@ const STATUS_ICONS: Record<TicketProgressStatus, LucideIcon> = {
   new: CircleDashed,
   in_progress: LoaderCircle,
   resolved: CheckCircle2,
+  reviewed: BadgeCheck,
 };
 
 type TicketStatusBadgeProps = {

@@ -39,6 +39,11 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Generic ticket console fallback.
+ * Track-specific consoles (e.g. /tracks/grc/console) take precedence via
+ * static App Router segments and compose shared ticket primitives differently.
+ */
 export default async function TrackConsolePage({ params }: ConsolePageProps) {
   const { trackSlug } = params;
   const returnTo = `/tracks/${trackSlug}/console`;

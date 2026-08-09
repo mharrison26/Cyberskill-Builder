@@ -8,13 +8,14 @@ import {
   GraduationCap,
   LayoutDashboard,
   Layers,
+  Monitor,
   Settings,
   Shield,
   Ticket,
 } from 'lucide-react';
 
 import { Separator } from '@/components/ui/separator';
-import type { SidebarLesson } from '@/lib/auth/appShell';
+import type { SidebarLesson, SidebarTrack } from '@/lib/auth/appShell';
 import { cn } from '@/lib/utils';
 
 type AppSidebarProps = {
@@ -22,6 +23,7 @@ type AppSidebarProps = {
   activeTrackSlug?: string;
   activeTrackName?: string;
   trackLessons?: SidebarLesson[];
+  enrollments?: SidebarTrack[];
   className?: string;
   onNavigate?: () => void;
 };
@@ -45,6 +47,7 @@ export function AppSidebar({
   activeTrackSlug,
   activeTrackName,
   trackLessons = [],
+  enrollments = [],
   className,
   onNavigate,
 }: AppSidebarProps) {
@@ -97,6 +100,39 @@ export function AppSidebar({
             );
           })}
         </ul>
+
+        {enrollments.length > 0 ? (
+          <div>
+            <h2 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Track consoles
+            </h2>
+            <ul className="space-y-1" role="list">
+              {enrollments.map((track) => {
+                const href = `/tracks/${track.slug}/console`;
+                const active = isActive(href);
+                return (
+                  <li key={track.slug}>
+                    <Link
+                      href={href}
+                      onClick={onNavigate}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                        'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                        active &&
+                          'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                      )}
+                    >
+                      <Monitor className="size-4 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{track.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
 
         {activeTrackSlug && trackLessons.length > 0 ? (
           <div>

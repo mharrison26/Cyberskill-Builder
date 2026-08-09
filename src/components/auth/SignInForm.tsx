@@ -5,8 +5,10 @@ import { useState, useTransition } from 'react';
 
 import { signIn } from '@/app/(auth)/actions';
 import { AuthField } from '@/components/auth/AuthField';
+import { SsoSignInForm } from '@/components/auth/SsoSignInForm';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { validateEmail, validatePassword } from '@/lib/auth/validation';
 
 export function SignInForm() {
@@ -48,50 +50,68 @@ export function SignInForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5">
-      {authError ? (
-        <Alert variant="destructive">
-          <AlertDescription>{authError}</AlertDescription>
-        </Alert>
-      ) : null}
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <p className="text-sm font-medium">Enterprise SSO</p>
+        <p className="text-xs text-muted-foreground">
+          Use your organization domain when SSO is configured for your tenant.
+        </p>
+        <SsoSignInForm />
+      </div>
 
-      <AuthField
-        id="sign-in-email"
-        label="Email"
-        type="email"
-        name="email"
-        value={email}
-        onChange={setEmail}
-        error={fieldErrors.email}
-        autoComplete="email"
-        disabled={isPending}
-      />
+      <div className="flex items-center gap-3">
+        <Separator className="flex-1" />
+        <span className="text-xs uppercase tracking-wide text-muted-foreground">
+          or
+        </span>
+        <Separator className="flex-1" />
+      </div>
 
-      <AuthField
-        id="sign-in-password"
-        label="Password"
-        type="password"
-        name="password"
-        value={password}
-        onChange={setPassword}
-        error={fieldErrors.password}
-        autoComplete="current-password"
-        disabled={isPending}
-      />
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        {authError ? (
+          <Alert variant="destructive">
+            <AlertDescription>{authError}</AlertDescription>
+          </Alert>
+        ) : null}
 
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? 'Signing in…' : 'Sign in'}
-      </Button>
+        <AuthField
+          id="sign-in-email"
+          label="Email"
+          type="email"
+          name="email"
+          value={email}
+          onChange={setEmail}
+          error={fieldErrors.email}
+          autoComplete="email"
+          disabled={isPending}
+        />
 
-      <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{' '}
-        <Link
-          href="/sign-up"
-          className="font-medium text-primary underline-offset-4 hover:underline focus:outline-none focus-visible:underline"
-        >
-          Sign up
-        </Link>
-      </p>
-    </form>
+        <AuthField
+          id="sign-in-password"
+          label="Password"
+          type="password"
+          name="password"
+          value={password}
+          onChange={setPassword}
+          error={fieldErrors.password}
+          autoComplete="current-password"
+          disabled={isPending}
+        />
+
+        <Button type="submit" disabled={isPending} className="w-full">
+          {isPending ? 'Signing in…' : 'Sign in'}
+        </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{' '}
+          <Link
+            href="/sign-up"
+            className="font-medium text-primary underline-offset-4 hover:underline focus:outline-none focus-visible:underline"
+          >
+            Sign up
+          </Link>
+        </p>
+      </form>
+    </div>
   );
 }

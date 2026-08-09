@@ -47,7 +47,8 @@ export interface ControlMapping {
   mapping_confidence: ControlMappingConfidence;
 }
 
-export type TicketProgressStatus = 'new' | 'in_progress' | 'resolved';
+export type TicketProgressStatus =
+  'new' | 'in_progress' | 'resolved' | 'reviewed';
 
 export interface Ticket {
   id: string;
@@ -193,6 +194,71 @@ export interface MockFinding {
   dcwfCode: string;
   dcwfTitle?: string;
   narrative: string;
+  /** ISO timestamp for ledger display. */
+  createdAt?: string;
+  /** Public portfolio visibility (matches finding toggle pattern). */
+  isPublic?: boolean;
+  /** Optional verbal defense recording (mock Storage object). */
+  defense?: MockDefenseRecording | null;
+  /** Sample AO/interview prompts the student would answer verbally. */
+  promptQuestions?: Array<{ id?: string; prompt: string; focus?: string }>;
+}
+
+/** Browser-recorded verbal/video defense artifact. */
+export interface MockDefenseRecording {
+  id: string;
+  /** Object path or blob URL for playback. */
+  url: string;
+  mediaType: 'audio' | 'video';
+  durationSeconds: number;
+  isPublic: boolean;
+  createdAt: string;
+}
+
+/** Track console ticket row used by useTrackTickets (mock → Supabase later). */
+export interface MockTrackTicket {
+  id: string;
+  trackSlug: string;
+  title: string;
+  subtitle?: string;
+  ticketType: string;
+  difficulty: string;
+  slaMinutes: number;
+  startedAt: string | null;
+  status: TicketProgressStatus;
+  /** GRC / ISSO / ISSM: control family or engagement label. */
+  controlFamily?: string;
+  controlId?: string;
+  /** Severity for compliance findings (critical/high/medium/low). */
+  severity?: 'critical' | 'high' | 'medium' | 'low';
+  /** POA&M due date (ISO date) when applicable. */
+  poamDueAt?: string | null;
+  /** HelpDesk: requester display name. */
+  requester?: string;
+  /** HelpDesk queue bucket for filter tabs. */
+  queueBucket?: 'my_queue' | 'unassigned' | 'escalated';
+  /** Sysadmin: hostname / asset id. */
+  hostname?: string;
+  /** Auditor: engagement folder title. */
+  engagementTitle?: string;
+  /** Auditor workpaper checklist lines. */
+  workpaperItems?: Array<{ id: string; label: string; done: boolean }>;
+  /** Python / issue-tracker labels. */
+  labels?: string[];
+  /** ISSO: system / authorization boundary name. */
+  systemName?: string;
+  /** ISSM: program or authorization package stage. */
+  packageStage?: string;
+  dcwfCode?: string | null;
+  sortOrder: number;
+  /** live = Supabase row; mock = placeholder console data. */
+  source?: 'live' | 'mock';
+  /** Workbench URL when source is live. */
+  workbenchHref?: string | null;
+  /** Raw ticket.initial_state for sandbox embedding. */
+  initialState?: Record<string, unknown>;
+  /** Raw ticket.expected_state for sandbox embedding. */
+  expectedState?: Record<string, unknown>;
 }
 
 export interface MockGradingQueueItem {
