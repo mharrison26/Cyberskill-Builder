@@ -88,10 +88,7 @@ export async function startTicket(
       .eq('id', existing.id);
 
     if (error) return { error: error.message };
-  } else if (
-    existing.status === 'resolved' ||
-    existing.status === 'reviewed'
-  ) {
+  } else if (existing.status === 'resolved' || existing.status === 'reviewed') {
     return { error: 'This ticket is already resolved.' };
   }
 

@@ -37,9 +37,7 @@ export function useTrackTickets(
   options: UseTrackTicketsOptions = {}
 ): UseTrackTicketsResult {
   const [tickets, setTickets] = useState<MockTrackTicket[]>(() =>
-    withMockDefaults(
-      options.initialTickets ?? getMockTicketsByTrack(trackSlug)
-    )
+    withMockDefaults(options.initialTickets ?? getMockTicketsByTrack(trackSlug))
   );
   const [source, setSource] = useState<'live' | 'mock' | 'mixed'>(
     options.initialSource ?? 'mock'

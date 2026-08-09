@@ -83,17 +83,16 @@ export function TicketStatusControl({
         <span className="text-sm font-medium text-muted-foreground">
           Status
         </span>
-        <ol className="flex flex-wrap items-center gap-1.5" aria-label="Ticket lifecycle">
+        <ol
+          className="flex flex-wrap items-center gap-1.5"
+          aria-label="Ticket lifecycle"
+        >
           {TICKET_STATUS_FLOW.map((step, index) => {
-            const reached =
-              TICKET_STATUS_FLOW.indexOf(status) >= index;
+            const reached = TICKET_STATUS_FLOW.indexOf(status) >= index;
             return (
               <li key={step} className="flex items-center gap-1.5">
                 {index > 0 ? (
-                  <span
-                    className="text-muted-foreground/60"
-                    aria-hidden="true"
-                  >
+                  <span className="text-muted-foreground/60" aria-hidden="true">
                     →
                   </span>
                 ) : null}

@@ -138,8 +138,7 @@ export function buildEngagementFlowView(args: {
     (s) => s.status === 'resolved' || s.status === 'reviewed'
   ).length;
   const firstOpen = stages.find(
-    (s) =>
-      s.unlocked && s.status !== 'resolved' && s.status !== 'reviewed'
+    (s) => s.unlocked && s.status !== 'resolved' && s.status !== 'reviewed'
   );
   const currentStage =
     firstOpen?.stage ?? stages[stages.length - 1]?.stage ?? 1;

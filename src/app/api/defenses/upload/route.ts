@@ -24,7 +24,9 @@ type PromptQuestion = {
   focus?: string;
 };
 
-function parsePromptQuestions(raw: FormDataEntryValue | null): PromptQuestion[] {
+function parsePromptQuestions(
+  raw: FormDataEntryValue | null
+): PromptQuestion[] {
   if (typeof raw !== 'string' || !raw.trim()) return [];
   try {
     const parsed = JSON.parse(raw) as unknown;
@@ -75,7 +77,10 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (!appUser) {
-    return NextResponse.json({ error: 'User profile not found' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'User profile not found' },
+      { status: 403 }
+    );
   }
 
   let formData: FormData;
@@ -156,7 +161,8 @@ export async function POST(request: Request) {
       trackId = trackId ?? (portfolioItem.track_id as string);
       relatedFindingId =
         relatedFindingId ??
-        ((portfolioItem.oscal_finding_id as string | null) ?? null);
+        (portfolioItem.oscal_finding_id as string | null) ??
+        null;
 
       if (promptQuestions.length === 0) {
         const submission =

@@ -118,14 +118,14 @@ export function SysadminNocConsole({
         </Button>
       </header>
 
-      <section aria-label="System status" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <section
+        aria-label="System status"
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+      >
         {MOCK_NOC_SYSTEMS.map((system) => (
           <div
             key={system.id}
-            className={cn(
-              'border px-4 py-3',
-              healthTone(system.status)
-            )}
+            className={cn('border px-4 py-3', healthTone(system.status))}
           >
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-semibold">{system.name}</p>
@@ -136,7 +136,9 @@ export function SysadminNocConsole({
             <p className="mt-2 font-mono text-xs text-foreground/80">
               {system.hostname}
             </p>
-            <p className="mt-1 font-mono text-sm tabular-nums">{system.metric}</p>
+            <p className="mt-1 font-mono text-sm tabular-nums">
+              {system.metric}
+            </p>
           </div>
         ))}
       </section>

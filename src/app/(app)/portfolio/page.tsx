@@ -33,7 +33,8 @@ export default async function MyPortfolioPage() {
 
     if (profile) {
       displayName =
-        profile.email.split('@')[0]
+        profile.email
+          .split('@')[0]
           ?.split(/[._-]+/)
           .filter(Boolean)
           .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))

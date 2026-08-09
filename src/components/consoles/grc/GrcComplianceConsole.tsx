@@ -120,7 +120,10 @@ export function GrcComplianceConsole({
     return tickets.filter((t) => {
       if (!t.poamDueAt || !isOpenTicketStatus(t.status)) return false;
       const due = new Date(t.poamDueAt);
-      return !Number.isNaN(due.getTime()) && due.getTime() <= today.getTime() + 14 * 86_400_000;
+      return (
+        !Number.isNaN(due.getTime()) &&
+        due.getTime() <= today.getTime() + 14 * 86_400_000
+      );
     }).length;
   }, [tickets]);
 
@@ -164,7 +167,11 @@ export function GrcComplianceConsole({
             <BookOpen className="size-4" aria-hidden="true" />
             Full catalog
           </Button>
-          <Button render={<Link href="/dashboard" />} variant="outline" size="sm">
+          <Button
+            render={<Link href="/dashboard" />}
+            variant="outline"
+            size="sm"
+          >
             Dashboard
           </Button>
         </div>
@@ -176,10 +183,7 @@ export function GrcComplianceConsole({
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
       >
         {SEVERITY_ORDER.map((sev) => (
-          <div
-            key={sev}
-            className="border border-border bg-card px-4 py-3"
-          >
+          <div key={sev} className="border border-border bg-card px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Open · {sev}
             </p>
@@ -228,10 +232,7 @@ export function GrcComplianceConsole({
             className="border border-border bg-card"
           >
             <div className="flex items-center justify-between border-b border-border px-4 py-2">
-              <h2
-                id="findings-log-heading"
-                className="text-sm font-semibold"
-              >
+              <h2 id="findings-log-heading" className="text-sm font-semibold">
                 Findings / tickets by control family
               </h2>
               <span className="font-mono text-xs text-muted-foreground">
@@ -359,9 +360,7 @@ export function GrcComplianceConsole({
                 trackSlug={trackSlug}
                 ticketId={selected.id}
                 status={selected.status}
-                onStatusChange={(next) =>
-                  setTicketStatus(selected.id, next)
-                }
+                onStatusChange={(next) => setTicketStatus(selected.id, next)}
               />
             </section>
           ) : null}

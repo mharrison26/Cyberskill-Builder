@@ -31,7 +31,9 @@ export function MockSandboxSurface({
         <span className="size-2 rounded-full bg-status-satisfied-foreground/80" />
         <span className="ml-2 truncate">{hostname}</span>
         <span className="ml-auto text-white/40">
-          {layout === 'editor' ? 'WebContainer (mock)' : 'Incident shell (mock)'}
+          {layout === 'editor'
+            ? 'WebContainer (mock)'
+            : 'Incident shell (mock)'}
         </span>
       </div>
 

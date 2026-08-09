@@ -53,7 +53,9 @@ export function SsoSignInForm() {
           return;
         }
 
-        setError('SSO redirect was not returned. Try again or use password sign-in.');
+        setError(
+          'SSO redirect was not returned. Try again or use password sign-in.'
+        );
       } catch (err) {
         setError(
           err instanceof Error
@@ -83,7 +85,12 @@ export function SsoSignInForm() {
         disabled={isPending}
       />
 
-      <Button type="submit" variant="outline" disabled={isPending} className="w-full">
+      <Button
+        type="submit"
+        variant="outline"
+        disabled={isPending}
+        className="w-full"
+      >
         <Building2 className="size-4" aria-hidden="true" />
         {isPending ? 'Redirecting…' : 'Continue with SSO'}
       </Button>

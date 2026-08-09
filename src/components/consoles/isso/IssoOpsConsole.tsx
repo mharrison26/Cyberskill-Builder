@@ -115,7 +115,9 @@ export function IssoOpsConsole({
             type="button"
             className={cn(
               'w-full rounded-md px-3 py-2 text-left text-sm',
-              systemFilter === 'all' ? 'bg-secondary font-medium' : 'hover:bg-muted/50'
+              systemFilter === 'all'
+                ? 'bg-secondary font-medium'
+                : 'hover:bg-muted/50'
             )}
             onClick={() => setSystemFilter('all')}
           >
@@ -198,9 +200,7 @@ export function IssoOpsConsole({
                 trackSlug={trackSlug}
                 ticketId={selected.id}
                 status={selected.status}
-                onStatusChange={(next) =>
-                  setTicketStatus(selected.id, next)
-                }
+                onStatusChange={(next) => setTicketStatus(selected.id, next)}
               />
             </div>
           ) : null}

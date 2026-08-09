@@ -111,7 +111,10 @@ export function HelpdeskConsole({
         })}
       </div>
 
-      <section aria-label={`${tab.replace('_', ' ')} tickets`} className="space-y-1">
+      <section
+        aria-label={`${tab.replace('_', ' ')} tickets`}
+        className="space-y-1"
+      >
         {filtered.length === 0 ? (
           <p className="rounded-md border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
             No tickets in this queue.
@@ -184,9 +187,7 @@ export function HelpdeskConsole({
                   trackSlug={trackSlug}
                   ticketId={selected.id}
                   status={selected.status}
-                  onStatusChange={(next) =>
-                    setTicketStatus(selected.id, next)
-                  }
+                  onStatusChange={(next) => setTicketStatus(selected.id, next)}
                 />
                 <div className="space-y-2 text-sm">
                   <h3 className="font-semibold">Description</h3>

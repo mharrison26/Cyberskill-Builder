@@ -74,9 +74,15 @@ export function OrgSwitcher({ workspaces, className }: OrgSwitcherProps) {
             />
           }
         >
-          <Building2 className="size-4 shrink-0 opacity-70" aria-hidden="true" />
+          <Building2
+            className="size-4 shrink-0 opacity-70"
+            aria-hidden="true"
+          />
           <span className="truncate text-sm font-medium">{active.name}</span>
-          <ChevronDown className="size-3.5 shrink-0 opacity-50" aria-hidden="true" />
+          <ChevronDown
+            className="size-3.5 shrink-0 opacity-50"
+            aria-hidden="true"
+          />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           <DropdownMenuLabel>Workspaces</DropdownMenuLabel>

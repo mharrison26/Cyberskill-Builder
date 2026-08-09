@@ -58,9 +58,7 @@ export default function SubprocessorsPage() {
       <LegalDraftBanner />
 
       <header className="mt-8">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Subprocessors
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Subprocessors</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Last updated: August 9, 2026 (draft)
         </p>
@@ -103,8 +101,9 @@ export default function SubprocessorsPage() {
         <section>
           <h2>Updates</h2>
           <p>
-            We may update this list when we add or remove subprocessors. Material
-            changes will be reflected on this page with an updated revision date.
+            We may update this list when we add or remove subprocessors.
+            Material changes will be reflected on this page with an updated
+            revision date.
           </p>
         </section>
 

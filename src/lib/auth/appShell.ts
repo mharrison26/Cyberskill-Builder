@@ -168,10 +168,7 @@ export async function getAppShellContext(): Promise<AppShellContext> {
   }
 
   const activeEnrollment = (enrollmentRows ?? []).find((row) => {
-    const track = row.tracks as
-      | { slug: string }
-      | { slug: string }[]
-      | null;
+    const track = row.tracks as { slug: string } | { slug: string }[] | null;
     const resolved = Array.isArray(track) ? track[0] : track;
     return resolved?.slug === activeTrack.slug;
   });

@@ -12,9 +12,7 @@ function asString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
-function asSeverity(
-  value: unknown
-): MockTrackTicket['severity'] | undefined {
+function asSeverity(value: unknown): MockTrackTicket['severity'] | undefined {
   if (
     value === 'critical' ||
     value === 'high' ||
@@ -53,9 +51,7 @@ export function mapTicketToConsoleTicket(args: {
   const meta = asRecord(state.meta);
 
   const title =
-    asString(state.title) ??
-    asString(scenario.title) ??
-    ticket.scenario_brief;
+    asString(state.title) ?? asString(scenario.title) ?? ticket.scenario_brief;
 
   const controlId =
     asString(state.control_id) ??
@@ -68,9 +64,7 @@ export function mapTicketToConsoleTicket(args: {
     asString(meta.control_family);
 
   const hostname =
-    asString(state.hostname) ??
-    asString(state.host) ??
-    asString(meta.hostname);
+    asString(state.hostname) ?? asString(state.host) ?? asString(meta.hostname);
 
   const requester =
     asString(state.requester) ??
@@ -96,9 +90,7 @@ export function mapTicketToConsoleTicket(args: {
     id: ticket.id,
     trackSlug,
     title,
-    subtitle:
-      asString(state.subtitle) ??
-      ticket.ticket_type.replace(/_/g, ' '),
+    subtitle: asString(state.subtitle) ?? ticket.ticket_type.replace(/_/g, ' '),
     ticketType: ticket.ticket_type,
     difficulty: ticket.difficulty,
     slaMinutes: ticket.sla_minutes,
@@ -110,10 +102,7 @@ export function mapTicketToConsoleTicket(args: {
       asSeverity(state.severity) ??
       asSeverity(meta.severity) ??
       asSeverity(ticket.difficulty.toLowerCase()),
-    poamDueAt:
-      asString(state.poam_due_at) ??
-      asString(state.poamDueAt) ??
-      null,
+    poamDueAt: asString(state.poam_due_at) ?? asString(state.poamDueAt) ?? null,
     requester,
     queueBucket:
       (asString(state.queue_bucket) as MockTrackTicket['queueBucket']) ??
@@ -121,8 +110,7 @@ export function mapTicketToConsoleTicket(args: {
     hostname,
     engagementTitle,
     systemName,
-    packageStage:
-      asString(state.package_stage) ?? asString(state.packageStage),
+    packageStage: asString(state.package_stage) ?? asString(state.packageStage),
     labels,
     dcwfCode: ticket.dcwf_code,
     sortOrder: ticket.sort_order,

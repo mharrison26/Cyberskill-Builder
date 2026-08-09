@@ -92,7 +92,9 @@ export function IssmProgramConsole({
               className="border border-border bg-card px-4 py-4"
             >
               <p className="font-mono text-sm font-semibold">{system.name}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{system.stage}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {system.stage}
+              </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge
                   variant="outline"
@@ -169,7 +171,10 @@ export function IssmProgramConsole({
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Decision queue
                 </p>
-                <h2 id="decision-heading" className="mt-1 text-lg font-semibold">
+                <h2
+                  id="decision-heading"
+                  className="mt-1 text-lg font-semibold"
+                >
                   {selected.title}
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -195,9 +200,7 @@ export function IssmProgramConsole({
                 trackSlug={trackSlug}
                 ticketId={selected.id}
                 status={selected.status}
-                onStatusChange={(next) =>
-                  setTicketStatus(selected.id, next)
-                }
+                onStatusChange={(next) => setTicketStatus(selected.id, next)}
               />
             </>
           ) : (

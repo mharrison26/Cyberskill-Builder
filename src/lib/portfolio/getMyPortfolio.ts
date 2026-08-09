@@ -1,10 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { OscalObservation } from '@/lib/oscal/toAssessmentFinding';
-import type {
-  PortfolioItemKind,
-  PortfolioScoreStatus,
-} from '@/types';
+import type { PortfolioItemKind, PortfolioScoreStatus } from '@/types';
 
 export type MyPortfolioDefense = {
   id: string;
@@ -198,21 +195,14 @@ export async function getMyPortfolioItems(
     const itemKind = row.item_kind as PortfolioItemKind;
     const structured =
       (row.structured_result as Record<string, unknown> | null) ?? {};
-    const submission =
-      (row.submission as Record<string, unknown> | null) ?? {};
+    const submission = (row.submission as Record<string, unknown> | null) ?? {};
     const dcwfTitle = embedWorkRoleTitle(
       row.work_role_codes as
-        | WorkRoleCodeEmbed
-        | WorkRoleCodeEmbed[]
-        | null
-        | undefined
+        WorkRoleCodeEmbed | WorkRoleCodeEmbed[] | null | undefined
     );
-    const defense =
-      defenseByArtifact.get(row.id as string) ??
-      null;
+    const defense = defenseByArtifact.get(row.id as string) ?? null;
     const trackId = row.track_id as string;
-    const relatedFindingId =
-      (row.oscal_finding_id as string | null) ?? null;
+    const relatedFindingId = (row.oscal_finding_id as string | null) ?? null;
     const promptQuestions = extractPromptQuestions(submission);
 
     if (itemKind === 'oscal_finding') {

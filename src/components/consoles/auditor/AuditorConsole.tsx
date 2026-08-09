@@ -70,7 +70,11 @@ export function AuditorConsole({
               queue.
             </p>
           </div>
-          <Button render={<Link href="/dashboard" />} variant="outline" size="sm">
+          <Button
+            render={<Link href="/dashboard" />}
+            variant="outline"
+            size="sm"
+          >
             Dashboard
           </Button>
         </div>
@@ -107,7 +111,8 @@ export function AuditorConsole({
                       items.length === 0
                         ? 0
                         : Math.round(
-                            (items.filter((i) => i.done).length / items.length) *
+                            (items.filter((i) => i.done).length /
+                              items.length) *
                               100
                           );
                     const selected = activeId === ticket.id;
@@ -117,9 +122,7 @@ export function AuditorConsole({
                           type="button"
                           className={cn(
                             'w-full rounded-md px-3 py-3 text-left transition-colors',
-                            selected
-                              ? 'bg-secondary'
-                              : 'hover:bg-muted/50'
+                            selected ? 'bg-secondary' : 'hover:bg-muted/50'
                           )}
                           onClick={() => setActiveId(ticket.id)}
                         >
@@ -164,7 +167,9 @@ export function AuditorConsole({
                 <h2 id="workpaper-heading" className="text-xl font-semibold">
                   {active.title}
                 </h2>
-                <p className="text-sm text-muted-foreground">{active.subtitle}</p>
+                <p className="text-sm text-muted-foreground">
+                  {active.subtitle}
+                </p>
               </div>
 
               <TicketStatusControl

@@ -32,7 +32,10 @@ export function PythonDevConsole({
     initialSource,
   });
   const [selectedId, setSelectedId] = useState<string | null>(
-    () => tickets.find((t) => t.status === 'in_progress')?.id ?? tickets[0]?.id ?? null
+    () =>
+      tickets.find((t) => t.status === 'in_progress')?.id ??
+      tickets[0]?.id ??
+      null
   );
   const nowMs = useSharedSlaClock(tickets.some((t) => t.startedAt));
   const selected = tickets.find((t) => t.id === selectedId) ?? null;
@@ -126,9 +129,7 @@ export function PythonDevConsole({
                   trackSlug={trackSlug}
                   ticketId={selected.id}
                   status={selected.status}
-                  onStatusChange={(next) =>
-                    setTicketStatus(selected.id, next)
-                  }
+                  onStatusChange={(next) => setTicketStatus(selected.id, next)}
                   className="max-w-md"
                 />
               </div>
