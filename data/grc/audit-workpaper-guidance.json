@@ -1,0 +1,101 @@
+{
+  "document": "Audit Workpaper Quality Guidance",
+  "title": "Structured control-test workpaper guidance (educational)",
+  "source_url": "internal://audit-workpaper-guidance",
+  "notes": "Pinned educational guidance for RAG-style grading of student audit workpapers. Graders must use only retrieved section text plus the ticket's stated test objective, not parametric knowledge of audit standards.",
+  "disclaimer": "Educational guidance only. Not a substitute for organizational audit methodology, IIA standards, or engagement-specific instructions.",
+  "sections": [
+    {
+      "id": "stated-objective",
+      "title": "Workpaper objective must mirror the stated test objective",
+      "topics": ["objective", "test objective", "scope", "purpose"],
+      "keywords": [
+        "objective",
+        "test objective",
+        "purpose",
+        "determine whether",
+        "scope",
+        "control test",
+        "stated objective"
+      ],
+      "text": "The workpaper Objective field should restate or closely paraphrase the engagement's stated test objective so a reviewer can see what question the test answers. A strong objective names the control or process under test and the outcome being evaluated (for example whether terminated accounts are disabled within policy timeframes). Vague objectives such as \"test access controls\" or \"review user accounts\" are insufficient. The student's written objective should not expand or shrink scope beyond the stated test objective without explaining why."
+    },
+    {
+      "id": "procedure-performed",
+      "title": "Procedure performed describes the work actually done",
+      "topics": ["procedure", "steps", "sample", "method"],
+      "keywords": [
+        "procedure",
+        "procedure performed",
+        "steps",
+        "sample",
+        "population",
+        "examined",
+        "compared",
+        "tested"
+      ],
+      "text": "Procedure Performed should narrate the concrete steps the tester executed: how the population was identified, how the sample was selected, which artifacts or system views were examined, and what comparisons or recalculations were made. Prefer specific actions (pulled HR termination list for Q2; selected 15 terminations; compared disable dates in the IAM console to termination effective dates) over generic phrases such as \"performed testing\" or \"reviewed evidence.\" Procedures should be reproducible by another auditor from the write-up alone."
+    },
+    {
+      "id": "evidence-obtained",
+      "title": "Evidence obtained identifies what supports the conclusion",
+      "topics": ["evidence", "artifacts", "support", "source"],
+      "keywords": [
+        "evidence",
+        "evidence obtained",
+        "artifacts",
+        "screenshots",
+        "export",
+        "ticket",
+        "log",
+        "source"
+      ],
+      "text": "Evidence Obtained should identify the specific artifacts collected or inspected (HR termination report, IAM account export, disablement tickets, access review screenshots) and how they relate to the procedure. Name sources and time periods when available. Evidence descriptions should be sufficient for a reviewer to understand what supports the findings; \"screenshots on file\" without saying of what system or attribute is weak. Evidence should align with the procedures claimed and with the conclusion drawn."
+    },
+    {
+      "id": "conclusion-quality",
+      "title": "Conclusion answers the stated test objective with a clear opinion",
+      "topics": ["conclusion", "opinion", "finding", "exception", "satisfied"],
+      "keywords": [
+        "conclusion",
+        "finding",
+        "exception",
+        "no exceptions",
+        "operating effectively",
+        "not operating",
+        "satisfied",
+        "deficiency"
+      ],
+      "text": "The Conclusion must directly answer the stated test objective with a clear control-test opinion (for example operating effectively with no exceptions noted, or not operating effectively based on described exceptions). It should be supported by the procedures and evidence documented in the same workpaper, not by unsupported assertions. Quantify exceptions when they exist (for example 3 of 15 terminations exceeded the 24-hour disablement requirement by 2–5 days). A conclusion that restates the objective without an opinion, or that introduces results unrelated to the objective, does not meet this guidance."
+    },
+    {
+      "id": "objective-alignment",
+      "title": "Conclusion must align to the stated test objective",
+      "topics": ["alignment", "relevance", "scope", "objective"],
+      "keywords": [
+        "align",
+        "alignment",
+        "stated test objective",
+        "relevant",
+        "out of scope",
+        "addresses",
+        "answers"
+      ],
+      "text": "Grade the conclusion primarily on whether it answers the stated test objective provided in the ticket. The opinion, exceptions, and supporting rationale must stay within that objective's scope. Do not credit conclusions that answer a different control question (for example password complexity when the objective concerns termination disablement), even if those statements are otherwise well written. Partial credit is inappropriate when the conclusion never addresses the objective's core question."
+    },
+    {
+      "id": "preparer-reviewer",
+      "title": "Preparer and reviewer identification",
+      "topics": ["preparer", "reviewer", "sign-off", "accountability"],
+      "keywords": [
+        "preparer",
+        "reviewer",
+        "prepared by",
+        "reviewed by",
+        "sign-off",
+        "accountability"
+      ],
+      "text": "Workpapers should identify a preparer and a reviewer by name (or clear role plus name) so ownership and review accountability are visible. Placeholder values such as \"TBD\", \"N/A\", or a single initial with no name are not adequate identification for training purposes. The reviewer should be distinct from the preparer when the scenario implies supervisory review."
+    }
+  ]
+}

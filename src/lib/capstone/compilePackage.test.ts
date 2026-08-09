@@ -1,14 +1,24 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseSourceArtifactsFromTicketState } from '@/lib/capstone/compilePackage';
+import {
+  compileSeedAuthorizationPackage,
+  mergeLivePackageWithSeed,
+  parseSeedPackageFromTicketState,
+  parseSourceArtifactsFromTicketState,
+  type CompiledAuthorizationPackage,
+} from '@/lib/capstone/compilePackage';
 import {
   DEFAULT_CAPSTONE_SOURCE_ARTIFACTS,
+  DEFAULT_SAR_SOURCE_ARTIFACTS,
   GRC_TICKET_CODES,
+  ISSO_TICKET_CODES,
+  isAoReviewTicketCode,
   isAoReviewTicketType,
+  isAuthorizationPackageTicketCode,
   isAuthorizationPackageTicketType,
+  isSecurityAssessmentReportTicketType,
 } from '@/lib/capstone/ticketCodes';
 import { buildDeterministicAoQuestions } from '@/lib/capstone/generateAoQuestions';
-import type { CompiledAuthorizationPackage } from '@/lib/capstone/compilePackage';
 
 describe('capstone ticket codes', () => {
   it('recognizes authorization_package and ao_review types', () => {
@@ -20,6 +30,24 @@ describe('capstone ticket codes', () => {
     );
     expect(isAoReviewTicketType('ao_review')).toBe(true);
     expect(isAoReviewTicketType('poam')).toBe(false);
+  });
+
+  it('documents ISSO-04/ISSO-05 aliases for package + flagship AO review', () => {
+    expect(ISSO_TICKET_CODES.AUTHORIZATION_PACKAGE).toBe('ISSO-04');
+    expect(ISSO_TICKET_CODES.AO_REVIEW).toBe('ISSO-05');
+    expect(isAuthorizationPackageTicketCode('ISSO-04')).toBe(true);
+    expect(isAoReviewTicketCode('ISSO-05')).toBe(true);
+  });
+
+  it('recognizes security_assessment_report / sar_summary (GRC-05)', () => {
+    expect(
+      isSecurityAssessmentReportTicketType('security_assessment_report')
+    ).toBe(true);
+    expect(isSecurityAssessmentReportTicketType('sar_summary')).toBe(true);
+    expect(DEFAULT_SAR_SOURCE_ARTIFACTS.map((s) => s.code)).toEqual([
+      GRC_TICKET_CODES.SSP,
+      GRC_TICKET_CODES.POAM,
+    ]);
   });
 
   it('documents default GRC-03/04/09 sources', () => {
@@ -54,6 +82,103 @@ describe('parseSourceArtifactsFromTicketState', () => {
   });
 });
 
+describe('seedPackage fallback (ISSO-04 preview)', () => {
+  const seedState = {
+    ticketCode: 'ISSO-05',
+    seedPackage: {
+      artifacts: [
+        {
+          code: 'GRC-03',
+          label: 'SSP fragment',
+          status: 'present',
+          summary: 'Seeded SSP',
+          payload: { systemName: 'Harbor Dental' },
+          textCorpus: 'Seeded SSP with AC-2 MFA gap',
+        },
+        {
+          code: 'GRC-04',
+          label: 'POA&M',
+          status: 'present',
+          summary: 'Seeded POA&M',
+          payload: {
+            poamItems: [
+              {
+                weakness_description: 'Privileged accounts lack MFA',
+                status: 'open',
+              },
+            ],
+          },
+          textCorpus: 'Seeded POA&M MFA weakness',
+        },
+      ],
+    },
+  };
+
+  it('parses seedPackage from initial_state', () => {
+    const artifacts = parseSeedPackageFromTicketState(seedState);
+    expect(artifacts).toHaveLength(2);
+    expect(artifacts[0]?.code).toBe(GRC_TICKET_CODES.SSP);
+    expect(artifacts[0]?.status).toBe('present');
+  });
+
+  it('compileSeedAuthorizationPackage builds a playable seed package', () => {
+    const pkg = compileSeedAuthorizationPackage(seedState);
+    expect(pkg.packageSource).toBe('seed');
+    expect(pkg.complete).toBe(true);
+    expect(pkg.artifacts.some((a) => a.textCorpus.includes('MFA'))).toBe(true);
+  });
+
+  it('prefers live artifacts and fills gaps from seed', () => {
+    const live: CompiledAuthorizationPackage = {
+      trackId: 't',
+      studentId: 's',
+      complete: false,
+      missingCodes: [GRC_TICKET_CODES.POAM],
+      compiledAt: new Date().toISOString(),
+      packageSource: 'empty',
+      artifacts: [
+        {
+          code: GRC_TICKET_CODES.SSP,
+          label: 'SSP',
+          ticketTypes: ['oscal_ssp'],
+          status: 'present',
+          ticketId: 'live-ssp',
+          progressStatus: 'resolved',
+          summary: 'Live SSP',
+          payload: { live: true },
+          textCorpus: 'Live student SSP',
+        },
+        {
+          code: GRC_TICKET_CODES.POAM,
+          label: 'POA&M',
+          ticketTypes: ['poam'],
+          status: 'missing',
+          ticketId: null,
+          progressStatus: null,
+          summary: 'Missing',
+          payload: null,
+          textCorpus: '',
+        },
+      ],
+    };
+
+    const merged = mergeLivePackageWithSeed(
+      live,
+      parseSeedPackageFromTicketState(seedState)
+    );
+    expect(merged.packageSource).toBe('mixed');
+    expect(merged.artifacts.find((a) => a.code === 'GRC-03')?.textCorpus).toBe(
+      'Live student SSP'
+    );
+    expect(merged.artifacts.find((a) => a.code === 'GRC-04')?.status).toBe(
+      'present'
+    );
+    expect(merged.artifacts.find((a) => a.code === 'GRC-04')?.summary).toMatch(
+      /seeded/i
+    );
+  });
+});
+
 describe('buildDeterministicAoQuestions', () => {
   it('builds 5–7 package-specific questions', () => {
     const pkg: CompiledAuthorizationPackage = {
@@ -62,6 +187,7 @@ describe('buildDeterministicAoQuestions', () => {
       complete: false,
       missingCodes: [GRC_TICKET_CODES.OSCAL_GENERATOR],
       compiledAt: new Date().toISOString(),
+      packageSource: 'prior_submission',
       artifacts: [
         {
           code: GRC_TICKET_CODES.SSP,

@@ -1,0 +1,52 @@
+transaction_id,date,vendor,invoice_id,amount,currency,description,department
+APT-0001,2026-05-01,Brightleaf Office,INV-9001,412.37,USD,Printer toner restock,Facilities
+APT-0002,2026-05-04,Cascade Networks,INV-9002,1288.64,USD,Switch stack maintenance,IT
+APT-0003,2026-05-05,HarborForge Consulting,INV-9003,755.19,USD,Quarterly advisory retainer,Finance
+APT-0004,2026-05-06,Summit Hardware Co,INV-9004,2399.45,USD,Laptop refresh batch,IT
+APT-0005,2026-05-07,Northwind Catering,INV-9005,186.22,USD,Team lunch catering,HR
+APT-0006,2026-05-08,Pinecrest Legal LLP,INV-9006,3400.88,USD,Contract review hours,Legal
+APT-0007,2026-05-11,Riverstone Cloud,INV-9007,919.53,USD,SaaS seat expansion,IT
+APT-0008,2026-05-12,Oakmont Travel Desk,INV-9008,642.17,USD,Conference travel booking,Finance
+APT-0009,2026-05-13,Brightleaf Office,INV-9009,1544.61,USD,Desk chairs replacement,Facilities
+APT-0010,2026-05-14,Cascade Networks,INV-9010,277.40,USD,Network cable plant,IT
+APT-0011,2026-05-15,HarborForge Consulting,INV-9011,1102.93,USD,SOC workshop facilitation,Finance
+APT-0012,2026-05-18,Summit Hardware Co,INV-9012,488.76,USD,Badge printer supplies,IT
+APT-0013,2026-05-19,Northwind Catering,INV-9013,3210.55,USD,Firewall appliance support,HR
+APT-0014,2026-05-20,Pinecrest Legal LLP,INV-9014,167.89,USD,Executive offsite meals,Legal
+APT-0015,2026-05-21,Riverstone Cloud,INV-9015,2899.12,USD,Outside counsel memo,IT
+APT-0016,2026-05-22,Oakmont Travel Desk,INV-9016,733.48,USD,Object storage overage,Finance
+APT-0017,2026-05-25,Brightleaf Office,INV-9017,1455.30,USD,Staff relocation flights,Facilities
+APT-0018,2026-05-26,Cascade Networks,INV-9018,521.06,USD,Cleaning contract add-on,IT
+APT-0019,2026-05-27,HarborForge Consulting,INV-9019,1988.71,USD,APAC circuit upgrade,Finance
+APT-0020,2026-05-28,Summit Hardware Co,INV-9020,864.25,USD,Board packet printing,IT
+APT-0021,2026-05-29,Northwind Catering,INV-9021,1333.58,USD,ERP connector license,HR
+APT-0022,2026-05-01,Pinecrest Legal LLP,INV-9022,249.91,USD,Wellness stipend batch,Legal
+APT-0023,2026-05-04,Riverstone Cloud,INV-9023,1766.04,USD,Penetration test follow-up,IT
+APT-0024,2026-05-05,Oakmont Travel Desk,INV-9024,390.67,USD,Courier overnight fees,Finance
+APT-0025,2026-05-06,Brightleaf Office,INV-9025,2111.39,USD,Backup appliance parts,Facilities
+APT-0026,2026-05-07,Cascade Networks,INV-9026,678.14,USD,Interview panel catering,IT
+APT-0027,2026-05-08,HarborForge Consulting,INV-9027,4555.82,USD,M&A diligence support,Finance
+APT-0028,2026-05-11,Summit Hardware Co,INV-9028,812.46,USD,CDN burst traffic,IT
+APT-0029,2026-05-12,Northwind Catering,INV-9029,1204.73,USD,Sales kickoff lodging,HR
+APT-0030,2026-05-13,Pinecrest Legal LLP,INV-9030,333.28,USD,Ergonomic keyboard set,Legal
+APT-0031,2026-05-14,Riverstone Cloud,INV-9031,967.51,USD,Identity broker renewal,IT
+APT-0032,2026-05-15,Oakmont Travel Desk,INV-9032,141.70,USD,New-hire welcome kits,Finance
+APT-0033,2026-05-18,Brightleaf Office,INV-9033,2588.96,USD,SIEM content pack,Facilities
+APT-0034,2026-05-19,Cascade Networks,INV-9034,704.33,USD,Notary and filing fees,IT
+APT-0035,2026-05-20,HarborForge Consulting,INV-9035,1822.07,USD,Multi-region failover test,Finance
+APT-0036,2026-05-21,Summit Hardware Co,INV-9036,459.62,USD,Airport transfers,IT
+APT-0037,2026-05-05,Cascade Networks,INV-9101,1000.00,USD,Emergency network cutover fee,IT
+APT-0038,2026-05-12,HarborForge Consulting,INV-9102,5000.00,USD,Executive advisory lump sum,Finance
+APT-0039,2026-05-19,Riverstone Cloud,INV-9103,2500.00,USD,Cloud credits true-up,IT
+APT-0040,2026-05-26,Summit Hardware Co,INV-9104,750.00,USD,Spare hardware contingency,IT
+APT-0041,2026-05-02,Brightleaf Office,INV-9201,388.44,USD,Weekend facilities unlock,Facilities
+APT-0042,2026-05-03,Oakmont Travel Desk,INV-9202,1299.18,USD,Sunday travel rebook,Finance
+APT-0043,2026-05-09,Cascade Networks,INV-9203,622.75,USD,Saturday NOC coverage,IT
+APT-0044,2026-05-16,Northwind Catering,INV-9204,210.56,USD,Weekend event catering,HR
+APT-0045,2026-05-24,HarborForge Consulting,INV-9205,1744.89,USD,Sunday incident retainer,Finance
+APT-0046,2026-05-08,HarborForge Consulting,INV-DUP-01,1840.50,USD,Controls walkthrough hours,Finance
+APT-0047,2026-05-15,HarborForge Consulting,INV-DUP-01,1840.50,USD,Controls walkthrough hours,Finance
+APT-0048,2026-05-20,Riverstone Cloud,INV-DUP-02,960.25,USD,Object storage expansion,IT
+APT-0049,2026-05-27,Riverstone Cloud,INV-DUP-02,960.25,USD,Object storage expansion,IT
+APT-0050,2026-05-28,Pinecrest Legal LLP,INV-9037,1188.42,USD,Policy redline package,Legal
+APT-0051,2026-05-10,Summit Hardware Co,INV-9105,3000.00,USD,Weekend emergency hardware buy,IT

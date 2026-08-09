@@ -4,6 +4,7 @@ import { compileStudentPackage } from '@/lib/capstone/compilePackage';
 import {
   isAoReviewTicketType,
   isAuthorizationPackageTicketType,
+  isSecurityAssessmentReportTicketType,
 } from '@/lib/capstone/ticketCodes';
 import { createClient } from '@/lib/supabase/server';
 import { resolveSubmitTicketContext } from '@/lib/tickets/submitTicketContext';
@@ -26,12 +27,13 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   if (
     !isAuthorizationPackageTicketType(ticketType) &&
-    !isAoReviewTicketType(ticketType)
+    !isAoReviewTicketType(ticketType) &&
+    !isSecurityAssessmentReportTicketType(ticketType)
   ) {
     return NextResponse.json(
       {
         error:
-          'Package compilation is only available for authorization_package and ao_review tickets',
+          'Package compilation is only available for authorization_package, ao_review, and security_assessment_report tickets',
       },
       { status: 400 }
     );

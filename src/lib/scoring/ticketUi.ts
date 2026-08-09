@@ -147,6 +147,41 @@ export const CUSTOMER_REPLY_MIN_REPLY_LENGTH = 120;
 
 export const ASSESSMENT_PROCEDURES_MIN_FIELD_LENGTH = 40;
 
+/** CCCER audit-exception narrative fields (Condition…Recommendation). */
+export const CCCER_MIN_FIELD_LENGTH = 40;
+
+/** Structured audit workpaper narrative field minimum length. */
+export const AUDIT_WORKPAPER_MIN_FIELD_LENGTH = 40;
+/** Preparer / reviewer identity minimum length (non-trivial name). */
+export const AUDIT_WORKPAPER_MIN_IDENTITY_LENGTH = 2;
+
+/** Sampling methodology narrative fields (sample selection + risk additions). */
+export const SAMPLING_METHODOLOGY_MIN_FIELD_LENGTH = 80;
+
+/** Capstone risk-based annual audit plan (from risk register). */
+export const RISK_BASED_AUDIT_PLAN_DEFAULT_CAPACITY = 5;
+export const RISK_BASED_AUDIT_PLAN_MIN_JUSTIFICATION_LENGTH = 60;
+export const RISK_BASED_AUDIT_PLAN_MIN_CAPACITY_NOTES_LENGTH = 40;
+
+/** PI-02 audit planning memo section minimum length. */
+export const AUDIT_PLANNING_MEMO_MIN_FIELD_LENGTH = 40;
+
+/** PI-02 process control test notes minimum length. */
+export const PROCESS_CONTROL_TEST_MIN_NOTES_LENGTH = 40;
+
+/** PI-02 findings summary section minimum length. */
+export const FINDINGS_SUMMARY_MIN_FIELD_LENGTH = 40;
+
+/**
+ * AUD-07 audit-committee brief (flagship) — executive summary + AC questions.
+ */
+export const AUDIT_COMMITTEE_BRIEF_MIN_SUMMARY_LENGTH = 200;
+export const AUDIT_COMMITTEE_BRIEF_QUESTION_MIN = 4;
+export const AUDIT_COMMITTEE_BRIEF_QUESTION_MAX = 5;
+
+/** ISSO incident notification draft completeness gate (length only). */
+export const INCIDENT_NOTIFICATION_MIN_DRAFT_LENGTH = 120;
+
 export const TOOL_WALKTHROUGH_MIN_JUSTIFICATION_LENGTH = 80;
 
 export const CMMC_GAP_ANALYSIS_MIN_LENGTH = 120;
@@ -162,6 +197,23 @@ export type CmmcPracticeScoreValue =
 
 export const CONMON_STRATEGY_MIN_FIELD_LENGTH = 40;
 export const CONMON_STRATEGY_MIN_ESCALATION_LENGTH = 80;
+
+/** Continuous auditing design (single control area) field minimums. */
+export const CONTINUOUS_AUDITING_MIN_FIELD_LENGTH = 40;
+export const CONTINUOUS_AUDITING_MIN_EXCEPTION_LENGTH = 80;
+export const CONTINUOUS_AUDITING_MIN_OPTIONAL_LENGTH = 20;
+
+export const CONTINUOUS_AUDITING_FREQUENCIES = [
+  'Daily',
+  'Weekly',
+  'Monthly',
+  'Quarterly',
+  'Event-triggered',
+  'Other (describe in rationale)',
+] as const;
+
+export type ContinuousAuditingFrequency =
+  (typeof CONTINUOUS_AUDITING_FREQUENCIES)[number];
 
 export const DEFAULT_CONMON_CONTROL_FAMILIES = [
   'AC',
@@ -276,6 +328,129 @@ export function isSlaEscalationTicketType(ticketType: string): boolean {
     base === 'sla_escalation' ||
     base === 'escalate_or_resolve' ||
     base === 'escalation_decision'
+  );
+}
+
+/** FIPS 199 potential impact levels for security categorization tickets. */
+export const FIPS_199_IMPACT_LEVELS = ['low', 'moderate', 'high'] as const;
+
+export type Fips199ImpactLevel = (typeof FIPS_199_IMPACT_LEVELS)[number];
+
+export const FIPS_199_IMPACT_LEVEL_LABELS: Record<Fips199ImpactLevel, string> =
+  {
+    low: 'Low',
+    moderate: 'Moderate',
+    high: 'High',
+  };
+
+export const FIPS_199_SECURITY_OBJECTIVES = [
+  'confidentiality',
+  'integrity',
+  'availability',
+] as const;
+
+export type Fips199SecurityObjective =
+  (typeof FIPS_199_SECURITY_OBJECTIVES)[number];
+
+export const FIPS_199_SECURITY_OBJECTIVE_LABELS: Record<
+  Fips199SecurityObjective,
+  string
+> = {
+  confidentiality: 'Confidentiality',
+  integrity: 'Integrity',
+  availability: 'Availability',
+};
+
+export const FIPS_199_MIN_JUSTIFICATION_LENGTH = 80;
+
+export function isFips199ImpactLevel(
+  value: string
+): value is Fips199ImpactLevel {
+  return (FIPS_199_IMPACT_LEVELS as readonly string[]).includes(value);
+}
+
+export function isFips199ImpactCategorizationTicketType(
+  ticketType: string
+): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'fips_199_impact_categorization' ||
+    base === 'impact_categorization' ||
+    base === 'security_categorization'
+  );
+}
+
+/** ISSO→ISSM cross-system escalation decisions. */
+export const ISSM_ESCALATION_DECISIONS = [
+  'escalate',
+  'handle_at_isso',
+] as const;
+
+export type IssmEscalationDecision = (typeof ISSM_ESCALATION_DECISIONS)[number];
+
+export const ISSM_ESCALATION_DECISION_LABELS: Record<
+  IssmEscalationDecision,
+  string
+> = {
+  escalate: 'Escalate to ISSM',
+  handle_at_isso: 'Handle at ISSO level',
+};
+
+export const ISSM_ESCALATION_MIN_MEMO_LENGTH = 120;
+
+export function isIssmEscalationDecision(
+  value: string
+): value is IssmEscalationDecision {
+  return (ISSM_ESCALATION_DECISIONS as readonly string[]).includes(value);
+}
+
+export function isIssmEscalationTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'issm_escalation' ||
+    base === 'cross_system_escalation' ||
+    base === 'isso_to_issm_escalation'
+  );
+}
+
+/** Binary adequacy judgments for control implementation statement review. */
+export const CONTROL_IMPLEMENTATION_ADEQUACY_JUDGMENTS = [
+  'adequate',
+  'inadequate',
+] as const;
+
+export type ControlImplementationAdequacyJudgment =
+  (typeof CONTROL_IMPLEMENTATION_ADEQUACY_JUDGMENTS)[number];
+
+export const CONTROL_IMPLEMENTATION_ADEQUACY_JUDGMENT_LABELS: Record<
+  ControlImplementationAdequacyJudgment,
+  string
+> = {
+  adequate: 'Adequate',
+  inadequate: 'Inadequate',
+};
+
+export const CONTROL_IMPLEMENTATION_ADEQUACY_MIN_JUSTIFICATION_LENGTH = 80;
+
+export function isControlImplementationAdequacyJudgment(
+  value: string
+): value is ControlImplementationAdequacyJudgment {
+  return (
+    CONTROL_IMPLEMENTATION_ADEQUACY_JUDGMENTS as readonly string[]
+  ).includes(value);
+}
+
+export function isControlImplementationAdequacyTicketType(
+  ticketType: string
+): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'control_implementation_adequacy' ||
+    base === 'implementation_statement_review' ||
+    base === 'control_statement_adequacy'
   );
 }
 
@@ -609,6 +784,30 @@ export type PoamStatus = (typeof POAM_STATUSES)[number];
 
 export const POAM_MIN_WEAKNESS_LENGTH = 20;
 export const POAM_MIN_MILESTONE_LENGTH = 20;
+
+/**
+ * Mid-remediation POA&M status update (on track / delayed / closed).
+ * Aligns with lifecycle vocab: ongoing → on_track, completed → closed.
+ */
+export const POAM_STATUS_UPDATE_STATUSES = [
+  'on_track',
+  'delayed',
+  'closed',
+] as const;
+
+export type PoamStatusUpdateStatus =
+  (typeof POAM_STATUS_UPDATE_STATUSES)[number];
+
+export const POAM_STATUS_UPDATE_STATUS_LABELS: Record<
+  PoamStatusUpdateStatus,
+  string
+> = {
+  on_track: 'On track (ongoing)',
+  delayed: 'Delayed',
+  closed: 'Closed (completed)',
+};
+
+export const POAM_STATUS_UPDATE_MIN_JUSTIFICATION_LENGTH = 80;
 
 export type PoamPriorFinding = {
   id: string;

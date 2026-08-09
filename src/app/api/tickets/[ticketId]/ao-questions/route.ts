@@ -152,6 +152,7 @@ async function handleAoQuestions(ticketId: string) {
       source: generated.source,
       cached: false,
       packageComplete: pkg.complete,
+      packageSource: pkg.packageSource ?? null,
       missingCodes: pkg.missingCodes,
     });
   } catch (error) {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { EngagementFlowCard } from '@/components/tickets/EngagementFlowCard';
 import {
   TicketQueueTable,
   type TicketQueueRow,
@@ -8,6 +9,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { requireEnrollment } from '@/lib/auth/requireEnrollment';
 import { getActiveTicketTier } from '@/lib/tickets/activeTier';
+import {
+  groupTicketsByEngagement,
+  type EngagementSummary,
+} from '@/lib/tickets/engagement';
 import {
   isOpenTicketStatus,
   normalizeTicketStatus,
@@ -48,7 +53,7 @@ export default async function TrackConsolePage({ params }: ConsolePageProps) {
   const { data: tickets, error: ticketsError } = await supabase
     .from('tickets')
     .select(
-      'id, tenant_id, track_id, tier, ticket_type, difficulty, sla_minutes, scenario_brief, initial_state, expected_state, dcwf_code, sort_order'
+      'id, tenant_id, track_id, tier, ticket_type, difficulty, sla_minutes, scenario_brief, initial_state, expected_state, dcwf_code, sort_order, engagement_id, engagement_stage'
     )
     .eq('track_id', track.id)
     .order('sort_order', { ascending: true });
@@ -59,6 +64,34 @@ export default async function TrackConsolePage({ params }: ConsolePageProps) {
 
   const ticketRows = (tickets ?? []) as Ticket[];
   const ticketIds = ticketRows.map((t) => t.id);
+
+  const engagementIds = Array.from(
+    new Set(
+      ticketRows
+        .map((t) => t.engagement_id)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    )
+  );
+
+  const { data: engagementRows } =
+    engagementIds.length > 0
+      ? await supabase
+          .from('engagements')
+          .select('id, slug, title, scope, sort_order')
+          .in('id', engagementIds)
+          .order('sort_order', { ascending: true })
+      : { data: [] };
+
+  const engagements = (engagementRows ?? []).map((row) => ({
+    id: row.id as string,
+    slug: row.slug as string,
+    title: row.title as string,
+    scope:
+      row.scope && typeof row.scope === 'object' && !Array.isArray(row.scope)
+        ? (row.scope as Record<string, unknown>)
+        : {},
+    sort_order: (row.sort_order as number) ?? 0,
+  })) satisfies EngagementSummary[];
 
   const { data: progressRows } =
     ticketIds.length > 0
@@ -85,8 +118,16 @@ export default async function TrackConsolePage({ params }: ConsolePageProps) {
 
   const activeTier = getActiveTicketTier(ticketRows, statusMap);
 
-  const openRows: TicketQueueRow[] = ticketRows
-    .filter((ticket) => ticket.tier === activeTier)
+  const tierTickets = ticketRows.filter((ticket) => ticket.tier === activeTier);
+
+  const { flows, standalone } = groupTicketsByEngagement({
+    engagements,
+    tickets: tierTickets,
+    progressByTicketId: statusMap,
+    trackSlug,
+  });
+
+  const openStandaloneRows: TicketQueueRow[] = standalone
     .map((ticket) => {
       const progress = progressByTicketId.get(ticket.id);
       const status = progress?.status ?? 'new';
@@ -103,6 +144,8 @@ export default async function TrackConsolePage({ params }: ConsolePageProps) {
     })
     .filter((row) => isOpenTicketStatus(row.status));
 
+  const hasContent = flows.length > 0 || openStandaloneRows.length > 0;
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <header className="space-y-2">
@@ -113,7 +156,8 @@ export default async function TrackConsolePage({ params }: ConsolePageProps) {
           <div>
             <h1 className="text-2xl font-semibold">Ticket console</h1>
             <p className="mt-1 text-muted-foreground">
-              Open tickets for your active tier (Tier {activeTier}).
+              Open tickets for your active tier (Tier {activeTier}). Multi-stage
+              engagements appear as one sequenced flow.
             </p>
           </div>
           <Button render={<Link href="/dashboard" />} variant="outline">
@@ -130,11 +174,35 @@ export default async function TrackConsolePage({ params }: ConsolePageProps) {
             scenarios are available.
           </p>
         </div>
+      ) : !hasContent ? (
+        <div className="rounded-lg border border-border bg-card px-6 py-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            No open tickets in your active tier.
+          </p>
+        </div>
       ) : (
-        <TicketQueueTable
-          rows={openRows}
-          emptyMessage="No open tickets in your active tier."
-        />
+        <div className="space-y-8">
+          {flows.length > 0 ? (
+            <div className="space-y-4">
+              <h2 className="text-base font-semibold">Engagements</h2>
+              {flows.map((flow) => (
+                <EngagementFlowCard key={flow.engagement.id} flow={flow} />
+              ))}
+            </div>
+          ) : null}
+
+          {openStandaloneRows.length > 0 ? (
+            <div className="space-y-4">
+              {flows.length > 0 ? (
+                <h2 className="text-base font-semibold">Other open tickets</h2>
+              ) : null}
+              <TicketQueueTable
+                rows={openStandaloneRows}
+                emptyMessage="No open tickets in your active tier."
+              />
+            </div>
+          ) : null}
+        </div>
       )}
     </div>
   );

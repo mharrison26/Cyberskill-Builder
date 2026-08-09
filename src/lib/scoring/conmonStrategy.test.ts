@@ -2,7 +2,11 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 import type { ScorableTicket } from '@/lib/scoring';
 import {
+  evaluateCadenceAppropriateness,
   evaluateConMonStrategyDeterministic,
+  parseCadenceIntervalDays,
+  resolveConMonImpactLevel,
+  resolveSystemImpactLevel,
   conmonStrategyTicketScorer,
 } from '@/lib/scoring/conmonStrategy';
 
@@ -32,14 +36,19 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
     difficulty: 'high',
     sla_minutes: 90,
     scenario_brief:
-      'Draft a system-level continuous monitoring strategy for HarborNet CMS.',
+      'ConMon: ISSO-01 system-level continuous monitoring plan for HarborNet CMS (FIPS 199 Moderate)',
     initial_state: {
+      ticketCode: 'ISSO-01',
+      impactLevel: 'moderate',
       systemProfile: {
         name: 'HarborNet Case Management System',
-        impact: 'Moderate',
+        impact: 'Moderate (FIPS 199)',
+        impactLevel: 'moderate',
       },
     },
-    expected_state: {},
+    expected_state: {
+      impactLevel: 'moderate',
+    },
     dcwf_code: '612',
     sort_order: 1,
     ...overrides,
@@ -59,7 +68,7 @@ function solidSubmission() {
     familyCadences: families.map((family) => ({
       family,
       cadence:
-        family === 'CM' || family === 'SI'
+        family === 'CM' || family === 'SI' || family === 'RA'
           ? 'Continuous automated + weekly assessor review'
           : 'Monthly assessment with quarterly deep review',
       rationale: solidRationale,
@@ -87,6 +96,87 @@ function solidSubmission() {
     escalationReporting: solidEscalation,
   };
 }
+
+describe('resolveConMonImpactLevel / parseCadenceIntervalDays', () => {
+  it('parses FIPS 199 impact labels', () => {
+    expect(resolveConMonImpactLevel('Moderate (FIPS 199)')).toBe('moderate');
+    expect(resolveConMonImpactLevel('high')).toBe('high');
+    expect(resolveConMonImpactLevel('LOW')).toBe('low');
+  });
+
+  it('parses the most frequent cadence interval from free text', () => {
+    expect(
+      parseCadenceIntervalDays('Continuous automated + weekly assessor review')
+    ).toBe(1);
+    expect(parseCadenceIntervalDays('Monthly assessment')).toBe(31);
+    expect(parseCadenceIntervalDays('Quarterly deep dive')).toBe(92);
+    expect(parseCadenceIntervalDays('Annually')).toBe(365);
+    expect(parseCadenceIntervalDays('as needed')).toBeNull();
+  });
+
+  it('resolves impact from ticket initial_state', () => {
+    expect(resolveSystemImpactLevel(ticket())).toBe('moderate');
+    expect(
+      resolveSystemImpactLevel(
+        ticket({
+          expected_state: { impactLevel: 'high' },
+          initial_state: { impactLevel: 'low' },
+        })
+      )
+    ).toBe('high');
+  });
+});
+
+describe('evaluateCadenceAppropriateness', () => {
+  it('rejects annual CM on a moderate-impact system', () => {
+    const result = evaluateCadenceAppropriateness(
+      [
+        {
+          family: 'CM',
+          cadence: 'Annual assessment only',
+          rationale: solidRationale,
+        },
+      ],
+      'moderate'
+    );
+    expect(result.ok).toBe(false);
+    expect(result.issues[0]?.family).toBe('CM');
+  });
+
+  it('accepts continuous/weekly CM on moderate impact', () => {
+    const result = evaluateCadenceAppropriateness(
+      [
+        {
+          family: 'CM',
+          cadence: 'Continuous automated + weekly review',
+          rationale: solidRationale,
+        },
+        {
+          family: 'CA',
+          cadence: 'Quarterly control assessment',
+          rationale: solidRationale,
+        },
+      ],
+      'moderate'
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it('requires weekly-or-better for volatile families on high impact', () => {
+    const result = evaluateCadenceAppropriateness(
+      [
+        {
+          family: 'SI',
+          cadence: 'Monthly vulnerability review',
+          rationale: solidRationale,
+        },
+      ],
+      'high'
+    );
+    expect(result.ok).toBe(false);
+    expect(result.issues[0]?.maxIntervalDays).toBe(7);
+  });
+});
 
 describe('evaluateConMonStrategyDeterministic', () => {
   it('rejects missing fields', () => {
@@ -130,6 +220,26 @@ describe('evaluateConMonStrategyDeterministic', () => {
     expect(result.structured.reason).toBe('escalation_too_short');
   });
 
+  it('rejects cadences that are too infrequent for the system impact level', () => {
+    const submission = solidSubmission();
+    submission.familyCadences = submission.familyCadences.map((row) =>
+      row.family === 'CM' || row.family === 'SI' || row.family === 'RA'
+        ? {
+            ...row,
+            cadence:
+              'Annual assessment only during the authorization package refresh cycle',
+          }
+        : row
+    );
+
+    const result = evaluateConMonStrategyDeterministic(submission, ticket());
+    expect(result.ok).toBe(false);
+    expect(result.structured.reason).toBe('cadence_not_impact_appropriate');
+    expect(result.structured.impactLevel).toBe('moderate');
+    expect(result.structured.cadenceAppropriatenessOk).toBe(false);
+    expect(result.feedback).toMatch(/impact/i);
+  });
+
   it('passes a complete memo through deterministic gates', () => {
     const result = evaluateConMonStrategyDeterministic(
       solidSubmission(),
@@ -138,6 +248,8 @@ describe('evaluateConMonStrategyDeterministic', () => {
     expect(result.ok).toBe(true);
     expect(result.structured.missingFamilies).toEqual([]);
     expect(result.structured.missingTools).toEqual([]);
+    expect(result.structured.impactLevel).toBe('moderate');
+    expect(result.structured.cadenceAppropriatenessOk).toBe(true);
   });
 });
 
@@ -189,6 +301,7 @@ describe('conmonStrategyTicketScorer', () => {
     expect(result.structuredResult).toMatchObject({
       style: 'conmon_strategy',
       guidancePath: 'data/nist/sp800-137-conmon-guidance.json',
+      impactLevel: 'moderate',
     });
     const retrieved = (
       result.structuredResult as { retrievedSectionIds: string[] }
@@ -199,5 +312,7 @@ describe('conmonStrategyTicketScorer', () => {
     const prompt = vi.mocked(callClaudeGrading).mock.calls[0]?.[0] ?? '';
     expect(prompt).toContain('SP 800-137');
     expect(prompt).toContain('Retrieved SP 800-137 guidance');
+    expect(prompt).toContain('FIPS 199');
+    expect(prompt).toContain('Moderate');
   });
 });

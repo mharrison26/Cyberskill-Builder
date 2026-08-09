@@ -64,6 +64,10 @@ export interface Ticket {
   /** FK → work_role_codes.code (nullable). */
   dcwf_code: string | null;
   sort_order: number;
+  /** Optional multi-stage engagement grouping (PI-02 / engagements migration). */
+  engagement_id?: string | null;
+  /** 1-based stage within engagement; null when not in an engagement. */
+  engagement_stage?: number | null;
 }
 
 export interface TicketProgress {

@@ -2,15 +2,28 @@ import { CodeSandbox } from '@/components/CodeSandbox';
 import { MockDirectoryPanel } from '@/components/MockDirectoryPanel';
 import { AoReviewTicket } from '@/components/tickets/AoReviewTicket';
 import { AssessmentProceduresTicket } from '@/components/tickets/AssessmentProceduresTicket';
+import { AuditCommitteeBriefTicket } from '@/components/tickets/AuditCommitteeBriefTicket';
+import { AuditPlanningMemoTicket } from '@/components/tickets/AuditPlanningMemoTicket';
+import { AuditWorkpaperTicket } from '@/components/tickets/AuditWorkpaperTicket';
 import { AuthorizationPackageTicket } from '@/components/tickets/AuthorizationPackageTicket';
+import { SecurityAssessmentReportTicket } from '@/components/tickets/SecurityAssessmentReportTicket';
+import { FindingsSummaryTicket } from '@/components/tickets/FindingsSummaryTicket';
+import { Fips199ImpactCategorizationTicket } from '@/components/tickets/Fips199ImpactCategorizationTicket';
 import { BackupDrPlanTicket } from '@/components/tickets/BackupDrPlanTicket';
+import { CccerExceptionTicket } from '@/components/tickets/CccerExceptionTicket';
 import { CmmcGapAnalysisTicket } from '@/components/tickets/CmmcGapAnalysisTicket';
 import { ConMonStrategyTicket } from '@/components/tickets/ConMonStrategyTicket';
+import { ContinuousAuditingTicket } from '@/components/tickets/ContinuousAuditingTicket';
+import { ControlImplementationAdequacyTicket } from '@/components/tickets/ControlImplementationAdequacyTicket';
 import { ControlMappingWorkArea } from '@/components/tickets/ControlMappingWorkArea';
+import { CrossSystemPoamPriorityTicket } from '@/components/tickets/CrossSystemPoamPriorityTicket';
 import { CoachingFeedbackTicket } from '@/components/tickets/CoachingFeedbackTicket';
 import { CustomerReplyTicket } from '@/components/tickets/CustomerReplyTicket';
 import { HelpdeskCapstoneTicket } from '@/components/tickets/HelpdeskCapstoneTicket';
 import { InfraDesignCapstoneTicket } from '@/components/tickets/InfraDesignCapstoneTicket';
+import { IncidentNotificationTicket } from '@/components/tickets/IncidentNotificationTicket';
+import { IssmEscalationTicket } from '@/components/tickets/IssmEscalationTicket';
+import { ItgcAccessRevocationTicket } from '@/components/tickets/ItgcAccessRevocationTicket';
 import { KbWriteupTicket } from '@/components/tickets/KbWriteupTicket';
 import { KpiReportTicket } from '@/components/tickets/KpiReportTicket';
 import { ConfigFaultDiagnosisTicket } from '@/components/tickets/ConfigFaultDiagnosisTicket';
@@ -22,28 +35,52 @@ import { NetworkTopologyFaultTicket } from '@/components/tickets/NetworkTopology
 import { OscalSspForm } from '@/components/tickets/OscalSspForm';
 import { OutageCapstoneTicket } from '@/components/tickets/OutageCapstoneTicket';
 import { P1StatusUpdatesTicket } from '@/components/tickets/P1StatusUpdatesTicket';
+import { PoamStatusUpdateTicket } from '@/components/tickets/PoamStatusUpdateTicket';
 import { PoamTicketWork } from '@/components/tickets/PoamTicketWork';
+import { ProcessControlTestTicket } from '@/components/tickets/ProcessControlTestTicket';
+import { RiskBasedAuditPlanTicket } from '@/components/tickets/RiskBasedAuditPlanTicket';
+import { SamplingMethodologyTicket } from '@/components/tickets/SamplingMethodologyTicket';
 import { SecMaterialityTicket } from '@/components/tickets/SecMaterialityTicket';
+import { TransactionAnomalyTicket } from '@/components/tickets/TransactionAnomalyTicket';
 import { SlaEscalationTicket } from '@/components/tickets/SlaEscalationTicket';
 import { SlaQueueSimTicket } from '@/components/tickets/SlaQueueSimTicket';
+import { Soc2ChangeManagementTestTicket } from '@/components/tickets/Soc2ChangeManagementTestTicket';
+import { SspGapReviewTicket } from '@/components/tickets/SspGapReviewTicket';
 import { ToolWalkthroughTicket } from '@/components/tickets/ToolWalkthroughTicket';
 import { TriageTicket } from '@/components/tickets/TriageTicket';
 import { VulnPrioritizationTicket } from '@/components/tickets/VulnPrioritizationTicket';
 import {
   isAoReviewTicketType,
   isAuthorizationPackageTicketType,
+  isSecurityAssessmentReportTicketType,
 } from '@/lib/capstone/ticketCodes';
 import { isHelpdeskCapstoneTicketType } from '@/lib/helpdesk/ticketCodes';
 import { isInfraDesignCapstoneTicketType } from '@/lib/infra/ticketCodes';
+import { isCccerTicketType } from '@/lib/scoring/cccer';
+import { isCrossSystemPoamPriorityTicketType } from '@/lib/scoring/crossSystemPoamPriority';
+import { isAuditCommitteeBriefTicketType } from '@/lib/grc/ticketCodes';
+import { isAuditPlanningMemoTicketType } from '@/lib/scoring/auditPlanningMemo';
+import { isFindingsSummaryTicketType } from '@/lib/scoring/findingsSummary';
+import { isIncidentNotificationTicketType } from '@/lib/scoring/incidentNotification';
+import { isItgcAccessRevocationTicketType } from '@/lib/scoring/itgcAccessRevocation';
+import { isPoamStatusUpdateTicketType } from '@/lib/scoring/poamStatusUpdate';
+import { isProcessControlTestTicketType } from '@/lib/scoring/processControlTest';
+import { isRiskBasedAuditPlanTicketType } from '@/lib/scoring/riskBasedAuditPlanShared';
+import { isSoc2ChangeManagementTestTicketType } from '@/lib/scoring/soc2ChangeManagementTest';
+import { isSspGapReviewTicketType } from '@/lib/scoring/sspGapReview';
 import { isSlaQueueSimTicketType } from '@/lib/scoring/slaQueueSim';
+import { isTransactionAnomalyTicketType } from '@/lib/scoring/transactionAnomaly';
 import { isVulnPrioritizationTicketType } from '@/lib/scoring/vulnPrioritization';
 import {
   isCisHardeningTicketType,
   isConfigFaultDiagnosisTicketType,
+  isControlImplementationAdequacyTicketType,
   isFsPermissionsLabTicketType,
   isKpiReportTicketType,
   isMonitoringConfigTicketType,
   isNetworkDiagnosticsTicketType,
+  isFips199ImpactCategorizationTicketType,
+  isIssmEscalationTicketType,
   isNetworkTopologyFaultTicketType,
   isOutageCapstoneTicketType,
   isP1StatusUpdatesTicketType,
@@ -164,6 +201,23 @@ export function isAssessmentProceduresTicketType(ticketType: string): boolean {
   );
 }
 
+/** Re-export for callers that resolve CCCER ticket types via TicketWorkSlot. */
+export { isCccerTicketType };
+
+export function isAuditWorkpaperTicketType(ticketType: string): boolean {
+  const base = ticketTypeBase(ticketType);
+  return base === 'audit_workpaper' || base === 'workpaper';
+}
+
+export function isSamplingMethodologyTicketType(ticketType: string): boolean {
+  const base = ticketTypeBase(ticketType);
+  return (
+    base === 'sampling_methodology' ||
+    base === 'assessment_sampling' ||
+    base === 'transaction_sampling'
+  );
+}
+
 export function isSecMaterialityTicketType(ticketType: string): boolean {
   const base = ticketTypeBase(ticketType);
   return base === 'sec_materiality' || base === 'sec_cyber_materiality';
@@ -172,6 +226,11 @@ export function isSecMaterialityTicketType(ticketType: string): boolean {
 export function isConMonStrategyTicketType(ticketType: string): boolean {
   const base = ticketTypeBase(ticketType);
   return base === 'conmon_strategy' || base === 'continuous_monitoring';
+}
+
+export function isContinuousAuditingTicketType(ticketType: string): boolean {
+  const base = ticketTypeBase(ticketType);
+  return base === 'continuous_auditing' || base === 'continuous_audit_design';
 }
 
 export function isBackupDrPlanTicketType(ticketType: string): boolean {
@@ -238,18 +297,29 @@ export function isCoachingFeedbackTicketType(ticketType: string): boolean {
  * Tool walkthrough tickets mount the SimpleRisk submission form.
  * control_mapping tickets mount the framework crosswalk work area.
  * oscal_ssp tickets mount the NIST 800-171 Rev 3 SSP form.
+ * ssp_gap_review tickets mount draft SSP excerpt + candidate gap checklist.
  * assessment_procedures tickets mount Examine/Interview/Test drafting.
+ * cccer / cccer_exception / audit_finding_cccer tickets mount CCCERForm (F22)
+ *   over AUD-05-style exception evidence (ArtifactLabLesson reuse).
+ * audit_workpaper tickets mount the structured control-test workpaper form.
+ * sampling_methodology tickets mount transaction population + methodology form.
+ * transaction_anomaly tickets mount AP CSV + optional WebContainer + anomaly multi-select.
  * poam tickets mount the POA&M drafting form over prior findings.
  * vuln_prioritization / patch_schedule tickets mount the ordered vuln patch schedule.
+ * cross_system_poam_priority tickets mount the multi-system POA&M remediation order.
  * sec_materiality tickets mount the Form 8-K Item 1.05 memo form.
  * conmon_strategy tickets mount the SP 800-137 continuous monitoring memo form.
+ * continuous_auditing tickets mount the single-control-area continuous audit design form.
  * backup_dr_plan tickets mount the backup / disaster recovery plan form.
  * cmmc_gap_analysis tickets mount the CMMC L2 practice scoring / gap form.
+ * security_assessment_report / sar_summary tickets mount SAR drafting over GRC-03/04.
  * authorization_package tickets mount the compiled GRC-03/04/09 package view.
  * ao_review tickets mount the Authorizing Official risk-acceptance Q&A.
+ * audit_committee_brief tickets mount exec summary + AC questions (AUD-07 flagship).
  * triage tickets mount the inbound priority + category form.
  * mock_directory tickets mount the simulated directory unlock/reset console.
  * sla_escalation tickets mount the escalate-or-resolve policy decision form.
+ * issm_escalation tickets mount the ISSO→ISSM cross-system escalation memo form.
  * kb_writeup tickets mount the post-resolution KB article form (HD-03).
  * helpdesk_capstone tickets mount the mini KB + onboarding process doc (HD-07 / PI-07).
  * infra_design_capstone tickets mount the backup-topology ADR + tradeoff Q&A (SA-07 / PI-07).
@@ -265,6 +335,9 @@ export function isCoachingFeedbackTicketType(ticketType: string): boolean {
  * sla_queue_sim tickets mount the timed multi-ticket queue with SLA timers (PI-09).
  * p1_status_updates tickets mount simulated-clock stakeholder status cadence (distinct from PI-09).
  * monitoring_config tickets mount the alert type / threshold / routing form.
+ * itgc_access_revocation tickets mount the timely access revocation pass/fail + exceptions form.
+ * soc2_change_management_test tickets mount CC8.1 procedure + change evidence exception testing.
+ * risk_based_audit_plan tickets mount the risk-register annual plan capstone form.
  */
 export function TicketWorkSlot({
   ticket,
@@ -347,6 +420,56 @@ export function TicketWorkSlot({
     );
   }
 
+  if (isCccerTicketType(ticket.ticket_type)) {
+    return (
+      <CccerExceptionTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isAuditWorkpaperTicketType(ticket.ticket_type)) {
+    return (
+      <AuditWorkpaperTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isSamplingMethodologyTicketType(ticket.ticket_type)) {
+    return (
+      <SamplingMethodologyTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isTransactionAnomalyTicketType(ticket.ticket_type)) {
+    return (
+      <TransactionAnomalyTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isPoamStatusUpdateTicketType(ticket.ticket_type)) {
+    return (
+      <PoamStatusUpdateTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
   if (isPoamTicketType(ticket.ticket_type)) {
     return (
       <PoamTicketWork
@@ -361,6 +484,16 @@ export function TicketWorkSlot({
   if (isVulnPrioritizationTicketType(ticket.ticket_type)) {
     return (
       <VulnPrioritizationTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isCrossSystemPoamPriorityTicketType(ticket.ticket_type)) {
+    return (
+      <CrossSystemPoamPriorityTicket
         ticket={ticket}
         readOnly={readOnly}
         className={className}
@@ -388,6 +521,16 @@ export function TicketWorkSlot({
     );
   }
 
+  if (isContinuousAuditingTicketType(ticket.ticket_type)) {
+    return (
+      <ContinuousAuditingTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
   if (isBackupDrPlanTicketType(ticket.ticket_type)) {
     return (
       <BackupDrPlanTicket
@@ -401,6 +544,16 @@ export function TicketWorkSlot({
   if (isCmmcGapAnalysisTicketType(ticket.ticket_type)) {
     return (
       <CmmcGapAnalysisTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isSecurityAssessmentReportTicketType(ticket.ticket_type)) {
+    return (
+      <SecurityAssessmentReportTicket
         ticket={ticket}
         readOnly={readOnly}
         className={className}
@@ -447,6 +600,36 @@ export function TicketWorkSlot({
   if (isSlaEscalationTicketType(ticket.ticket_type)) {
     return (
       <SlaEscalationTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isControlImplementationAdequacyTicketType(ticket.ticket_type)) {
+    return (
+      <ControlImplementationAdequacyTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isFips199ImpactCategorizationTicketType(ticket.ticket_type)) {
+    return (
+      <Fips199ImpactCategorizationTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isIssmEscalationTicketType(ticket.ticket_type)) {
+    return (
+      <IssmEscalationTicket
         ticket={ticket}
         readOnly={readOnly}
         className={className}
@@ -577,6 +760,96 @@ export function TicketWorkSlot({
   if (isMonitoringConfigTicketType(ticket.ticket_type)) {
     return (
       <MonitoringConfigTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isItgcAccessRevocationTicketType(ticket.ticket_type)) {
+    return (
+      <ItgcAccessRevocationTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isIncidentNotificationTicketType(ticket.ticket_type)) {
+    return (
+      <IncidentNotificationTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isSoc2ChangeManagementTestTicketType(ticket.ticket_type)) {
+    return (
+      <Soc2ChangeManagementTestTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isSspGapReviewTicketType(ticket.ticket_type)) {
+    return (
+      <SspGapReviewTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isAuditPlanningMemoTicketType(ticket.ticket_type)) {
+    return (
+      <AuditPlanningMemoTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isProcessControlTestTicketType(ticket.ticket_type)) {
+    return (
+      <ProcessControlTestTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isFindingsSummaryTicketType(ticket.ticket_type)) {
+    return (
+      <FindingsSummaryTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isAuditCommitteeBriefTicketType(ticket.ticket_type)) {
+    return (
+      <AuditCommitteeBriefTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isRiskBasedAuditPlanTicketType(ticket.ticket_type)) {
+    return (
+      <RiskBasedAuditPlanTicket
         ticket={ticket}
         readOnly={readOnly}
         className={className}
