@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 
-export const DEFENSES_BUCKET = 'defenses';
+const DEFENSES_BUCKET = 'defenses';
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
 const ACCEPTED_TYPES = new Set([

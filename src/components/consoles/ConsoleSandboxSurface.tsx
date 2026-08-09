@@ -5,10 +5,10 @@ import { MockSandboxSurface } from '@/components/consoles/MockSandboxSurface';
 import { FlySandboxTicket } from '@/components/tickets/FlySandboxTicket';
 import {
   initialStateToFiles,
+  isCisHardeningTicketType,
   isScriptRemediationTicketType,
   isScriptingTicketType,
-} from '@/components/tickets/TicketWorkSlot';
-import { isCisHardeningTicketType } from '@/lib/scoring/ticketUi';
+} from '@/lib/scoring/ticketUi';
 import type { MockTrackTicket } from '@/types';
 
 type ConsoleSandboxSurfaceProps = {

@@ -600,6 +600,58 @@ export function isCisHardeningTicketType(ticketType: string): boolean {
   );
 }
 
+/** Normalize ticket.initial_state into a flat path → contents map for CodeSandbox. */
+export function initialStateToFiles(
+  initialState: Record<string, unknown>
+): Record<string, string> {
+  const nested = initialState.files;
+  const source =
+    typeof nested === 'object' && nested !== null && !Array.isArray(nested)
+      ? (nested as Record<string, unknown>)
+      : initialState;
+
+  const files: Record<string, string> = {};
+  for (const [path, value] of Object.entries(source)) {
+    if (
+      path === 'files' ||
+      path === 'expected_config' ||
+      path === 'expected_state' ||
+      path === 'rules'
+    ) {
+      continue;
+    }
+    if (typeof value === 'string') {
+      files[path] = value;
+    }
+  }
+  return files;
+}
+
+export function isScriptingTicketType(ticketType: string): boolean {
+  const base = ticketTypeBase(ticketType);
+  return (
+    base === 'scripting' ||
+    base === 'python' ||
+    base === 'python_lab' ||
+    base === 'shell' ||
+    base === 'oscal_generator' ||
+    base === 'capstone_oscal'
+  );
+}
+
+/** WebContainer script lab: spooler fix or fixture-based scripting lab. */
+export function isScriptRemediationTicketType(ticketType: string): boolean {
+  const base = ticketTypeBase(ticketType);
+  return (
+    base === 'script_remediation' ||
+    base === 'spooler_fix' ||
+    base === 'sandbox_script' ||
+    base === 'service_restart' ||
+    base === 'scripting_lab' ||
+    base === 'script_fixtures'
+  );
+}
+
 export function parseCisHardeningChecklist(
   initialState: Record<string, unknown> | null | undefined
 ): CisHardeningChecklistItem[] {
