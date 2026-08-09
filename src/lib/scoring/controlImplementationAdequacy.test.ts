@@ -132,7 +132,10 @@ describe('controlImplementationAdequacyTicketScorer', () => {
       finding_state: 'satisfied',
       feedback:
         'Justification correctly cites missing AC-2 account lifecycle requirements.',
-      strengths: ['Cites create/disable/review gaps', 'Tied to statement vagueness'],
+      strengths: [
+        'Cites create/disable/review gaps',
+        'Tied to statement vagueness',
+      ],
       gaps: [],
     });
 

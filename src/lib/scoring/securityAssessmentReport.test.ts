@@ -17,9 +17,7 @@ import {
   SAR_MIN_SUMMARY_LENGTH,
 } from '@/lib/scoring/securityAssessmentReport';
 
-function ticket(
-  overrides?: Partial<ScorableTicket>
-): ScorableTicket {
+function ticket(overrides?: Partial<ScorableTicket>): ScorableTicket {
   return {
     id: 't-sar',
     tenant_id: 'ten1',
@@ -110,9 +108,9 @@ const goodSeedSar = [
 
 describe('security assessment report helpers', () => {
   it('recognizes ticket type aliases', () => {
-    expect(isSecurityAssessmentReportTicketType('security_assessment_report')).toBe(
-      true
-    );
+    expect(
+      isSecurityAssessmentReportTicketType('security_assessment_report')
+    ).toBe(true);
     expect(isSecurityAssessmentReportTicketType('grc.sar_summary')).toBe(true);
     expect(isSecurityAssessmentReportTicketType('poam')).toBe(false);
   });

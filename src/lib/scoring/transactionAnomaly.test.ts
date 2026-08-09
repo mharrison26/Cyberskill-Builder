@@ -102,10 +102,7 @@ describe('transactionAnomaly parsers', () => {
       type: 'csv_anomaly_detection',
       anomaly_transaction_ids: ['apt-0037', 'APT-0038'],
     });
-    expect(extracted?.anomalyTransactionIds).toEqual([
-      'apt-0037',
-      'APT-0038',
-    ]);
+    expect(extracted?.anomalyTransactionIds).toEqual(['apt-0037', 'APT-0038']);
   });
 });
 

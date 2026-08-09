@@ -114,9 +114,7 @@ export function Fips199ImpactCategorizationTicket({
   const minJustificationLength = resolveMinJustificationLength(expectedState);
 
   const system = useMemo(() => {
-    const nested = asRecord(
-      initialState.systemProfile ?? initialState.system
-    );
+    const nested = asRecord(initialState.systemProfile ?? initialState.system);
     return {
       name: readString(
         nested,
@@ -146,14 +144,14 @@ export function Fips199ImpactCategorizationTicket({
     };
   }, [initialState]);
 
-  const [levels, setLevels] = useState<Record<LevelField, Fips199ImpactLevel | ''>>(
-    {
-      confidentiality: '',
-      integrity: '',
-      availability: '',
-      overall: '',
-    }
-  );
+  const [levels, setLevels] = useState<
+    Record<LevelField, Fips199ImpactLevel | ''>
+  >({
+    confidentiality: '',
+    integrity: '',
+    availability: '',
+    overall: '',
+  });
   const [justification, setJustification] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -177,7 +175,8 @@ export function Fips199ImpactCategorizationTicket({
 
     for (const objective of FIPS_199_SECURITY_OBJECTIVES) {
       if (!levels[objective]) {
-        nextErrors[objective] = `Select a ${FIPS_199_SECURITY_OBJECTIVE_LABELS[objective]} impact level.`;
+        nextErrors[objective] =
+          `Select a ${FIPS_199_SECURITY_OBJECTIVE_LABELS[objective]} impact level.`;
       }
     }
     if (!levels.overall) {
@@ -348,7 +347,9 @@ export function Fips199ImpactCategorizationTicket({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Information types processed</CardTitle>
+          <CardTitle className="text-base">
+            Information types processed
+          </CardTitle>
           <CardDescription>
             Base each C/I/A selection on these data types and the mission
             consequences of losing confidentiality, integrity, or availability.

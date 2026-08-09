@@ -25,16 +25,10 @@ type ContinuousAuditingTicketProps = {
 };
 
 type RequiredFieldKey =
-  | 'controlArea'
-  | 'frequency'
-  | 'dataSource'
-  | 'exceptionHandling';
+  'controlArea' | 'frequency' | 'dataSource' | 'exceptionHandling';
 
 type OptionalFieldKey =
-  | 'automationMethod'
-  | 'owners'
-  | 'escalation'
-  | 'falsePositiveHandling';
+  'automationMethod' | 'owners' | 'escalation' | 'falsePositiveHandling';
 
 type FieldKey = RequiredFieldKey | OptionalFieldKey;
 

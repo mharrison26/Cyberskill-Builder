@@ -182,7 +182,8 @@ describe('continuousAuditing scorer shape', () => {
   });
 
   it('fills control area from ticket when submission omits it', () => {
-    const { controlArea: _omit, ...withoutArea } = solidSubmission;
+    const { controlArea: _, ...withoutArea } = solidSubmission;
+    void _;
     const result = evaluateContinuousAuditingDeterministic(
       withoutArea,
       ticket()

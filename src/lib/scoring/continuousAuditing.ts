@@ -443,15 +443,13 @@ export const continuousAuditingTicketScorer: TicketScorer = {
       };
     }
 
-    const expected = parseContinuousAuditingExpectedState(ticket.expected_state);
+    const expected = parseContinuousAuditingExpectedState(
+      ticket.expected_state
+    );
 
     try {
       const { grading, retrievedSectionIds, guidancePath } =
-        await gradeDesignWithGuidance(
-          deterministic.parsed,
-          ticket,
-          expected
-        );
+        await gradeDesignWithGuidance(deterministic.parsed, ticket, expected);
 
       const structured: ContinuousAuditingStructuredResult = {
         ...deterministic.structured,

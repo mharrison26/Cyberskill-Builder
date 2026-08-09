@@ -43,19 +43,10 @@ import {
 } from '@/lib/scoring/ticketUi';
 
 /** High-volatility / high-risk families that need tighter monitoring. */
-export const CONMON_HIGH_VOLATILITY_FAMILIES = [
-  'CM',
-  'SI',
-  'RA',
-] as const;
+export const CONMON_HIGH_VOLATILITY_FAMILIES = ['CM', 'SI', 'RA'] as const;
 
 /** Elevated families tightened further on High-impact systems. */
-export const CONMON_ELEVATED_FAMILIES = [
-  'AC',
-  'AU',
-  'IA',
-  'SC',
-] as const;
+export const CONMON_ELEVATED_FAMILIES = ['AC', 'AU', 'IA', 'SC'] as const;
 
 /**
  * Max monitoring interval (days) for high-volatility families by impact.
@@ -247,9 +238,7 @@ export function parseCadenceIntervalDays(cadence: string): number | null {
   if (/\b(weekly|every\s+week|each\s+week)\b/.test(text)) {
     matches.push(7);
   }
-  if (
-    /\b(bi[\s-]?weekly|every\s+two\s+weeks|fortnightly)\b/.test(text)
-  ) {
+  if (/\b(bi[\s-]?weekly|every\s+two\s+weeks|fortnightly)\b/.test(text)) {
     matches.push(14);
   }
   if (/\b(monthly|every\s+month|each\s+month)\b/.test(text)) {
@@ -265,7 +254,9 @@ export function parseCadenceIntervalDays(cadence: string): number | null {
   ) {
     matches.push(183);
   }
-  if (/\b(annual(?:ly)?|yearly|every\s+year|once\s+(a|per)\s+year)\b/.test(text)) {
+  if (
+    /\b(annual(?:ly)?|yearly|every\s+year|once\s+(a|per)\s+year)\b/.test(text)
+  ) {
     matches.push(365);
   }
 

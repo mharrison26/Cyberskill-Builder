@@ -240,7 +240,8 @@ export function evaluateCccerDeterministic(
     }
   }
 
-  const parsed = missing.length === 0 ? extractCccerSubmission(submission) : null;
+  const parsed =
+    missing.length === 0 ? extractCccerSubmission(submission) : null;
   const fieldsOk = missing.length === 0 && tooShort.length === 0;
 
   const structured: CccerStructuredResult = {

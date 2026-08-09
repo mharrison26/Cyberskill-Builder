@@ -313,8 +313,7 @@ export function evaluateProcessControlTestDeterministic(
   }
 
   const notesOk = parsed.notes.length >= minNotesLength;
-  const controlOutcomeMatch =
-    parsed.controlOutcome === expected.controlOutcome;
+  const controlOutcomeMatch = parsed.controlOutcome === expected.controlOutcome;
 
   const expectedSet = new Set(expected.exceptionItemIds);
   const submittedSet = new Set(parsed.exceptionItemIds);
@@ -330,7 +329,10 @@ export function evaluateProcessControlTestDeterministic(
   );
 
   // Pass with no exceptions: empty sets must match.
-  if (expected.controlOutcome === 'pass' && expected.exceptionItemIds.length === 0) {
+  if (
+    expected.controlOutcome === 'pass' &&
+    expected.exceptionItemIds.length === 0
+  ) {
     // already handled by setEqual
   }
 

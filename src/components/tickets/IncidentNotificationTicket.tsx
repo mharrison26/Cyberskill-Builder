@@ -61,8 +61,7 @@ function readString(
 }
 
 function resolveMinDraftLength(expectedState: Record<string, unknown>): number {
-  const value =
-    expectedState.minDraftLength ?? expectedState.min_draft_length;
+  const value = expectedState.minDraftLength ?? expectedState.min_draft_length;
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
     return Math.floor(value);
   }
@@ -424,9 +423,7 @@ export function IncidentNotificationTicket({
                           inputMode="decimal"
                           placeholder="e.g. 1"
                           value={row.deadlineHours}
-                          disabled={
-                            readOnly || isSubmitting || !row.selected
-                          }
+                          disabled={readOnly || isSubmitting || !row.selected}
                           onChange={(event) =>
                             updateRow(rule.recipientId, {
                               deadlineHours: event.target.value,

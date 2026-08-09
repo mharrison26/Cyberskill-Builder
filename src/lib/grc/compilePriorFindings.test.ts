@@ -44,9 +44,7 @@ describe('compileSeedPriorFindings (flagship helper)', () => {
 
 describe('AUD-07 flagship eligibility helper', () => {
   it('marks audit_committee_brief as flagship-eligible', () => {
-    expect(isAuditCommitteeBriefTicketType('audit_committee_brief')).toBe(
-      true
-    );
+    expect(isAuditCommitteeBriefTicketType('audit_committee_brief')).toBe(true);
     expect(isFlagshipEligibleTicketType('audit_committee_brief')).toBe(true);
     expect(isFlagshipEligibleTicketType('executive_summary_ac')).toBe(true);
   });

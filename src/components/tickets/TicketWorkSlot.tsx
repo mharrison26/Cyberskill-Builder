@@ -230,9 +230,7 @@ export function isConMonStrategyTicketType(ticketType: string): boolean {
 
 export function isContinuousAuditingTicketType(ticketType: string): boolean {
   const base = ticketTypeBase(ticketType);
-  return (
-    base === 'continuous_auditing' || base === 'continuous_audit_design'
-  );
+  return base === 'continuous_auditing' || base === 'continuous_audit_design';
 }
 
 export function isBackupDrPlanTicketType(ticketType: string): boolean {

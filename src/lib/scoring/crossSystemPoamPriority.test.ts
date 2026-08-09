@@ -25,7 +25,8 @@ const SAMPLE_SYSTEMS: CrossSystemPoamSystem[] = [
       {
         id: 'AEGIS-POAM-01',
         title: 'MFA gap on break-glass admins',
-        weakness: 'Privileged break-glass accounts lack phishing-resistant MFA.',
+        weakness:
+          'Privileged break-glass accounts lack phishing-resistant MFA.',
         severity: 'critical',
         dueDate: '2026-09-01',
       },
@@ -141,9 +142,9 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
 
 describe('isCrossSystemPoamPriorityTicketType', () => {
   it('accepts canonical type and aliases', () => {
-    expect(isCrossSystemPoamPriorityTicketType('cross_system_poam_priority')).toBe(
-      true
-    );
+    expect(
+      isCrossSystemPoamPriorityTicketType('cross_system_poam_priority')
+    ).toBe(true);
     expect(
       isCrossSystemPoamPriorityTicketType('enterprise_poam_prioritization')
     ).toBe(true);
@@ -167,9 +168,9 @@ describe('computePoamRiskScore / derivePoamExpectedOrder', () => {
     expect(
       computePoamRiskScore({ impactLevel: 'moderate', severity: 'critical' })
     ).toBe(8);
-    expect(
-      computePoamRiskScore({ impactLevel: 'low', severity: 'high' })
-    ).toBe(3);
+    expect(computePoamRiskScore({ impactLevel: 'low', severity: 'high' })).toBe(
+      3
+    );
   });
 
   it('derives unambiguous risk-weighted order', () => {

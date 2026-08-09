@@ -120,9 +120,9 @@ function sortIds(ids: string[]): string[] {
 
 function setDiff(a: string[], b: string[]): string[] {
   const bSet = new Set(b.map((id) => id.toUpperCase()));
-  return a.filter((id) => !bSet.has(id.toUpperCase())).sort((x, y) =>
-    x.localeCompare(y)
-  );
+  return a
+    .filter((id) => !bSet.has(id.toUpperCase()))
+    .sort((x, y) => x.localeCompare(y));
 }
 
 function setsEqualIgnoreCase(a: string[], b: string[]): boolean {
@@ -322,8 +322,7 @@ export function evaluateTransactionAnomalyDeterministic(
   structured.missingAnomalyTransactionIds = missing;
   structured.extraAnomalyTransactionIds = extra;
   structured.submittedCount = submittedCount;
-  structured.countMatch =
-    parsed.anomalyCount !== undefined ? countMatch : null;
+  structured.countMatch = parsed.anomalyCount !== undefined ? countMatch : null;
 
   if (!setMatch) {
     const parts: string[] = [];

@@ -162,9 +162,7 @@ export function parseSspExcerpt(
         : '';
 
   const controlsRaw =
-    raw.controlImplementations ??
-    raw.control_implementations ??
-    raw.controls;
+    raw.controlImplementations ?? raw.control_implementations ?? raw.controls;
   const controlImplementations: SspControlImplementation[] = [];
   if (Array.isArray(controlsRaw)) {
     for (const entry of controlsRaw) {
@@ -316,9 +314,7 @@ export function extractSspGapReviewSubmission(
 
   return {
     type:
-      typeof submission.type === 'string'
-        ? submission.type
-        : 'ssp_gap_review',
+      typeof submission.type === 'string' ? submission.type : 'ssp_gap_review',
     selectedGapIds: sortIds(selectedGapIds),
   };
 }
@@ -389,7 +385,9 @@ export function evaluateSspGapReviewDeterministic(
   const candidateSet = new Set(candidateIds);
   const selectedSet = new Set(parsed.selectedGapIds);
 
-  const unknownIds = parsed.selectedGapIds.filter((id) => !candidateSet.has(id));
+  const unknownIds = parsed.selectedGapIds.filter(
+    (id) => !candidateSet.has(id)
+  );
   if (unknownIds.length > 0) {
     return {
       parsed,
@@ -436,9 +434,7 @@ export function evaluateSspGapReviewDeterministic(
   const foundCount = foundRequiredGapIds.length;
   const requiredCount = expected.requiredGapIds.length;
   const recallPercent =
-    requiredCount === 0
-      ? 0
-      : Math.round((foundCount / requiredCount) * 100);
+    requiredCount === 0 ? 0 : Math.round((foundCount / requiredCount) * 100);
 
   const allRequiredFound = missingRequiredGapIds.length === 0;
   const meetsThreshold = percentage >= expected.passThresholdPercent;
@@ -479,9 +475,7 @@ export function evaluateSspGapReviewDeterministic(
     `SSP gap review needs revision (${percentage}% checklist accuracy, ${foundCount}/${requiredCount} required gaps found; need ≥ ${expected.passThresholdPercent}% and all required gaps).`,
   ];
   if (missingRequiredGapIds.length > 0) {
-    parts.push(
-      `Missing gap(s): ${missingRequiredGapIds.join(', ')}.`
-    );
+    parts.push(`Missing gap(s): ${missingRequiredGapIds.join(', ')}.`);
   }
   if (extraGapIds.length > 0) {
     parts.push(

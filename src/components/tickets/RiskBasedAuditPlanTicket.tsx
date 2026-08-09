@@ -62,10 +62,7 @@ function readString(
   return fallback;
 }
 
-function resolvePositiveInt(
-  value: unknown,
-  fallback: number
-): number {
+function resolvePositiveInt(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
     return Math.floor(value);
   }
@@ -222,7 +219,9 @@ export function RiskBasedAuditPlanTicket({
     for (let i = 0; i < planRows.length; i++) {
       const row = planRows[i]!;
       if (!row.areaId) {
-        setFormError(`Priority ${i + 1}: select an audit area from the register.`);
+        setFormError(
+          `Priority ${i + 1}: select an audit area from the register.`
+        );
         return false;
       }
       if (row.justification.trim().length < minJustificationLength) {
@@ -416,7 +415,10 @@ export function RiskBasedAuditPlanTicket({
                   {selected ? (
                     <Badge
                       variant="secondary"
-                      className={cn('capitalize', residualTone(selected.residualRisk))}
+                      className={cn(
+                        'capitalize',
+                        residualTone(selected.residualRisk)
+                      )}
                     >
                       Residual {selected.residualRisk}
                     </Badge>
@@ -490,9 +492,7 @@ export function RiskBasedAuditPlanTicket({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="capacity-notes">
-            Capacity / deferral notes
-          </Label>
+          <Label htmlFor="capacity-notes">Capacity / deferral notes</Label>
           <Textarea
             id="capacity-notes"
             disabled={readOnly}

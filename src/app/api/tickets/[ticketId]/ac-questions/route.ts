@@ -154,8 +154,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
       executiveSummary: stored.executiveSummary,
       priorFindings: prior.findings,
       priorFindingsSource: prior.source,
-      priorFindingsNarrative:
-        stored.priorFindingsNarrative ?? prior.narrative,
+      priorFindingsNarrative: stored.priorFindingsNarrative ?? prior.narrative,
       questions: stored.questions,
       generatedAt: stored.generatedAt ?? null,
       source: stored.source ?? 'stored',
@@ -212,8 +211,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       executiveSummary: stored.executiveSummary,
       priorFindings: prior.findings,
       priorFindingsSource: prior.source,
-      priorFindingsNarrative:
-        stored.priorFindingsNarrative ?? prior.narrative,
+      priorFindingsNarrative: stored.priorFindingsNarrative ?? prior.narrative,
       questions: stored.questions,
       generatedAt: stored.generatedAt ?? null,
       source: stored.source ?? 'stored',

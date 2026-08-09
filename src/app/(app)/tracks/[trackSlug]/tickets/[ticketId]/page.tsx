@@ -98,7 +98,9 @@ export default async function TicketDetailPage({
     startedAt = progress?.started_at ?? null;
   }
 
-  let engagementFlow = null as ReturnType<typeof buildEngagementFlowView> | null;
+  let engagementFlow = null as ReturnType<
+    typeof buildEngagementFlowView
+  > | null;
   let stageLocked = false;
 
   if (isEngagementTicket(ticket)) {
@@ -229,9 +231,7 @@ export default async function TicketDetailPage({
               <Badge variant="outline">DCWF {ticket.dcwf_code}</Badge>
             ) : null}
             {ticket.engagement_stage ? (
-              <Badge variant="outline">
-                Stage {ticket.engagement_stage}
-              </Badge>
+              <Badge variant="outline">Stage {ticket.engagement_stage}</Badge>
             ) : null}
           </div>
 

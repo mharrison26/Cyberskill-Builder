@@ -80,7 +80,10 @@ export function parseSarExpectedState(
 }
 
 export function extractSarSummary(submission: TicketSubmission): string {
-  if (typeof submission.sarSummary === 'string' && submission.sarSummary.trim()) {
+  if (
+    typeof submission.sarSummary === 'string' &&
+    submission.sarSummary.trim()
+  ) {
     return submission.sarSummary.trim();
   }
   if (
@@ -134,7 +137,11 @@ export function mergeSarPriors(
       ? 'seed'
       : 'none';
   const poamSource: ResolvedSarPriors['poamSource'] =
-    livePoamRefs.length > 0 ? 'live' : seed.poamRefs.length > 0 ? 'seed' : 'none';
+    livePoamRefs.length > 0
+      ? 'live'
+      : seed.poamRefs.length > 0
+        ? 'seed'
+        : 'none';
 
   return {
     sspPayload,
@@ -231,8 +238,7 @@ export function evaluateSarConsistency(
     .map((ref) => ref.findingId);
   return {
     uncoveredPoamIds,
-    consistencyOk:
-      priors.poamRefs.length > 0 && uncoveredPoamIds.length === 0,
+    consistencyOk: priors.poamRefs.length > 0 && uncoveredPoamIds.length === 0,
     sspAligned: sarAlignsWithSsp(sarSummary, priors.sspPayload),
   };
 }
@@ -301,10 +307,8 @@ export function evaluateSecurityAssessmentReportDeterministic(
   const sarPresent = summaryLength > 0;
   const artifactsComplete = sspPresent && poamPresent && summaryOk;
 
-  const { uncoveredPoamIds, consistencyOk, sspAligned } = evaluateSarConsistency(
-    sarSummary,
-    priors
-  );
+  const { uncoveredPoamIds, consistencyOk, sspAligned } =
+    evaluateSarConsistency(sarSummary, priors);
 
   let artifactSource: SecurityAssessmentReportStructuredResult['artifactSource'] =
     'none';

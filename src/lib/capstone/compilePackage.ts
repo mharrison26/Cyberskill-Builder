@@ -304,10 +304,9 @@ export function mergeLivePackageWithSeed(
   if (seedArtifacts.length === 0) {
     return {
       ...live,
-      packageSource:
-        live.artifacts.some((a) => a.status === 'present')
-          ? 'prior_submission'
-          : 'empty',
+      packageSource: live.artifacts.some((a) => a.status === 'present')
+        ? 'prior_submission'
+        : 'empty',
     };
   }
 

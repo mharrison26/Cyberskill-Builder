@@ -358,9 +358,7 @@ export function ItgcAccessRevocationTicket({
               disabled={readOnly}
               className="space-y-2"
               aria-describedby={
-                errors.controlOutcome
-                  ? 'itgc-control-outcome-error'
-                  : undefined
+                errors.controlOutcome ? 'itgc-control-outcome-error' : undefined
               }
             >
               <legend className="mb-1 text-sm font-medium">
@@ -425,9 +423,7 @@ export function ItgcAccessRevocationTicket({
             {isSubmitting ? 'Submitting…' : 'Submit test conclusion'}
           </Button>
           {scoreStatus ? (
-            <Badge
-              variant={scoreStatus === 'resolved' ? 'default' : 'outline'}
-            >
+            <Badge variant={scoreStatus === 'resolved' ? 'default' : 'outline'}>
               {scoreStatus.replace(/_/g, ' ')}
             </Badge>
           ) : null}

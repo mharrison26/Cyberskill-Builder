@@ -16,7 +16,8 @@ import {
 export const AUDIT_COMMITTEE_GUIDANCE_PATH =
   'data/grc/audit-committee-reporting-guidance.json';
 
-export type AuditCommitteeGuidanceSection = GuidanceDocument['sections'][number];
+export type AuditCommitteeGuidanceSection =
+  GuidanceDocument['sections'][number];
 export type AuditCommitteeGuidanceDocument = GuidanceDocument;
 export type RetrievedAuditCommitteeGuidance = RetrievedGuidance;
 
@@ -63,12 +64,17 @@ export function retrieveAuditCommitteeGuidance(
   }
 ): RetrievedAuditCommitteeGuidance {
   const doc = loadGuidanceDocument();
-  return retrieveFromGuidanceDocument(doc, AUDIT_COMMITTEE_GUIDANCE_PATH, query, {
-    topK: options?.topK ?? 5,
-    requiredSectionIds: options?.requiredSectionIds ?? [
-      ...DEFAULT_CORE_SECTION_IDS,
-    ],
-  });
+  return retrieveFromGuidanceDocument(
+    doc,
+    AUDIT_COMMITTEE_GUIDANCE_PATH,
+    query,
+    {
+      topK: options?.topK ?? 5,
+      requiredSectionIds: options?.requiredSectionIds ?? [
+        ...DEFAULT_CORE_SECTION_IDS,
+      ],
+    }
+  );
 }
 
 export function formatRetrievedAuditCommitteeGuidance(

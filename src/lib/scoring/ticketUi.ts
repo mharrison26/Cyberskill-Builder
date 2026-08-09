@@ -387,8 +387,7 @@ export const ISSM_ESCALATION_DECISIONS = [
   'handle_at_isso',
 ] as const;
 
-export type IssmEscalationDecision =
-  (typeof ISSM_ESCALATION_DECISIONS)[number];
+export type IssmEscalationDecision = (typeof ISSM_ESCALATION_DECISIONS)[number];
 
 export const ISSM_ESCALATION_DECISION_LABELS: Record<
   IssmEscalationDecision,
@@ -438,9 +437,9 @@ export const CONTROL_IMPLEMENTATION_ADEQUACY_MIN_JUSTIFICATION_LENGTH = 80;
 export function isControlImplementationAdequacyJudgment(
   value: string
 ): value is ControlImplementationAdequacyJudgment {
-  return (CONTROL_IMPLEMENTATION_ADEQUACY_JUDGMENTS as readonly string[]).includes(
-    value
-  );
+  return (
+    CONTROL_IMPLEMENTATION_ADEQUACY_JUDGMENTS as readonly string[]
+  ).includes(value);
 }
 
 export function isControlImplementationAdequacyTicketType(

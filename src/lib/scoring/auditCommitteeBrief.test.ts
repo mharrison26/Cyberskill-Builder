@@ -85,13 +85,11 @@ approval. Management owns remediation: IAM for deprovisioning automation
 
 describe('audit committee brief ticket codes', () => {
   it('recognizes aliases and flagship eligibility', () => {
-    expect(isAuditCommitteeBriefTicketType('audit_committee_brief')).toBe(
+    expect(isAuditCommitteeBriefTicketType('audit_committee_brief')).toBe(true);
+    expect(isAuditCommitteeBriefTicketType('executive_summary_ac')).toBe(true);
+    expect(isAuditCommitteeBriefTicketType('grc.audit_committee_brief')).toBe(
       true
     );
-    expect(isAuditCommitteeBriefTicketType('executive_summary_ac')).toBe(true);
-    expect(
-      isAuditCommitteeBriefTicketType('grc.audit_committee_brief')
-    ).toBe(true);
     expect(isAuditCommitteeBriefTicketType('ao_review')).toBe(false);
     expect(isFlagshipEligibleTicketType('audit_committee_brief')).toBe(true);
     expect(isFlagshipEligibleTicketType('executive_summary_ac')).toBe(true);

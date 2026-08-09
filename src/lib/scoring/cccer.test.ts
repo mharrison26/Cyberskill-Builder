@@ -37,7 +37,8 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
       'AUD-05: Write up the HarborForge timely access revocation exception using CCCER.',
     initial_state: {
       relatedTicketCode: 'AUD-05',
-      criteriaSource: 'HarborForge Access Revocation Standard — 5 calendar days',
+      criteriaSource:
+        'HarborForge Access Revocation Standard — 5 calendar days',
       exceptionSummary:
         'Of 12 terminated users tested, 6 retained access beyond the 5-day SLA.',
     },

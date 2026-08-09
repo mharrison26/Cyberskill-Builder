@@ -16,7 +16,8 @@ import {
 export const AUDIT_WORKPAPER_GUIDANCE_PATH =
   'data/grc/audit-workpaper-guidance.json';
 
-export type AuditWorkpaperGuidanceSection = GuidanceDocument['sections'][number];
+export type AuditWorkpaperGuidanceSection =
+  GuidanceDocument['sections'][number];
 export type AuditWorkpaperGuidanceDocument = GuidanceDocument;
 export type RetrievedAuditWorkpaperGuidance = RetrievedGuidance;
 
@@ -65,12 +66,17 @@ export function retrieveAuditWorkpaperGuidance(
   }
 ): RetrievedAuditWorkpaperGuidance {
   const doc = loadGuidanceDocument();
-  return retrieveFromGuidanceDocument(doc, AUDIT_WORKPAPER_GUIDANCE_PATH, query, {
-    topK: options?.topK ?? 5,
-    requiredSectionIds: options?.requiredSectionIds ?? [
-      ...DEFAULT_CORE_SECTION_IDS,
-    ],
-  });
+  return retrieveFromGuidanceDocument(
+    doc,
+    AUDIT_WORKPAPER_GUIDANCE_PATH,
+    query,
+    {
+      topK: options?.topK ?? 5,
+      requiredSectionIds: options?.requiredSectionIds ?? [
+        ...DEFAULT_CORE_SECTION_IDS,
+      ],
+    }
+  );
 }
 
 export function formatRetrievedAuditWorkpaperGuidance(

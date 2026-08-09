@@ -39,7 +39,8 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
         title: 'HarborForge shared Entra ID MFA policy drift',
         summary:
           'A misconfigured conditional-access baseline on the enterprise IdP weakens MFA for HarborLedger (High) and RiverOps (Moderate), owned by different ISSOs.',
-        sharedDependency: 'Corporate Entra ID tenant (enterprise identity service)',
+        sharedDependency:
+          'Corporate Entra ID tenant (enterprise identity service)',
         impact:
           'Cross-system authentication assurance degraded for a High-impact finance system and a Moderate ops system.',
         resourceNeeds:

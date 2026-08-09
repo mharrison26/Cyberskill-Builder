@@ -108,8 +108,9 @@ export function ControlImplementationAdequacyTicket({
     };
   }, [expectedState, initialState]);
 
-  const [judgment, setJudgment] =
-    useState<ControlImplementationAdequacyJudgment | ''>('');
+  const [judgment, setJudgment] = useState<
+    ControlImplementationAdequacyJudgment | ''
+  >('');
   const [justification, setJustification] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -168,9 +169,7 @@ export function ControlImplementationAdequacyTicket({
       };
 
       if (!response.ok) {
-        throw new Error(
-          payload.error ?? 'Failed to submit adequacy judgment.'
-        );
+        throw new Error(payload.error ?? 'Failed to submit adequacy judgment.');
       }
 
       setScoreStatus(payload.status ?? null);

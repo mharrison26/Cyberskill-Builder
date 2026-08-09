@@ -4,7 +4,10 @@ import {
   DEFAULT_AC_BRIEF_SOURCE_TICKET_TYPES,
   ticketTypeBase,
 } from '@/lib/grc/ticketCodes';
-import { parsePriorFindings, type PoamPriorFinding } from '@/lib/scoring/ticketUi';
+import {
+  parsePriorFindings,
+  type PoamPriorFinding,
+} from '@/lib/scoring/ticketUi';
 
 /**
  * Load prior AUD-06 / CCCER findings for the audit-committee brief (AUD-07).
@@ -19,12 +22,7 @@ export type CompiledPriorFinding = {
   title: string;
   summary: string;
   controlId?: string;
-  source:
-    | 'findings_summary'
-    | 'cccer'
-    | 'seed'
-    | 'portfolio'
-    | 'unknown';
+  source: 'findings_summary' | 'cccer' | 'seed' | 'portfolio' | 'unknown';
   ticketCode?: string | null;
   ticketId?: string | null;
   status?: string | null;
@@ -254,17 +252,15 @@ export async function compilePriorAuditFindings(
   };
 
   const matchingTickets = ((tickets ?? []) as Array<Record<string, unknown>>)
-    .map(
-      (row): TicketRow => ({
-        id: row.id as string,
-        ticket_type: row.ticket_type as string,
-        scenario_brief: (row.scenario_brief as string) ?? '',
-        initial_state: isPlainObject(row.initial_state)
-          ? row.initial_state
-          : null,
-        sort_order: typeof row.sort_order === 'number' ? row.sort_order : 0,
-      })
-    )
+    .map((row): TicketRow => ({
+      id: row.id as string,
+      ticket_type: row.ticket_type as string,
+      scenario_brief: (row.scenario_brief as string) ?? '',
+      initial_state: isPlainObject(row.initial_state)
+        ? row.initial_state
+        : null,
+      sort_order: typeof row.sort_order === 'number' ? row.sort_order : 0,
+    }))
     .filter((t) => typeSet.has(ticketTypeBase(t.ticket_type)))
     .sort((a, b) => a.sort_order - b.sort_order);
 

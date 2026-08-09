@@ -210,11 +210,11 @@ export function TransactionAnomalyTicket({
           label:
             typeof item.label === 'string'
               ? item.label
-              : ANOMALY_RULE_DEFINITIONS[index]?.label ?? `Rule ${index + 1}`,
+              : (ANOMALY_RULE_DEFINITIONS[index]?.label ?? `Rule ${index + 1}`),
           detail:
             typeof item.detail === 'string'
               ? item.detail
-              : ANOMALY_RULE_DEFINITIONS[index]?.detail ?? '',
+              : (ANOMALY_RULE_DEFINITIONS[index]?.detail ?? ''),
         }));
     }
     return ANOMALY_RULE_DEFINITIONS;
@@ -287,7 +287,9 @@ export function TransactionAnomalyTicket({
 
     clearOutcome();
     if (selectedIds.length === 0) {
-      setError('Select at least one anomalous transaction (or re-check your analysis).');
+      setError(
+        'Select at least one anomalous transaction (or re-check your analysis).'
+      );
       return;
     }
 
@@ -356,7 +358,9 @@ export function TransactionAnomalyTicket({
           <ol className="list-decimal space-y-3 pl-5 text-sm">
             {rules.map((rule) => (
               <li key={rule.id}>
-                <span className="font-medium text-foreground">{rule.label}</span>
+                <span className="font-medium text-foreground">
+                  {rule.label}
+                </span>
                 {rule.detail ? (
                   <p className="mt-0.5 text-muted-foreground">{rule.detail}</p>
                 ) : null}
@@ -434,13 +438,17 @@ export function TransactionAnomalyTicket({
             <div className="space-y-3">
               <p className="max-w-prose text-sm text-muted-foreground">
                 Boot the PI-04 WebContainer, inspect{' '}
-                <code className="text-foreground">data/ap_transactions.csv</code>
+                <code className="text-foreground">
+                  data/ap_transactions.csv
+                </code>
                 , and run{' '}
-                <code className="text-foreground">node analyze_anomalies.mjs</code>{' '}
+                <code className="text-foreground">
+                  node analyze_anomalies.mjs
+                </code>{' '}
                 (Python stub{' '}
-                <code className="text-foreground">analyze_anomalies.py</code>{' '}
-                is included for environments with Python). Then mark the IDs in
-                the table above.
+                <code className="text-foreground">analyze_anomalies.py</code> is
+                included for environments with Python). Then mark the IDs in the
+                table above.
               </p>
               <CodeSandbox
                 ticketId={ticket.id}
@@ -573,9 +581,7 @@ function TransactionTable({
                       disabled={readOnly}
                       onChange={() => onToggle(row.id)}
                     />
-                    <span className="sr-only">
-                      Mark {row.id} as anomaly
-                    </span>
+                    <span className="sr-only">Mark {row.id} as anomaly</span>
                   </Label>
                 </td>
                 <td className="px-3 py-2 align-middle font-mono text-xs">

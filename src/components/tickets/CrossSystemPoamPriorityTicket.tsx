@@ -173,9 +173,7 @@ export function CrossSystemPoamPriorityTicket({
       };
 
       if (!response.ok) {
-        throw new Error(
-          payload.error ?? 'Failed to submit remediation order.'
-        );
+        throw new Error(payload.error ?? 'Failed to submit remediation order.');
       }
 
       setScoreStatus(payload.status ?? null);

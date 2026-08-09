@@ -144,9 +144,9 @@ export function isCrossSystemPoamPriorityTicketType(
   ticketType: string
 ): boolean {
   const base = ticketTypeBase(ticketType);
-  return (CROSS_SYSTEM_POAM_PRIORITY_TICKET_TYPES as readonly string[]).includes(
-    base
-  );
+  return (
+    CROSS_SYSTEM_POAM_PRIORITY_TICKET_TYPES as readonly string[]
+  ).includes(base);
 }
 
 function readFiniteNumber(value: unknown): number | null {
@@ -570,8 +570,7 @@ export function evaluateCrossSystemPoamPriority(
     expectedOrder.length > 0
       ? (positionMatches / expectedOrder.length) * 100
       : 0;
-  const partialScore =
-    Math.round(((rounded + positionPct) / 2) * 100) / 100;
+  const partialScore = Math.round(((rounded + positionPct) / 2) * 100) / 100;
 
   const structured: CrossSystemPoamPriorityStructuredResult = {
     ...baseStructured,

@@ -47,7 +47,9 @@ function loadGuidanceDocument(): GuidanceFile {
   const parsed = JSON.parse(raw) as GuidanceFile;
 
   if (!parsed?.sections || !Array.isArray(parsed.sections)) {
-    throw new Error(`Invalid FIPS 199 guidance file: ${FIPS_199_GUIDANCE_PATH}`);
+    throw new Error(
+      `Invalid FIPS 199 guidance file: ${FIPS_199_GUIDANCE_PATH}`
+    );
   }
 
   cachedDocument = parsed;

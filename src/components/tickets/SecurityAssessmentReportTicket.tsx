@@ -132,7 +132,8 @@ export function SecurityAssessmentReportTicket({
         const ssp = data.artifacts?.find((a) => a.code === 'GRC-03');
         const poam = data.artifacts?.find((a) => a.code === 'GRC-04');
         const liveSsp =
-          ssp?.payload && (ssp.status === 'present' || ssp.status === 'incomplete')
+          ssp?.payload &&
+          (ssp.status === 'present' || ssp.status === 'incomplete')
             ? ssp.payload
             : null;
         const livePoam = extractPoamRefsFromPayload(poam?.payload ?? null);
@@ -221,9 +222,18 @@ export function SecurityAssessmentReportTicket({
     }
   }
 
-  const sspStatus = sspSource === 'none' ? 'missing' : sspSource === 'seed' ? 'seed' : 'present';
+  const sspStatus =
+    sspSource === 'none'
+      ? 'missing'
+      : sspSource === 'seed'
+        ? 'seed'
+        : 'present';
   const poamStatus =
-    poamSource === 'none' ? 'missing' : poamSource === 'seed' ? 'seed' : 'present';
+    poamSource === 'none'
+      ? 'missing'
+      : poamSource === 'seed'
+        ? 'seed'
+        : 'present';
 
   return (
     <section
@@ -238,8 +248,8 @@ export function SecurityAssessmentReportTicket({
         </h2>
         <p className="text-sm text-muted-foreground">
           Review your GRC-03 SSP fragment and GRC-04 POA&M entries, then draft a
-          short SAR summary. Scoring requires all three artifacts and checks that
-          each POA&M finding is referenced in the SAR.
+          short SAR summary. Scoring requires all three artifacts and checks
+          that each POA&M finding is referenced in the SAR.
         </p>
       </div>
 

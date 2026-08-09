@@ -154,7 +154,9 @@ export function parseFips199ExpectedState(
       expectedState.c
   );
   const integrity = normalizeFips199ImpactLevel(
-    expectedState.integrity ?? expectedState.expectedIntegrity ?? expectedState.i
+    expectedState.integrity ??
+      expectedState.expectedIntegrity ??
+      expectedState.i
   );
   const availability = normalizeFips199ImpactLevel(
     expectedState.availability ??
@@ -251,7 +253,9 @@ export function extractFips199Submission(
   };
 }
 
-function systemProfileTextFromTicket(ticket: ScorableTicket): string | undefined {
+function systemProfileTextFromTicket(
+  ticket: ScorableTicket
+): string | undefined {
   const initial = ticket.initial_state;
   if (!isPlainObject(initial)) return undefined;
 

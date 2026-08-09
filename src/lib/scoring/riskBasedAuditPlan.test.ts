@@ -152,7 +152,9 @@ const solidJustification =
 const solidCapacityNotes =
   'Deferred physical security, T&E, and communications because residual risk is low and recent or immaterial; will revisit if fraud indicators emerge or board requests coverage.';
 
-function solidPlan(areaIds: string[] = ['R-01', 'R-02', 'R-03', 'R-04', 'R-05']) {
+function solidPlan(
+  areaIds: string[] = ['R-01', 'R-02', 'R-03', 'R-04', 'R-05']
+) {
   return {
     type: 'risk_based_audit_plan',
     planEntries: areaIds.map((areaId) => ({
@@ -268,7 +270,8 @@ describe('evaluateRiskBasedAuditPlanDeterministic', () => {
   });
 
   it('rejects missing capacity notes', () => {
-    const { capacityNotes: _omit, ...withoutNotes } = solidPlan();
+    const { capacityNotes: _, ...withoutNotes } = solidPlan();
+    void _;
     const result = evaluateRiskBasedAuditPlanDeterministic(
       withoutNotes,
       ticket()

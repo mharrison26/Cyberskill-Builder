@@ -183,7 +183,10 @@ function setsEqual(a: string[], b: string[]): boolean {
 
 function normalizeChangeType(value: unknown): Soc2ChangeType | null {
   if (typeof value !== 'string') return null;
-  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
   if (normalized === 'standard' || normalized === 'std') return 'standard';
   if (normalized === 'normal' || normalized === 'routine') return 'normal';
   if (normalized === 'emergency' || normalized === 'urgent') return 'emergency';
@@ -392,9 +395,7 @@ export function parseSoc2ChangeManagementTestExpectedState(
     expectedState.rateTolerance ?? expectedState.rate_tolerance
   );
   const rateTolerance =
-    rateToleranceRaw !== null && rateToleranceRaw >= 0
-      ? rateToleranceRaw
-      : 0;
+    rateToleranceRaw !== null && rateToleranceRaw >= 0 ? rateToleranceRaw : 0;
 
   const requireExceptionIds =
     typeof expectedState.requireExceptionIds === 'boolean'

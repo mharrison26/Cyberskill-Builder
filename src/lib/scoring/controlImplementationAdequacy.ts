@@ -441,7 +441,10 @@ export const controlImplementationAdequacyTicketScorer: TicketScorer = {
         };
       }
 
-      if (error instanceof Error && error.message.startsWith('Control not found')) {
+      if (
+        error instanceof Error &&
+        error.message.startsWith('Control not found')
+      ) {
         return {
           status: 'needs_revision',
           structuredResult: {
@@ -455,7 +458,7 @@ export const controlImplementationAdequacyTicketScorer: TicketScorer = {
       console.error('Control implementation adequacy grading failed:', error);
       captureFeatureException(error, {
         feature: 'scoring',
-        pi: 'PI-01',
+        pi: 'PI-03',
         operation: 'control_implementation_adequacy_grade',
         ticketId: ticket.id,
         ticketType: ticket.ticket_type,

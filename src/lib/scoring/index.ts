@@ -9,10 +9,7 @@ import { securityAssessmentReportTicketScorer } from '@/lib/scoring/securityAsse
 import { findingsSummaryTicketScorer } from '@/lib/scoring/findingsSummary';
 import { fips199ImpactCategorizationTicketScorer } from '@/lib/scoring/fips199ImpactCategorization';
 import { backupDrPlanTicketScorer } from '@/lib/scoring/backupDrPlan';
-import {
-  cccerTicketScorer,
-  scoreCccerCompleteness,
-} from '@/lib/scoring/cccer';
+import { cccerTicketScorer, scoreCccerCompleteness } from '@/lib/scoring/cccer';
 import { cmmcGapAnalysisTicketScorer } from '@/lib/scoring/cmmcGapAnalysis';
 import { configDiffTicketScorer } from '@/lib/scoring/configDiff';
 import { configFaultDiagnosisTicketScorer } from '@/lib/scoring/configFaultDiagnosis';
@@ -806,7 +803,10 @@ registerTicketScorer(
   'enterprise_poam_prioritization',
   crossSystemPoamPriorityTicketScorer
 );
-registerTicketScorer('isso_poam_portfolio', crossSystemPoamPriorityTicketScorer);
+registerTicketScorer(
+  'isso_poam_portfolio',
+  crossSystemPoamPriorityTicketScorer
+);
 registerTicketScorer('sec_materiality', secMaterialityTicketScorer);
 registerTicketScorer('sec_cyber_materiality', secMaterialityTicketScorer);
 registerTicketScorer('conmon_strategy', conmonStrategyTicketScorer);
@@ -947,14 +947,8 @@ registerTicketScorer(
   'soc2_exception_testing',
   soc2ChangeManagementTestTicketScorer
 );
-registerTicketScorer(
-  'audit_committee_brief',
-  auditCommitteeBriefTicketScorer
-);
-registerTicketScorer(
-  'executive_summary_ac',
-  auditCommitteeBriefTicketScorer
-);
+registerTicketScorer('audit_committee_brief', auditCommitteeBriefTicketScorer);
+registerTicketScorer('executive_summary_ac', auditCommitteeBriefTicketScorer);
 registerTicketScorer('transaction_anomaly', transactionAnomalyTicketScorer);
 registerTicketScorer('csv_anomaly_detection', transactionAnomalyTicketScorer);
 registerTicketScorer('anomaly_detection', transactionAnomalyTicketScorer);
@@ -964,15 +958,9 @@ registerTicketScorer('process_control_test', processControlTestTicketScorer);
 registerTicketScorer('control_sample_test', processControlTestTicketScorer);
 registerTicketScorer('findings_summary', findingsSummaryTicketScorer);
 registerTicketScorer('engagement_findings', findingsSummaryTicketScorer);
-registerTicketScorer(
-  'incident_notification',
-  incidentNotificationTicketScorer
-);
+registerTicketScorer('incident_notification', incidentNotificationTicketScorer);
 registerTicketScorer('incident_reporting', incidentNotificationTicketScorer);
-registerTicketScorer(
-  'isso_incident_notify',
-  incidentNotificationTicketScorer
-);
+registerTicketScorer('isso_incident_notify', incidentNotificationTicketScorer);
 registerTicketScorer(
   'fips_199_impact_categorization',
   fips199ImpactCategorizationTicketScorer

@@ -383,7 +383,9 @@ export function evaluateItgcAccessRevocationDeterministic(
   ok: boolean;
   feedback: string;
 } {
-  const expected = parseItgcAccessRevocationExpectedState(ticket.expected_state);
+  const expected = parseItgcAccessRevocationExpectedState(
+    ticket.expected_state
+  );
   const parsed = extractItgcAccessRevocationSubmission(submission);
 
   const expectedOutcome = expected?.controlOutcome ?? null;

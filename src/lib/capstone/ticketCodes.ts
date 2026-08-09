@@ -135,9 +135,7 @@ export function isSecurityAssessmentReportTicketType(
   ticketType: string
 ): boolean {
   const base = ticketTypeBase(ticketType);
-  return (
-    base === GRC_TICKET_TYPES.SAR || base === GRC_TICKET_TYPES.SAR_SUMMARY
-  );
+  return base === GRC_TICKET_TYPES.SAR || base === GRC_TICKET_TYPES.SAR_SUMMARY;
 }
 
 export function isOscalSspTicketType(ticketType: string): boolean {

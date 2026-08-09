@@ -46,10 +46,7 @@ export function SspGapReviewTicket({
 }: SspGapReviewTicketProps) {
   const initialState = asRecord(ticket.initial_state);
 
-  const excerpt = useMemo(
-    () => parseSspExcerpt(initialState),
-    [initialState]
-  );
+  const excerpt = useMemo(() => parseSspExcerpt(initialState), [initialState]);
   const candidateGaps = useMemo(
     () => parseSspCandidateGaps(initialState),
     [initialState]
@@ -98,7 +95,9 @@ export function SspGapReviewTicket({
     setScoreStatus(null);
 
     if (selectedGaps.size === 0) {
-      setFormError('Select at least one gap from the checklist before submitting.');
+      setFormError(
+        'Select at least one gap from the checklist before submitting.'
+      );
       return;
     }
 
@@ -163,7 +162,9 @@ export function SspGapReviewTicket({
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               System overview
             </p>
-            <p className="mt-1 whitespace-pre-wrap text-sm">{excerpt.overview}</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm">
+              {excerpt.overview}
+            </p>
           </div>
         ) : null}
 

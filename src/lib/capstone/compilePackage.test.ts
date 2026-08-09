@@ -170,12 +170,12 @@ describe('seedPackage fallback (ISSO-04 preview)', () => {
     expect(merged.artifacts.find((a) => a.code === 'GRC-03')?.textCorpus).toBe(
       'Live student SSP'
     );
-    expect(
-      merged.artifacts.find((a) => a.code === 'GRC-04')?.status
-    ).toBe('present');
-    expect(
-      merged.artifacts.find((a) => a.code === 'GRC-04')?.summary
-    ).toMatch(/seeded/i);
+    expect(merged.artifacts.find((a) => a.code === 'GRC-04')?.status).toBe(
+      'present'
+    );
+    expect(merged.artifacts.find((a) => a.code === 'GRC-04')?.summary).toMatch(
+      /seeded/i
+    );
   });
 });
 

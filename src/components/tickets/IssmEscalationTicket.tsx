@@ -119,14 +119,16 @@ export function IssmEscalationTicket({
   );
 
   const scenario = useMemo(() => {
-    const nested = asRecord(
-      initialState.scenario ?? initialState.riskScenario
-    );
+    const nested = asRecord(initialState.scenario ?? initialState.riskScenario);
     return {
       title: readString(
         nested,
         ['title'],
-        readString(initialState, ['scenarioTitle'], 'Cross-system risk scenario')
+        readString(
+          initialState,
+          ['scenarioTitle'],
+          'Cross-system risk scenario'
+        )
       ),
       summary: readString(
         nested,
@@ -317,7 +319,9 @@ export function IssmEscalationTicket({
           ) : null}
           {scenario.resourceNeeds ? (
             <div>
-              <p className="font-medium text-foreground">Resource / authority</p>
+              <p className="font-medium text-foreground">
+                Resource / authority
+              </p>
               <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
                 {scenario.resourceNeeds}
               </p>

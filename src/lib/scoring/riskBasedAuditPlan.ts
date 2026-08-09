@@ -659,7 +659,9 @@ export const riskBasedAuditPlanTicketScorer: TicketScorer = {
       };
     }
 
-    const expected = parseRiskBasedAuditPlanExpectedState(ticket.expected_state);
+    const expected = parseRiskBasedAuditPlanExpectedState(
+      ticket.expected_state
+    );
     const auditCapacity = resolveAuditCapacity(ticket, expected);
 
     try {

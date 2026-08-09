@@ -73,9 +73,9 @@ describe('engagement sequencing helpers', () => {
       { stage: 1, status: 'new' as const },
       { stage: 2, status: 'new' as const },
     ];
-    expect(
-      isEngagementStageUnlocked(2, stages, { forceUnlock: true })
-    ).toBe(true);
+    expect(isEngagementStageUnlocked(2, stages, { forceUnlock: true })).toBe(
+      true
+    );
   });
 
   it('builds a flow with progress and current stage', () => {

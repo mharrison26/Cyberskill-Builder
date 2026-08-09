@@ -145,10 +145,7 @@ export function AuditPlanningMemoTicket({
       data-ticket-id={ticket.id}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h2
-          id="audit-planning-memo-heading"
-          className="text-lg font-semibold"
-        >
+        <h2 id="audit-planning-memo-heading" className="text-lg font-semibold">
           Audit planning memo
         </h2>
         <Badge variant="secondary">PI-02 Stage 1</Badge>

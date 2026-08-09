@@ -189,6 +189,7 @@ describe('buildAoReviewGradingPrompt', () => {
       {
         document: 'risk-acceptance',
         title: 'AO guidance',
+        sourceUrl: 'https://example.test/risk-acceptance',
         catalogPath: 'data/nist/risk-acceptance-guidance.json',
         sections: [],
       },

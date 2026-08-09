@@ -226,7 +226,9 @@ export function Soc2ChangeManagementTestTicket({
           ) : null}
           {exceptionDefinition ? (
             <div className="rounded-md border border-border bg-muted/30 px-3 py-2">
-              <p className="font-medium text-foreground">Exception definition</p>
+              <p className="font-medium text-foreground">
+                Exception definition
+              </p>
               <p className="mt-1 whitespace-pre-wrap">{exceptionDefinition}</p>
             </div>
           ) : null}
@@ -353,8 +355,8 @@ export function Soc2ChangeManagementTestTicket({
             <CardTitle className="text-base">Exception results</CardTitle>
             <CardDescription>
               Report count and rate for the full population
-              {populationSize > 0 ? ` (n=${populationSize})` : ''}. You can
-              sync count/rate from your selected exceptions.
+              {populationSize > 0 ? ` (n=${populationSize})` : ''}. You can sync
+              count/rate from your selected exceptions.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -386,9 +388,7 @@ export function Soc2ChangeManagementTestTicket({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="soc2-exception-rate">
-                  Exception rate (%)
-                </Label>
+                <Label htmlFor="soc2-exception-rate">Exception rate (%)</Label>
                 <Input
                   id="soc2-exception-rate"
                   inputMode="decimal"
@@ -416,9 +416,7 @@ export function Soc2ChangeManagementTestTicket({
             {isSubmitting ? 'Submitting…' : 'Submit test results'}
           </Button>
           {scoreStatus ? (
-            <Badge
-              variant={scoreStatus === 'resolved' ? 'default' : 'outline'}
-            >
+            <Badge variant={scoreStatus === 'resolved' ? 'default' : 'outline'}>
               {scoreStatus.replace(/_/g, ' ')}
             </Badge>
           ) : null}

@@ -163,9 +163,7 @@ export function extractAuditWorkpaperSubmission(
 
   return {
     type:
-      typeof submission.type === 'string'
-        ? submission.type
-        : 'audit_workpaper',
+      typeof submission.type === 'string' ? submission.type : 'audit_workpaper',
     objective,
     procedurePerformed,
     evidenceObtained,

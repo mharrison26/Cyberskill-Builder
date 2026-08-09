@@ -220,7 +220,8 @@ describe('auditWorkpaperTicketScorer RAG path', () => {
   it('needs revision when Claude finds gaps', async () => {
     vi.mocked(callClaudeGrading).mockResolvedValue({
       finding_state: 'not_satisfied',
-      feedback: 'Conclusion does not answer the disablement timeframe objective.',
+      feedback:
+        'Conclusion does not answer the disablement timeframe objective.',
       strengths: [],
       gaps: ['Discusses password policy instead of termination timing'],
     });

@@ -133,7 +133,11 @@ export function normalizePoamStatusUpdateStatus(
   ) {
     return 'on_track';
   }
-  if (normalized === 'delayed' || normalized === 'behind' || normalized === 'late') {
+  if (
+    normalized === 'delayed' ||
+    normalized === 'behind' ||
+    normalized === 'late'
+  ) {
     return 'delayed';
   }
   if (

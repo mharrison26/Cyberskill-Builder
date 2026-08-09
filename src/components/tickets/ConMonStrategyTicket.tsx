@@ -343,9 +343,9 @@ export function ConMonStrategyTicket({
           <CardDescription>
             Plan continuous monitoring for this one system from an ISSO
             perspective—not an org-wide ISCM program. Set control-family
-            cadences that fit the system&apos;s FIPS 199 impact, map
-            DefectDojo / CloudSploit / Scuba coverage, and define
-            escalation/reporting. Graded against retrieved NIST SP 800-137.
+            cadences that fit the system&apos;s FIPS 199 impact, map DefectDojo
+            / CloudSploit / Scuba coverage, and define escalation/reporting.
+            Graded against retrieved NIST SP 800-137.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -373,10 +373,10 @@ export function ConMonStrategyTicket({
             </CardTitle>
             <CardDescription>
               For each family, set how often you will monitor/assess and why
-              (volatility, this system&apos;s impact level, weaknesses,
-              threats, reporting needs). High-impact systems need more
-              frequent monitoring than moderate/low—especially for volatile
-              families such as CM, SI, and RA.
+              (volatility, this system&apos;s impact level, weaknesses, threats,
+              reporting needs). High-impact systems need more frequent
+              monitoring than moderate/low—especially for volatile families such
+              as CM, SI, and RA.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">

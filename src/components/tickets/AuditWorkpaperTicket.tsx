@@ -24,10 +24,7 @@ type AuditWorkpaperTicketProps = {
 };
 
 type NarrativeFieldKey =
-  | 'objective'
-  | 'procedurePerformed'
-  | 'evidenceObtained'
-  | 'conclusion';
+  'objective' | 'procedurePerformed' | 'evidenceObtained' | 'conclusion';
 
 type IdentityFieldKey = 'preparer' | 'reviewer';
 
@@ -151,7 +148,9 @@ function formatScenarioDetails(
   initialState: Record<string, unknown>
 ): string[] {
   const lines: string[] = [];
-  const scenario = asRecord(initialState.scenario ?? initialState.controlTestScenario);
+  const scenario = asRecord(
+    initialState.scenario ?? initialState.controlTestScenario
+  );
 
   const orderedKeys = [
     'organization',
@@ -169,7 +168,9 @@ function formatScenarioDetails(
     if (typeof value === 'string' && value.trim()) {
       lines.push(value.trim());
     } else if (Array.isArray(value)) {
-      const items = value.filter((entry) => typeof entry === 'string') as string[];
+      const items = value.filter(
+        (entry) => typeof entry === 'string'
+      ) as string[];
       if (items.length > 0) {
         lines.push(`${key}: ${items.join('; ')}`);
       }
@@ -244,10 +245,7 @@ export function AuditWorkpaperTicket({
     conclusion,
   };
 
-  const narrativeSetters: Record<
-    NarrativeFieldKey,
-    (value: string) => void
-  > = {
+  const narrativeSetters: Record<NarrativeFieldKey, (value: string) => void> = {
     objective: setObjective,
     procedurePerformed: setProcedurePerformed,
     evidenceObtained: setEvidenceObtained,
@@ -365,7 +363,8 @@ export function AuditWorkpaperTicket({
         </div>
       ) : (
         <p className="text-sm text-destructive" role="alert">
-          This ticket is missing a stated test objective (initial_state.testObjective).
+          This ticket is missing a stated test objective
+          (initial_state.testObjective).
         </p>
       )}
 

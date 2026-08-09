@@ -28,7 +28,8 @@ function parsePoamRef(raw: unknown): SarPoamRef | null {
       ? raw.title.trim()
       : undefined;
   const weaknessDescription =
-    typeof raw.weaknessDescription === 'string' && raw.weaknessDescription.trim()
+    typeof raw.weaknessDescription === 'string' &&
+    raw.weaknessDescription.trim()
       ? raw.weaknessDescription.trim()
       : typeof raw.weakness_description === 'string' &&
           raw.weakness_description.trim()
@@ -65,7 +66,7 @@ export function extractPoamRefsFromPayload(
         existing.weaknessDescription ?? ref.weaknessDescription,
     });
   }
-  return [...byId.values()];
+  return Array.from(byId.values());
 }
 
 /** Seed fallbacks for admin preview / standalone play. */

@@ -121,7 +121,11 @@ export function PoamStatusUpdateTicket({
       );
       return;
     }
-    if (status === 'closed' && evidence.length > 0 && citedEvidenceIds.size === 0) {
+    if (
+      status === 'closed' &&
+      evidence.length > 0 &&
+      citedEvidenceIds.size === 0
+    ) {
       setFormError(
         'Closing requires citing at least one evidence item. Closure also requires verification evidence in the scenario.'
       );
@@ -146,7 +150,9 @@ export function PoamStatusUpdateTicket({
         status?: string;
       };
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Failed to submit POA&M status update.');
+        throw new Error(
+          payload.error ?? 'Failed to submit POA&M status update.'
+        );
       }
       setScoreStatus(payload.status ?? null);
       setFeedback(payload.feedback ?? 'Submission recorded.');
@@ -169,16 +175,11 @@ export function PoamStatusUpdateTicket({
       data-ticket-id={ticket.id}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h2
-          id="poam-status-update-heading"
-          className="text-lg font-semibold"
-        >
+        <h2 id="poam-status-update-heading" className="text-lg font-semibold">
           POA&M status update
         </h2>
         <Badge variant="secondary">Mid-remediation</Badge>
-        {asOfDate ? (
-          <Badge variant="outline">As of {asOfDate}</Badge>
-        ) : null}
+        {asOfDate ? <Badge variant="outline">As of {asOfDate}</Badge> : null}
       </div>
 
       <p className="max-w-prose text-sm text-muted-foreground">{prompt}</p>
@@ -196,9 +197,7 @@ export function PoamStatusUpdateTicket({
               <p className="text-xs text-muted-foreground">{poamItem.id}</p>
             </div>
             {poamItem.currentStatus ? (
-              <Badge variant="outline">
-                Current: {poamItem.currentStatus}
-              </Badge>
+              <Badge variant="outline">Current: {poamItem.currentStatus}</Badge>
             ) : null}
           </div>
 
@@ -211,9 +210,7 @@ export function PoamStatusUpdateTicket({
             ) : null}
             {poamItem.scheduledCompletionDate ? (
               <div>
-                <dt className="text-muted-foreground">
-                  Scheduled completion
-                </dt>
+                <dt className="text-muted-foreground">Scheduled completion</dt>
                 <dd>{poamItem.scheduledCompletionDate}</dd>
               </div>
             ) : null}

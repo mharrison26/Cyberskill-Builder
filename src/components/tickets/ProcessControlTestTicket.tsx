@@ -73,8 +73,9 @@ export function ProcessControlTestTicket({
     return Array.from(keys);
   }, [sampleItems]);
 
-  const [controlOutcome, setControlOutcome] =
-    useState<ProcessControlOutcome | ''>('');
+  const [controlOutcome, setControlOutcome] = useState<
+    ProcessControlOutcome | ''
+  >('');
   const [selectedExceptions, setSelectedExceptions] = useState<Set<string>>(
     () => new Set()
   );
@@ -107,7 +108,9 @@ export function ProcessControlTestTicket({
       return;
     }
     if (notes.trim().length < minNotesLength) {
-      setFormError(`Testing notes must be at least ${minNotesLength} characters.`);
+      setFormError(
+        `Testing notes must be at least ${minNotesLength} characters.`
+      );
       return;
     }
 
@@ -152,10 +155,7 @@ export function ProcessControlTestTicket({
       data-ticket-id={ticket.id}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h2
-          id="process-control-test-heading"
-          className="text-lg font-semibold"
-        >
+        <h2 id="process-control-test-heading" className="text-lg font-semibold">
           Process control test
         </h2>
         <Badge variant="secondary">Sample evidence</Badge>
@@ -188,7 +188,10 @@ export function ProcessControlTestTicket({
           </thead>
           <tbody>
             {sampleItems.map((item) => (
-              <tr key={item.id} className="border-b border-border last:border-0">
+              <tr
+                key={item.id}
+                className="border-b border-border last:border-0"
+              >
                 <td className="px-3 py-2 align-top">
                   <input
                     type="checkbox"

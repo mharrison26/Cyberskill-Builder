@@ -42,7 +42,8 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
             recipientId: 'issm',
             recipientLabel: 'ISSM',
             deadlineHours: 1,
-            description: 'Report confirmed incidents to the ISSM within 1 hour.',
+            description:
+              'Report confirmed incidents to the ISSM within 1 hour.',
           },
           {
             recipientId: 'ao',

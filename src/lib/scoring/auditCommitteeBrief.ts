@@ -103,9 +103,7 @@ function resolveMin(value: unknown, fallback: number): number {
   return fallback;
 }
 
-export function extractExecutiveSummary(
-  submission: TicketSubmission
-): string {
+export function extractExecutiveSummary(submission: TicketSubmission): string {
   const nested = submission.executiveSummary;
   if (typeof nested === 'string' && nested.trim()) {
     return nested.trim();

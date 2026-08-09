@@ -171,10 +171,7 @@ describe('fips199ImpactCategorizationTicketScorer', () => {
       finding_state: 'satisfied',
       feedback:
         'Justification ties PII and life-safety mission effects to Moderate/High definitions and applies the high-water mark.',
-      strengths: [
-        'Concrete data-type citations',
-        'High-water mark explained',
-      ],
+      strengths: ['Concrete data-type citations', 'High-water mark explained'],
       gaps: [],
     });
 

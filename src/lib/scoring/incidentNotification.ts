@@ -145,9 +145,7 @@ function readPositiveInt(value: unknown): number | null {
   return Math.floor(n);
 }
 
-function parseNotificationEntry(
-  entry: unknown
-): RequiredNotification | null {
+function parseNotificationEntry(entry: unknown): RequiredNotification | null {
   if (!isPlainObject(entry)) return null;
 
   const recipientId = normalizeRecipientId(
@@ -160,10 +158,7 @@ function parseNotificationEntry(
   if (!recipientId) return null;
 
   const deadlineHours = readPositiveNumber(
-    entry.deadlineHours ??
-      entry.deadline_hours ??
-      entry.hours ??
-      entry.deadline
+    entry.deadlineHours ?? entry.deadline_hours ?? entry.hours ?? entry.deadline
   );
   if (deadlineHours === null) return null;
 
@@ -182,7 +177,7 @@ function dedupeNotifications(
       byId.set(item.recipientId, item);
     }
   }
-  return [...byId.values()].sort((a, b) =>
+  return Array.from(byId.values()).sort((a, b) =>
     a.recipientId.localeCompare(b.recipientId)
   );
 }
@@ -330,10 +325,7 @@ export function parseIncidentNotificationPolicyRules(
     if (!isPlainObject(entry)) continue;
 
     const recipientId = normalizeRecipientId(
-      entry.recipientId ??
-        entry.recipient_id ??
-        entry.id ??
-        entry.recipient
+      entry.recipientId ?? entry.recipient_id ?? entry.id ?? entry.recipient
     );
     if (!recipientId || seen.has(recipientId)) continue;
 

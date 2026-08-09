@@ -255,9 +255,7 @@ export function AuditCommitteeBriefTicket({
           questions,
           priorFindingsNarrative:
             priorFindingsNarrative ||
-            priorFindings
-              .map((f) => `${f.title}: ${f.summary}`)
-              .join('\n\n'),
+            priorFindings.map((f) => `${f.title}: ${f.summary}`).join('\n\n'),
         }),
       });
       const data = (await res.json()) as SubmitResponse;

@@ -57,10 +57,12 @@ export function FindingsSummaryTicket({
       initialState.prior_stage_outcomes ??
       initialState.rollupContext ??
       initialState.rollup;
-    if (!Array.isArray(raw)) return [] as Array<{ title: string; detail: string }>;
+    if (!Array.isArray(raw))
+      return [] as Array<{ title: string; detail: string }>;
     return raw
       .map((item) => {
-        if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+        if (!item || typeof item !== 'object' || Array.isArray(item))
+          return null;
         const rec = item as Record<string, unknown>;
         const title =
           typeof rec.title === 'string'
@@ -79,7 +81,9 @@ export function FindingsSummaryTicket({
         if (!title && !detail) return null;
         return { title: title || 'Finding', detail };
       })
-      .filter((item): item is { title: string; detail: string } => Boolean(item));
+      .filter((item): item is { title: string; detail: string } =>
+        Boolean(item)
+      );
   }, [initialState]);
 
   const [executiveSummary, setExecutiveSummary] = useState('');
@@ -168,11 +172,15 @@ export function FindingsSummaryTicket({
 
       {rollup.length > 0 ? (
         <div className="space-y-2 rounded-lg border border-border bg-muted/30 px-4 py-3">
-          <h3 className="text-sm font-medium">Prior stage outcomes (context)</h3>
+          <h3 className="text-sm font-medium">
+            Prior stage outcomes (context)
+          </h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             {rollup.map((item) => (
               <li key={`${item.title}-${item.detail.slice(0, 24)}`}>
-                <span className="font-medium text-foreground">{item.title}: </span>
+                <span className="font-medium text-foreground">
+                  {item.title}:{' '}
+                </span>
                 {item.detail}
               </li>
             ))}

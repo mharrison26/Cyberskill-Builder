@@ -138,7 +138,10 @@ function normalizeQuestions(raw: unknown): AuditCommitteeQuestion[] | null {
         : undefined;
     questions.push({ id, prompt, focus });
   }
-  if (questions.length < AC_QUESTION_MIN || questions.length > AC_QUESTION_MAX) {
+  if (
+    questions.length < AC_QUESTION_MIN ||
+    questions.length > AC_QUESTION_MAX
+  ) {
     return null;
   }
   return questions;
