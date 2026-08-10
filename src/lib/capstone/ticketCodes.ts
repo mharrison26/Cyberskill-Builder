@@ -10,11 +10,13 @@
  * | GRC-04  |          | poam, poam_draft            | POA&M entries (`poam_items`)     |
  * | GRC-05  |          | security_assessment_report, sar_summary | SAR summary over SSP+POA&M |
  * | GRC-09  |          | oscal_generator, capstone_oscal | Generated OSCAL via WebContainer |
- * | GRC-10  | ISSO-04  | authorization_package       | Compiled ATO package view        |
- * | GRC-11  | ISSO-05  | ao_review                   | AO risk-acceptance Q&A (flagship)|
+ * | GRC-10  | ISSO-05  | ao_review                   | Sheet: RMF package defense (compiled GRC-03/04/09 + AO Q&A flagship) |
+ * | GRC-11  | ISSO-05  | ao_review                   | Legacy AO-only code (same ticket_type) |
+ * | ISSO-04 |          | authorization_package       | Optional package-ack step before AO |
  *
- * ISSO-04/ISSO-05 are the ISSO-path curriculum codes for the same ticket_types.
- * Seed rows may use either code; runtime keys off ticket_type.
+ * Sheet curriculum maps GRC-10 → `ao_review` (compiled view + DefenseRecorder).
+ * Older seeds may still mark `authorization_package` as GRC-10; runtime keys off
+ * `ticket_type`. ISSO-04/ISSO-05 are ISSO-path aliases.
  */
 
 export const GRC_TICKET_CODES = {
@@ -22,7 +24,14 @@ export const GRC_TICKET_CODES = {
   POAM: 'GRC-04',
   SAR: 'GRC-05',
   OSCAL_GENERATOR: 'GRC-09',
+  /** Sheet RMF package defense capstone (ao_review). */
+  PACKAGE_DEFENSE: 'GRC-10',
+  /**
+   * Historical code for the package-ack ticket / older seeds.
+   * Prefer ticket_type `authorization_package` at runtime.
+   */
   AUTHORIZATION_PACKAGE: 'GRC-10',
+  /** Legacy AO-only code; sheet now uses GRC-10 for ao_review. */
   AO_REVIEW: 'GRC-11',
 } as const;
 
@@ -49,6 +58,8 @@ export function isAuthorizationPackageTicketCode(code: string): boolean {
 export function isAoReviewTicketCode(code: string): boolean {
   const normalized = code.trim().toUpperCase();
   return (
+    // Sheet GRC-10 is the RMF package defense (ao_review).
+    normalized === GRC_TICKET_CODES.PACKAGE_DEFENSE ||
     normalized === GRC_TICKET_CODES.AO_REVIEW ||
     normalized === ISSO_TICKET_CODES.AO_REVIEW
   );
@@ -78,7 +89,7 @@ export type CapstoneSourceArtifactDef = {
   table?: 'poam_items';
 };
 
-/** Default sources compiled into the GRC-10 package / GRC-11 AO review. */
+/** Default sources compiled into sheet GRC-10 (ao_review) / ISSO-04 package. */
 export const DEFAULT_CAPSTONE_SOURCE_ARTIFACTS: readonly CapstoneSourceArtifactDef[] =
   [
     {

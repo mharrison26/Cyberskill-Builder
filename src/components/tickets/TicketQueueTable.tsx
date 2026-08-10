@@ -54,7 +54,7 @@ export function TicketQueueTable({
     return (
       <div
         className={cn(
-          'rounded-lg border border-border bg-card px-6 py-10 text-center',
+          'rounded-lg border border-border bg-surface px-6 py-10 text-center text-surface-foreground shadow-xs',
           className
         )}
       >
@@ -64,7 +64,12 @@ export function TicketQueueTable({
   }
 
   return (
-    <div className={cn('rounded-lg border border-border', className)}>
+    <div
+      className={cn(
+        'overflow-hidden rounded-lg border border-border bg-surface text-surface-foreground shadow-xs',
+        className
+      )}
+    >
       <Table>
         <TableHeader>
           <TableRow>
@@ -105,7 +110,7 @@ export function TicketQueueTable({
                 <TableCell className="max-w-md whitespace-normal font-medium">
                   <span className="line-clamp-2">{row.scenarioBrief}</span>
                 </TableCell>
-                <TableCell className="capitalize text-muted-foreground">
+                <TableCell className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                   {row.ticketType.replace(/_/g, ' ')}
                 </TableCell>
                 <TableCell>

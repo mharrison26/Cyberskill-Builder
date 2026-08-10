@@ -66,6 +66,99 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Format structured vendor profile from ticket initial_state for the grading
+ * prompt (GRC-02 Northwind SaaS vendor facts, etc.).
+ */
+export function vendorProfileTextFromToolWalkthroughTicket(
+  ticket: ScorableTicket
+): string | undefined {
+  const initial = ticket.initial_state;
+  if (!isPlainObject(initial)) return undefined;
+
+  const vendor = isPlainObject(initial.vendor)
+    ? initial.vendor
+    : isPlainObject(initial.vendorProfile)
+      ? initial.vendorProfile
+      : null;
+  const org = isPlainObject(initial.organization) ? initial.organization : null;
+
+  const parts: string[] = [];
+
+  if (org) {
+    const orgName = typeof org.name === 'string' ? org.name.trim() : '';
+    if (orgName) parts.push(`organization: ${orgName}`);
+  }
+
+  if (!vendor) {
+    return parts.length > 0 ? parts.join('\n') : undefined;
+  }
+
+  for (const key of ['name', 'service', 'description'] as const) {
+    const value = vendor[key];
+    if (typeof value === 'string' && value.trim()) {
+      parts.push(`${key}: ${value.trim()}`);
+    }
+  }
+
+  const dataTypes = asStringArray(
+    vendor.dataTypes ?? vendor.data_types ?? vendor.dataClasses
+  );
+  if (dataTypes.length > 0) {
+    parts.push(`data types: ${dataTypes.join(', ')}`);
+  } else if (typeof vendor.dataTypes === 'string' && vendor.dataTypes.trim()) {
+    parts.push(`data types: ${vendor.dataTypes.trim()}`);
+  }
+
+  if (typeof vendor.integration === 'string' && vendor.integration.trim()) {
+    parts.push(`integration: ${vendor.integration.trim()}`);
+  }
+
+  if (
+    typeof vendor.postureSummary === 'string' &&
+    vendor.postureSummary.trim()
+  ) {
+    parts.push(`vendor posture: ${vendor.postureSummary.trim()}`);
+  } else if (
+    typeof vendor.vendorPosture === 'string' &&
+    vendor.vendorPosture.trim()
+  ) {
+    parts.push(`vendor posture: ${vendor.vendorPosture.trim()}`);
+  } else {
+    const posture = isPlainObject(vendor.posture)
+      ? vendor.posture
+      : isPlainObject(vendor.securityPosture)
+        ? vendor.securityPosture
+        : null;
+    if (posture) {
+      const soc2 =
+        typeof posture.soc2 === 'string'
+          ? posture.soc2.trim()
+          : typeof posture.soc2Status === 'string'
+            ? posture.soc2Status.trim()
+            : '';
+      const penTest =
+        typeof posture.penetrationTestHistory === 'string'
+          ? posture.penetrationTestHistory.trim()
+          : typeof posture.penetration_test_history === 'string'
+            ? posture.penetration_test_history.trim()
+            : '';
+      if (soc2) parts.push(`SOC 2: ${soc2}`);
+      if (penTest) parts.push(`penetration test history: ${penTest}`);
+    }
+  }
+
+  return parts.length > 0 ? parts.join('\n') : undefined;
+}
+
 export function parseToolWalkthroughExpectedState(
   expectedState: Record<string, unknown> | null | undefined
 ): ToolWalkthroughExpectedState {
@@ -241,6 +334,7 @@ async function gradeJustificationWithSp80030(
     riskRegisterId: parsed.riskRegisterId,
     justification: parsed.justification,
     scenarioBrief: ticket.scenario_brief,
+    vendorProfileText: vendorProfileTextFromToolWalkthroughTicket(ticket),
   });
 
   const grading = await callClaudeGrading(prompt);

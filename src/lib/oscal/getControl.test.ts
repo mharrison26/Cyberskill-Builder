@@ -28,12 +28,34 @@ describe('getControlText', () => {
     expect(result.family).toBeTruthy();
   });
 
+  it('includes SP 800-53A assessment-objective layer for pinned ia-5.1', () => {
+    const result = getControlText('ia-5.1');
+
+    expect(result.assessmentObjective.length).toBeGreaterThan(0);
+    expect(result.assessmentObjective).toMatch(
+      /password-based authentication/i
+    );
+    expect(result.assessmentObjective).toMatch(
+      /commonly used, expected, or compromised passwords/i
+    );
+    // Assessment objectives are distinct from the control statement prose.
+    expect(result.assessmentObjective).not.toBe(result.statement);
+    expect(result.assessmentMethods.examine).toMatch(/password policy/i);
+    expect(result.assessmentMethods.interview).toMatch(
+      /authenticator management responsibilities/i
+    );
+    expect(result.assessmentMethods.test).toMatch(
+      /password-based authenticator management/i
+    );
+  });
+
   it('accepts parenthetical IA-5(1) notation', () => {
     const dot = getControlText('ia-5.1');
     const paren = getControlText('IA-5(1)');
 
     expect(paren.title).toBe(dot.title);
     expect(paren.statement).toBe(dot.statement);
+    expect(paren.assessmentObjective).toBe(dot.assessmentObjective);
   });
 
   it('returns title and statement for ac-2', () => {
@@ -62,6 +84,38 @@ describe('getControlText', () => {
 });
 
 describe('getAssessmentObjectiveText', () => {
+  it('retrieves live SP 800-53A assessment content for pinned ia-5.1', () => {
+    const result = getAssessmentObjectiveText('ia-5.1');
+
+    expect(result.controlId).toMatch(/IA-5\(1\)/i);
+    expect(result.title).toBe('Password-based Authentication');
+    expect(result.catalogPath).toBe(OSCAL_CATALOG_PATH);
+    expect(result.assessmentObjective).toMatch(
+      /commonly used, expected, or compromised passwords/i
+    );
+    expect(result.assessmentMethods.examine).toMatch(
+      /password configurations/i
+    );
+    expect(result.assessmentMethods.interview).toMatch(
+      /authenticator management responsibilities/i
+    );
+    expect(result.assessmentMethods.test).toMatch(
+      /password-based authenticator management/i
+    );
+    // Payload must not expose the 53 control statement for grading.
+    expect(result).not.toHaveProperty('statement');
+  });
+
+  it('accepts parenthetical IA-5(1) notation for 53A retrieval', () => {
+    const base = getAssessmentObjectiveText('ia-5.1');
+    const paren = getAssessmentObjectiveText('IA-5(1)');
+
+    expect(paren.assessmentObjective).toBe(base.assessmentObjective);
+    expect(paren.assessmentMethods.examine).toBe(
+      base.assessmentMethods.examine
+    );
+  });
+
   it('retrieves live SP 800-53A assessment content for ac-2', () => {
     const result = getAssessmentObjectiveText('ac-2');
 

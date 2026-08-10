@@ -153,6 +153,8 @@ describe('ISSO / GRC AO flagship codes', () => {
     expect(isAuthorizationPackageTicketCode('GRC-10')).toBe(true);
     expect(isAoReviewTicketCode('ISSO-05')).toBe(true);
     expect(isAoReviewTicketCode('GRC-11')).toBe(true);
+    // Sheet curriculum: GRC-10 is the RMF package defense (ao_review).
+    expect(isAoReviewTicketCode('GRC-10')).toBe(true);
     expect(isFlagshipEligibleTicketType('ao_review')).toBe(true);
   });
 });
@@ -163,6 +165,7 @@ describe('evaluateAoReviewDeterministic', () => {
     expect(missingQs.ok).toBe(false);
     expect(missingQs.structured.reason).toBe('questions_missing');
     expect(missingQs.structured.flagshipEligible).toBe(true);
+    expect(missingQs.structured.responsePath).toBe('written');
 
     const short = evaluateAoReviewDeterministic({
       questions,
@@ -173,13 +176,37 @@ describe('evaluateAoReviewDeterministic', () => {
     expect(short.structured.minAnswerLength).toBe(AO_REVIEW_MIN_ANSWER_LENGTH);
   });
 
-  it('accepts complete answers', () => {
+  it('accepts complete written answers', () => {
     const result = evaluateAoReviewDeterministic({
       questions,
       answers: Object.fromEntries(questions.map((q) => [q.id, solidAnswer])),
     });
     expect(result.ok).toBe(true);
     expect(result.structured.flagshipEligible).toBe(true);
+    expect(result.structured.responsePath).toBe('written');
+  });
+
+  it('accepts verbal defense as primary without written answers', () => {
+    const result = evaluateAoReviewDeterministic({
+      questions,
+      answers: {},
+      defenseRecordingId: '11111111-1111-4111-8111-111111111111',
+    });
+    expect(result.ok).toBe(true);
+    expect(result.structured.responsePath).toBe('verbal');
+    expect(result.structured.defenseRecordingId).toBe(
+      '11111111-1111-4111-8111-111111111111'
+    );
+    expect(result.structured.missingAnswerIds).toEqual([]);
+  });
+
+  it('rejects local-only defense placeholders', () => {
+    const result = evaluateAoReviewDeterministic({
+      questions,
+      defenseRecordingId: 'defense-local-123',
+    });
+    expect(result.ok).toBe(false);
+    expect(result.structured.reason).toBe('defense_upload_incomplete');
   });
 });
 

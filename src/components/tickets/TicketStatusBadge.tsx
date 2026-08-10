@@ -1,12 +1,5 @@
-import {
-  BadgeCheck,
-  CheckCircle2,
-  CircleDashed,
-  LoaderCircle,
-  type LucideIcon,
-} from 'lucide-react';
-
 import { Badge } from '@/components/ui/badge';
+import { StatusDot } from '@/components/ui/status-dot';
 import {
   getTicketStatusColorClass,
   normalizeTicketStatus,
@@ -15,16 +8,17 @@ import {
 import type { TicketProgressStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
-const STATUS_ICONS: Record<TicketProgressStatus, LucideIcon> = {
-  new: CircleDashed,
-  in_progress: LoaderCircle,
-  resolved: CheckCircle2,
-  reviewed: BadgeCheck,
+const TICKET_STATUS_DOT: Record<TicketProgressStatus, string> = {
+  new: 'bg-status-not-started-foreground',
+  in_progress: 'bg-status-insufficient-foreground',
+  resolved: 'bg-status-satisfied-foreground',
+  reviewed: 'bg-status-satisfied-foreground',
 };
 
 type TicketStatusBadgeProps = {
   status: string | null | undefined;
   className?: string;
+  /** When false, renders label only (no status dot). */
   showIcon?: boolean;
 };
 
@@ -34,20 +28,22 @@ export function TicketStatusBadge({
   showIcon = true,
 }: TicketStatusBadgeProps) {
   const normalized = normalizeTicketStatus(status);
-  const Icon = STATUS_ICONS[normalized];
   const label = TICKET_STATUS_LABELS[normalized];
 
   return (
     <Badge
       variant="outline"
       className={cn(
-        'gap-1.5 font-normal',
+        'h-5 gap-1.5 rounded-md px-2 py-0 font-mono text-[10px] font-medium uppercase tracking-wider',
         getTicketStatusColorClass(normalized),
         className
       )}
     >
       {showIcon ? (
-        <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+        <StatusDot
+          className={TICKET_STATUS_DOT[normalized]}
+          pulse={normalized === 'in_progress'}
+        />
       ) : null}
       <span>{label}</span>
     </Badge>

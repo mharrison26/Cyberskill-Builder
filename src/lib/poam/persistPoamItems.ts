@@ -22,20 +22,25 @@ export type PersistPoamItemsResult = {
   findingIds: string[];
 };
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function toRow(
   entry: PoamEntrySubmission,
   input: PersistPoamItemsInput,
   now: string
 ) {
-  // Seed exercises use text finding keys (e.g. FIND-AC-2-01). Leave
-  // oscal_finding_id null unless a future caller links a real oscal_findings row.
+  // Seed exercises use text finding keys (e.g. FIND-AC-2-01). When the
+  // findingId is a real oscal_findings UUID (GRC-04 student history), link it.
+  const oscalFindingId = UUID_RE.test(entry.findingId) ? entry.findingId : null;
+
   return {
     tenant_id: input.tenantId,
     student_id: input.studentId,
     track_id: input.trackId,
     ticket_id: input.ticketId,
     finding_id: entry.findingId,
-    oscal_finding_id: null as string | null,
+    oscal_finding_id: oscalFindingId,
     weakness_description: entry.weaknessDescription,
     milestone: entry.milestone,
     scheduled_completion_date: entry.scheduledCompletionDate,

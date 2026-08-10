@@ -199,6 +199,121 @@ describe('poam completeness scoring', () => {
     expect(result.entries).toHaveLength(3);
   });
 
+  it('fails when required fields are blank (completeness gate)', () => {
+    const result = evaluatePoamCompleteness(
+      {
+        entries: [
+          {
+            findingId: 'FIND-AC-2-01',
+            weaknessDescription: '',
+            milestone: '',
+            scheduledCompletionDate: '',
+            status: '',
+          },
+          {
+            findingId: 'FIND-AU-6-01',
+            weaknessDescription:
+              'Security log review is ad hoc with no defined weekly cadence.',
+            milestone:
+              'Publish AU-6 procedures and run weekly SOC log review checklists.',
+            scheduledCompletionDate: '2026-09-30',
+            status: 'ongoing',
+          },
+          {
+            findingId: 'FIND-CM-6-01',
+            weaknessDescription:
+              'Jump host configuration deviations are not tracked to a baseline.',
+            milestone:
+              'Enforce hardened baseline and open CM exceptions for approved deviations.',
+            scheduledCompletionDate: '2026-12-15',
+            status: 'open',
+          },
+        ],
+      },
+      ticket()
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.structured.complete).toBe(false);
+    expect(result.structured.incompleteEntries).toEqual([
+      {
+        findingId: 'FIND-AC-2-01',
+        missing: [
+          'weakness_description',
+          'milestone',
+          'scheduled_completion_date',
+          'status',
+        ],
+      },
+    ]);
+  });
+
+  it('fails on invalid status and invalid scheduled date', () => {
+    const result = evaluatePoamCompleteness(
+      {
+        entries: [
+          {
+            findingId: 'FIND-AC-2-01',
+            weaknessDescription:
+              'Privileged account reviews are not documented each quarter.',
+            milestone:
+              'Implement quarterly privileged access reviews with signed evidence.',
+            scheduledCompletionDate: '2026-10-15',
+            status: 'in_progress',
+          },
+          {
+            findingId: 'FIND-AU-6-01',
+            weaknessDescription:
+              'Security log review is ad hoc with no defined weekly cadence.',
+            milestone:
+              'Publish AU-6 procedures and run weekly SOC log review checklists.',
+            scheduledCompletionDate: '09/30/2026',
+            status: 'ongoing',
+          },
+          {
+            findingId: 'FIND-CM-6-01',
+            weaknessDescription:
+              'Jump host configuration deviations are not tracked to a baseline.',
+            milestone:
+              'Enforce hardened baseline and open CM exceptions for approved deviations.',
+            scheduledCompletionDate: '2026-12-15',
+            status: 'open',
+          },
+        ],
+      },
+      ticket()
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.structured.invalidStatuses).toEqual(['FIND-AC-2-01']);
+    expect(result.structured.invalidDates).toEqual(['FIND-AU-6-01']);
+    expect(result.feedback).toContain('Invalid status');
+    expect(result.feedback).toContain('Invalid scheduled_completion_date');
+  });
+
+  it('fails when ticket has no prior findings seeded', () => {
+    const result = evaluatePoamCompleteness(
+      {
+        entries: [
+          {
+            findingId: 'FIND-AC-2-01',
+            weaknessDescription:
+              'Privileged account reviews are not documented each quarter.',
+            milestone:
+              'Implement quarterly privileged access reviews with signed evidence.',
+            scheduledCompletionDate: '2026-10-15',
+            status: 'open',
+          },
+        ],
+      },
+      ticket({ initial_state: { prior_findings: [] } })
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.structured.reason).toBe('missing_prior_findings');
+    expect(result.structured.complete).toBe(false);
+  });
+
   it('recognizes poam ticket type aliases', () => {
     expect(isPoamTicketType('poam')).toBe(true);
     expect(isPoamTicketType('grc.poam')).toBe(true);

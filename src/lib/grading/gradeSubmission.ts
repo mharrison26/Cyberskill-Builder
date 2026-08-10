@@ -6,10 +6,15 @@ import {
   MissingAnthropicApiKeyError,
 } from '@/lib/grading/callClaudeGrading';
 import { getCatalogSourceMetadata } from '@/lib/grading/catalogSource';
+import { gradeCatalogLabLesson } from '@/lib/grading/gradeCatalogLabLesson';
+import { gradeConceptualLesson } from '@/lib/grading/gradeConceptualLesson';
+import { gradeToolWalkthroughLesson } from '@/lib/grading/gradeToolWalkthroughLesson';
 import {
   mapAiFindingStateToDb,
   type AiFindingState,
 } from '@/lib/grading/mapFindingState';
+import { isCatalogLabSubmission } from '@/lib/lessons/catalogLabValidation';
+import { isConceptualSubmission } from '@/lib/lessons/conceptualValidation';
 import { getControlText } from '@/lib/oscal/getControl';
 import type { CCCERValues } from '@/types';
 
@@ -73,6 +78,16 @@ function resolveLessonControlIds(
   return [];
 }
 
+function isToolWalkthroughSubmissionPayload(
+  value: unknown
+): value is { type: 'tool_walkthrough' } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { type?: unknown }).type === 'tool_walkthrough'
+  );
+}
+
 export async function gradeSubmission(
   input: GradeSubmissionInput
 ): Promise<GradeSubmissionResult> {
@@ -80,7 +95,7 @@ export async function gradeSubmission(
 
   const { data: lesson, error: lessonError } = await supabase
     .from('lessons')
-    .select('id, track_id, dcwf_code, control_id')
+    .select('id, track_id, dcwf_code, control_id, lesson_type')
     .eq('id', lessonId)
     .maybeSingle();
 
@@ -98,6 +113,39 @@ export async function gradeSubmission(
 
   if (progressError || !progress) {
     throw new Error('Submitted lesson progress not found');
+  }
+
+  if (
+    lesson.lesson_type === 'tool_walkthrough' ||
+    isToolWalkthroughSubmissionPayload(progress.submission)
+  ) {
+    const result = await gradeToolWalkthroughLesson(input);
+    return {
+      finding: result.finding,
+      aiFindingState: result.aiFindingState,
+    };
+  }
+
+  if (
+    lesson.lesson_type === 'catalog_lab' ||
+    isCatalogLabSubmission(progress.submission)
+  ) {
+    const result = await gradeCatalogLabLesson(input);
+    return {
+      finding: result.finding,
+      aiFindingState: result.aiFindingState,
+    };
+  }
+
+  if (
+    lesson.lesson_type === 'conceptual' ||
+    isConceptualSubmission(progress.submission)
+  ) {
+    const result = await gradeConceptualLesson(input);
+    return {
+      finding: result.finding,
+      aiFindingState: result.aiFindingState,
+    };
   }
 
   const submission = progress.submission as CCCERValues | null;

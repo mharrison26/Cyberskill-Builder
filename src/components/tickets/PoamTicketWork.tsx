@@ -1,11 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  buildPoamSourceGapsMessage,
+  usesStudentPoamSourceFindings,
+  type PoamSourceFindingGap,
+} from '@/lib/grc/poamSourceFindingsShared';
 import {
   POAM_STATUSES,
   parsePriorFindings,
@@ -35,6 +40,18 @@ type SubmitResponse = {
   structuredResult?: Record<string, unknown>;
 };
 
+type PriorFindingsResponse = {
+  error?: string;
+  priorFindings?: PoamPriorFinding[];
+  priorFindingsSource?: 'student_history' | 'seed' | 'empty';
+  complete?: boolean;
+  gaps?: PoamSourceFindingGap[];
+  gapsMessage?: string | null;
+  iamLessonTitle?: string;
+  l02LessonTitle?: string;
+  useStudentSourceFindings?: boolean;
+};
+
 function emptyEntry(): EntryDraft {
   return {
     weaknessDescription: '',
@@ -53,29 +70,101 @@ function findingHeading(finding: PoamPriorFinding): string {
   return finding.id;
 }
 
+function draftsFromFindings(
+  findings: PoamPriorFinding[]
+): Record<string, EntryDraft> {
+  const initial: Record<string, EntryDraft> = {};
+  for (const finding of findings) {
+    initial[finding.id] = emptyEntry();
+  }
+  return initial;
+}
+
 export function PoamTicketWork({
   ticketId,
   initialState,
   readOnly = false,
   className,
 }: PoamTicketWorkProps) {
-  const priorFindings = useMemo(
+  const usesStudentHistory = usesStudentPoamSourceFindings(initialState);
+  const seedFindings = useMemo(
     () => parsePriorFindings(initialState),
     [initialState]
   );
 
-  const [drafts, setDrafts] = useState<Record<string, EntryDraft>>(() => {
-    const initial: Record<string, EntryDraft> = {};
-    for (const finding of parsePriorFindings(initialState)) {
-      initial[finding.id] = emptyEntry();
-    }
-    return initial;
-  });
+  const [priorFindings, setPriorFindings] = useState<PoamPriorFinding[]>(() =>
+    usesStudentHistory ? [] : seedFindings
+  );
+  const [drafts, setDrafts] = useState<Record<string, EntryDraft>>(() =>
+    draftsFromFindings(usesStudentHistory ? [] : seedFindings)
+  );
+  const [loading, setLoading] = useState(usesStudentHistory);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [gaps, setGaps] = useState<PoamSourceFindingGap[]>([]);
+  const [gapsMessage, setGapsMessage] = useState<string | null>(null);
+  const [findingsSource, setFindingsSource] = useState<
+    'student_history' | 'seed' | 'empty' | null
+  >(usesStudentHistory ? null : seedFindings.length > 0 ? 'seed' : 'empty');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!usesStudentHistory) return;
+
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const res = await fetch(`/api/tickets/${ticketId}/prior-findings`, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json()) as PriorFindingsResponse;
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to load source findings');
+        }
+        if (cancelled) return;
+
+        const findings = Array.isArray(data.priorFindings)
+          ? data.priorFindings
+          : [];
+        setPriorFindings(findings);
+        setDrafts(draftsFromFindings(findings));
+        setGaps(Array.isArray(data.gaps) ? data.gaps : []);
+        setGapsMessage(
+          typeof data.gapsMessage === 'string'
+            ? data.gapsMessage
+            : findings.length < 2
+              ? buildPoamSourceGapsMessage(data.gaps ?? [])
+              : null
+        );
+        setFindingsSource(data.priorFindingsSource ?? 'empty');
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : 'Failed to load source findings'
+          );
+          setPriorFindings([]);
+          setDrafts({});
+          setFindingsSource('empty');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticketId, usesStudentHistory]);
 
   function updateDraft(
     findingId: string,
@@ -93,7 +182,7 @@ export function PoamTicketWork({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly || isSubmitting) return;
+    if (readOnly || isSubmitting || priorFindings.length === 0) return;
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -149,7 +238,7 @@ export function PoamTicketWork({
     }
   }
 
-  if (priorFindings.length === 0) {
+  if (loading) {
     return (
       <section
         aria-labelledby="poam-work-heading"
@@ -162,12 +251,61 @@ export function PoamTicketWork({
         <h2 id="poam-work-heading" className="text-base font-semibold">
           POA&M work area
         </h2>
-        <p className="mt-2 max-w-prose text-sm text-muted-foreground">
-          This ticket has no prior findings in{' '}
-          <code className="text-xs">initial_state.prior_findings</code>. An
-          admin should seed 2–3 findings before students can draft POA&M
-          entries.
+        <p className="mt-2 text-sm text-muted-foreground">
+          Loading your prior findings from the IAM lab and Navigating NIST SP
+          800-53…
         </p>
+      </section>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <section
+        aria-labelledby="poam-work-heading"
+        className={cn(
+          'rounded-lg border border-destructive/40 bg-destructive/5 px-5 py-8',
+          className
+        )}
+        data-ticket-id={ticketId}
+      >
+        <h2 id="poam-work-heading" className="text-base font-semibold">
+          POA&M work area
+        </h2>
+        <p className="mt-2 text-sm text-destructive" role="alert">
+          {loadError}
+        </p>
+      </section>
+    );
+  }
+
+  if (priorFindings.length === 0 || (usesStudentHistory && gaps.length > 0)) {
+    return (
+      <section
+        aria-labelledby="poam-work-heading"
+        className={cn(
+          'rounded-lg border border-dashed border-border bg-muted/30 px-5 py-8',
+          className
+        )}
+        data-ticket-id={ticketId}
+        data-findings-source={findingsSource ?? 'empty'}
+      >
+        <h2 id="poam-work-heading" className="text-base font-semibold">
+          Prerequisites required
+        </h2>
+        <p className="mt-2 max-w-prose text-sm text-muted-foreground">
+          {usesStudentHistory
+            ? gapsMessage ||
+              'This POA&M ticket uses your own prior lab findings. Complete the prerequisite lessons first — placeholder findings are not used.'
+            : 'This ticket has no prior findings in initial_state.prior_findings. An admin should seed 2–3 findings before students can draft POA&M entries.'}
+        </p>
+        {usesStudentHistory && gaps.length > 0 ? (
+          <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-foreground">
+            {gaps.map((gap) => (
+              <li key={gap.key}>{gap.message}</li>
+            ))}
+          </ul>
+        ) : null}
       </section>
     );
   }
@@ -178,15 +316,16 @@ export function PoamTicketWork({
       className={cn('space-y-6', className)}
       data-ticket-id={ticketId}
       data-ticket-type="poam"
+      data-findings-source={findingsSource ?? undefined}
     >
       <div>
         <h2 id="poam-work-heading" className="text-base font-semibold">
           Draft POA&M entries
         </h2>
         <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-          Review each prior finding, then write a weakness description, a
-          realistic remediation milestone, a scheduled completion date, and a
-          status.
+          {findingsSource === 'student_history'
+            ? 'These two source findings come from your prior IAM lab finding and your Navigating NIST SP 800-53 submission. Draft a POA&M entry for each with a realistic remediation milestone.'
+            : 'Review each prior finding, then write a weakness description, a realistic remediation milestone, a scheduled completion date, and a status.'}
         </p>
       </div>
 
@@ -211,7 +350,7 @@ export function PoamTicketWork({
               <div className="rounded-md bg-muted/40 px-3 py-3 text-sm">
                 <p className="font-medium text-foreground">{finding.id}</p>
                 {finding.summary ? (
-                  <p className="mt-1 text-muted-foreground">
+                  <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
                     {finding.summary}
                   </p>
                 ) : (

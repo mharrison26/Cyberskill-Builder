@@ -8,14 +8,20 @@ import {
   getStudentActiveTracks,
   toFindingStateDisplay,
 } from '@/lib/portfolio/getPublicPortfolio';
-import {
-  displayNameFromEmail,
-  getUserByUsername,
-} from '@/lib/users/getUserByUsername';
+import { getUserByUsername } from '@/lib/users/getUserByUsername';
 
 type PortfolioPageProps = {
   params: { username: string };
 };
+
+function portfolioHeading(user: {
+  displayName: string | null;
+  username: string | null;
+}): string {
+  if (user.displayName) return user.displayName;
+  if (user.username) return `@${user.username}`;
+  return 'Student portfolio';
+}
 
 export async function generateMetadata({
   params,
@@ -28,7 +34,7 @@ export async function generateMetadata({
     };
   }
 
-  const name = displayNameFromEmail(user.email);
+  const name = portfolioHeading(user);
 
   return {
     title: `${name} — Portfolio`,
@@ -50,7 +56,7 @@ export default async function PublicPortfolioPage({
     getPublicPortfolioItems(user.id),
   ]);
 
-  const displayName = displayNameFromEmail(user.email);
+  const displayName = portfolioHeading(user);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
@@ -59,7 +65,7 @@ export default async function PublicPortfolioPage({
           Verifiable capability ledger
         </p>
         <h1 className="mt-1 text-2xl font-semibold">{displayName}</h1>
-        {user.username ? (
+        {user.username && user.displayName ? (
           <p className="mt-1 text-sm text-muted-foreground">@{user.username}</p>
         ) : null}
       </header>

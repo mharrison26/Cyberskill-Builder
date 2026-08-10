@@ -105,6 +105,38 @@ describe('evaluateSecMaterialityDeterministic', () => {
     expect(result.structured.missingFactors).toEqual([]);
     expect(result.structured.rationaleOk).toBe(true);
   });
+
+  it('enforces GRC-08 requiredFactors and min lengths from expected_state', () => {
+    const factors = solidFactors();
+    delete factors.reputational_legal;
+
+    const missing = evaluateSecMaterialityDeterministic(
+      {
+        determination: 'not_material',
+        determinationRationale: solidRationale,
+        factors,
+      },
+      ticket({
+        expected_state: {
+          judgmentCall: true,
+          minFactorLength: 40,
+          minRationaleLength: 60,
+          requiredFactors: [
+            'nature_scope',
+            'data_compromise',
+            'operational_impact',
+            'financial_impact',
+            'reputational_legal',
+            'reasonable_investor',
+          ],
+        },
+      })
+    );
+    expect(missing.ok).toBe(false);
+    expect(missing.structured.missingFactors).toEqual(['reputational_legal']);
+    expect(missing.structured.minFactorLength).toBe(40);
+    expect(missing.structured.minRationaleLength).toBe(60);
+  });
 });
 
 describe('secMaterialityTicketScorer', () => {
@@ -132,7 +164,26 @@ describe('secMaterialityTicketScorer', () => {
         determinationRationale: solidRationale,
         factors: solidFactors(),
       },
-      ticket()
+      ticket({
+        scenario_brief:
+          "A vendor Northwind uses for payment processing just disclosed a breach that exposed a subset of Northwind's customer records. As the person drafting the initial materiality assessment, determine whether this triggers the SEC's 4-business-day 8-K disclosure requirement and draft the determination memo.",
+        initial_state: {
+          keyArtifact:
+            "Breach scenario details: systems affected (payment vendor's own systems, not Northwind's), data exposed (names, emails, last-4 card digits), estimated customers impacted (~4,000), vendor's remediation status (contained, forensics ongoing).",
+          breach: {
+            company: 'Northwind Retail Technology',
+            systemsAffected: "payment vendor's own systems, not Northwind's",
+            customersImpacted: '~4,000',
+            scopeNote:
+              "Vendor breach (not a direct Northwind breach); exposed a subset of Northwind's customer records.",
+          },
+        },
+        expected_state: {
+          gradingFocus:
+            "RAG-graded against the SEC cybersecurity disclosure rule's materiality factors -- does the memo address each factor (financial impact, reputational impact, operational impact, legal/regulatory exposure), not just assert a conclusion.",
+          judgmentCall: true,
+        },
+      })
     );
 
     expect(result.status).toBe('resolved');
@@ -149,6 +200,9 @@ describe('secMaterialityTicketScorer', () => {
     expect(prompt).toContain('Retrieved SEC materiality guidance');
     expect(prompt).toContain('Use only the retrieved guidance');
     expect(prompt).toContain('Educational summary');
+    expect(prompt).toContain('deliberately ambiguous');
+    expect(prompt).toContain("payment vendor's own systems, not Northwind's");
+    expect(prompt).toContain('not just assert a conclusion');
   });
 
   it('needs revision when grading is not satisfied', async () => {

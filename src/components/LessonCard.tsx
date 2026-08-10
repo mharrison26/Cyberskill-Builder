@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Eyebrow } from '@/components/ui/eyebrow';
 import type { StatusKey } from '@/lib/status';
 import type { LessonType } from '@/types';
 import { cn } from '@/lib/utils';
@@ -23,45 +24,53 @@ const LESSON_TYPE_CONFIG: Record<
   tool_walkthrough: { label: 'Tool Walkthrough', icon: MonitorPlay },
 };
 
+/** Canonical lesson detail path for a track + lesson id. */
+export function lessonDetailHref(trackSlug: string, lessonId: string): string {
+  return `/tracks/${trackSlug}/lessons/${lessonId}`;
+}
+
 type LessonCardProps = {
   id: string;
+  trackSlug: string;
   title: string;
   status: StatusKey;
   lessonType: LessonType;
   tier: string;
-  href: string;
   className?: string;
 };
 
 export function LessonCard({
+  id,
+  trackSlug,
   title,
   status,
   lessonType,
   tier,
-  href,
   className,
 }: LessonCardProps) {
   const typeConfig = LESSON_TYPE_CONFIG[lessonType];
   const TypeIcon = typeConfig.icon;
+  const href = lessonDetailHref(trackSlug, id);
 
   return (
     <Card
-      className={cn('transition-colors hover:border-primary/40', className)}
+      className={cn(
+        'transition-hover hover:border-accent/50 hover:shadow-sm focus-within:border-accent/50 focus-within:shadow-sm',
+        className
+      )}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 text-muted-foreground">
             <TypeIcon className="size-4 shrink-0" aria-hidden="true" />
-            <span className="text-xs font-medium uppercase tracking-wide">
-              {typeConfig.label}
-            </span>
+            <Eyebrow as="span">{typeConfig.label}</Eyebrow>
           </div>
           <StatusBadge status={status} />
         </div>
         <CardTitle className="text-base leading-snug">
           <Link
             href={href}
-            className="hover:text-primary focus:outline-none focus-visible:underline"
+            className="rounded-sm transition-hover hover:text-primary focus:outline-none focus-visible:text-primary"
           >
             {title}
           </Link>
@@ -71,7 +80,7 @@ export function LessonCard({
       <CardContent className="pt-0">
         <Link
           href={href}
-          className="text-sm font-medium text-primary hover:underline focus:outline-none focus-visible:underline"
+          className="rounded-sm text-sm font-medium text-primary transition-hover hover:underline focus:outline-none focus-visible:underline"
         >
           Open lesson
         </Link>

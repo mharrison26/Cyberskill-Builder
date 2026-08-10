@@ -51,6 +51,9 @@ export async function GET(_request: Request, { params }: RouteContext) {
       complete: pkg.complete,
       missingCodes: pkg.missingCodes,
       compiledAt: pkg.compiledAt,
+      packageSource: pkg.packageSource ?? null,
+      trackId: pkg.trackId,
+      studentId: pkg.studentId,
       artifacts: pkg.artifacts.map((artifact) => ({
         code: artifact.code,
         label: artifact.label,

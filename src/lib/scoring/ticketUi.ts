@@ -81,6 +81,9 @@ export function isTriageUrgencyLevel(
 
 export const AO_REVIEW_MIN_ANSWER_LENGTH = 40;
 
+/** Minimum verbal defense length for AO review primary path (seconds). */
+export const AO_REVIEW_MIN_DEFENSE_SECONDS = 20;
+
 /**
  * Sysadmin infra design capstone (SA-07 / PI-07) — design decision doc + tradeoff Q&A.
  */
@@ -185,6 +188,8 @@ export const INCIDENT_NOTIFICATION_MIN_DRAFT_LENGTH = 120;
 export const TOOL_WALKTHROUGH_MIN_JUSTIFICATION_LENGTH = 80;
 
 export const CMMC_GAP_ANALYSIS_MIN_LENGTH = 120;
+
+export const CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH = 120;
 
 export const CMMC_PRACTICE_SCORE_VALUES = [
   'met',
@@ -769,9 +774,15 @@ export function isScriptingTicketType(ticketType: string): boolean {
     base === 'python' ||
     base === 'python_lab' ||
     base === 'shell' ||
+    // Dedicated OscalGeneratorTicket mounts for these (see TicketWorkSlot).
     base === 'oscal_generator' ||
     base === 'capstone_oscal'
   );
+}
+
+export function isOscalGeneratorTicketType(ticketType: string): boolean {
+  const base = ticketTypeBase(ticketType);
+  return base === 'oscal_generator' || base === 'capstone_oscal';
 }
 
 /** WebContainer script lab: spooler fix or fixture-based scripting lab. */

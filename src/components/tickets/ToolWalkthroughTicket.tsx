@@ -37,11 +37,106 @@ type WalkthroughStep = {
   body: string;
 };
 
+type VendorProfileView = {
+  organization?: string;
+  dataTypes: string[];
+  integration?: string;
+  postureSummary?: string;
+};
+
 function asRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   return {};
+}
+
+function readString(
+  source: Record<string, unknown>,
+  keys: string[]
+): string | undefined {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+  return undefined;
+}
+
+function parseStringList(value: unknown): string[] {
+  if (typeof value === 'string' && value.trim()) {
+    return [value.trim()];
+  }
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseVendorProfile(
+  initialState: Record<string, unknown>
+): VendorProfileView | null {
+  const vendor = asRecord(initialState.vendor);
+  const vendorProfile = asRecord(initialState.vendorProfile);
+  const source =
+    Object.keys(vendor).length > 0
+      ? vendor
+      : Object.keys(vendorProfile).length > 0
+        ? vendorProfile
+        : null;
+  if (!source) return null;
+
+  const org = asRecord(initialState.organization);
+  const organization = readString(org, ['name']);
+
+  const dataTypes = parseStringList(
+    source.dataTypes ?? source.data_types ?? source.dataClasses
+  );
+
+  const integration = readString(source, ['integration']);
+
+  const posture = asRecord(source.posture ?? source.securityPosture);
+  const postureSummary =
+    readString(source, [
+      'postureSummary',
+      'posture_summary',
+      'vendorPosture',
+      'vendor_posture',
+    ]) ??
+    (() => {
+      const soc2 = readString(posture, ['soc2', 'soc2Status']);
+      const penTest = readString(posture, [
+        'penetrationTestHistory',
+        'penetration_test_history',
+      ]);
+      const bits = [
+        soc2 ? `SOC 2 ${soc2}` : null,
+        penTest === 'none' || penTest === 'no'
+          ? 'no penetration test history'
+          : penTest
+            ? `penetration test history: ${penTest}`
+            : null,
+      ].filter(Boolean);
+      return bits.length > 0 ? bits.join(', ') : undefined;
+    })();
+
+  if (
+    !organization &&
+    dataTypes.length === 0 &&
+    !integration &&
+    !postureSummary
+  ) {
+    return null;
+  }
+
+  return {
+    organization,
+    dataTypes,
+    integration,
+    postureSummary,
+  };
 }
 
 function parseSteps(initialState: Record<string, unknown>): WalkthroughStep[] {
@@ -91,6 +186,10 @@ export function ToolWalkthroughTicket({
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const steps = useMemo(() => parseSteps(initialState), [initialState]);
+  const vendorProfile = useMemo(
+    () => parseVendorProfile(initialState),
+    [initialState]
+  );
   const minJustificationLength = resolveMinJustificationLength(expectedState);
 
   const toolName =
@@ -228,6 +327,56 @@ export function ToolWalkthroughTicket({
           )}
         </CardContent>
       </Card>
+
+      {vendorProfile ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Vendor profile</CardTitle>
+            <CardDescription>
+              Use these scenario facts when identifying threat sources and
+              assessing likelihood/impact (SP 800-30).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-3 text-sm sm:grid-cols-2">
+              {vendorProfile.organization ? (
+                <div>
+                  <dt className="font-medium text-foreground">Organization</dt>
+                  <dd className="text-muted-foreground">
+                    {vendorProfile.organization}
+                  </dd>
+                </div>
+              ) : null}
+              {vendorProfile.dataTypes.length > 0 ? (
+                <div>
+                  <dt className="font-medium text-foreground">Data types</dt>
+                  <dd className="text-muted-foreground">
+                    {vendorProfile.dataTypes.join(', ')}
+                  </dd>
+                </div>
+              ) : null}
+              {vendorProfile.integration ? (
+                <div>
+                  <dt className="font-medium text-foreground">Integration</dt>
+                  <dd className="text-muted-foreground">
+                    {vendorProfile.integration}
+                  </dd>
+                </div>
+              ) : null}
+              {vendorProfile.postureSummary ? (
+                <div className="sm:col-span-2">
+                  <dt className="font-medium text-foreground">
+                    Vendor posture
+                  </dt>
+                  <dd className="text-muted-foreground">
+                    {vendorProfile.postureSummary}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {steps.length > 0 ? (
         <Card>

@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { LessonContent } from '@/components/LessonContent';
 import { TOOL_WALKTHROUGH_MIN_REFLECTION_LENGTH } from '@/lib/lessons/toolWalkthroughValidation';
 import type { Lesson } from '@/types';
 import { cn } from '@/lib/utils';
@@ -57,6 +58,11 @@ export function ToolWalkthroughLesson({
   className,
 }: ToolWalkthroughLessonProps) {
   const objectives = parseObjectives(lesson.learning_objectives);
+  const scenarioBrief =
+    typeof lesson.content?.scenarioBrief === 'string' &&
+    lesson.content.scenarioBrief.trim()
+      ? lesson.content.scenarioBrief.trim()
+      : null;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [externalReference, setExternalReference] = useState('');
   const [reflection, setReflection] = useState('');
@@ -64,6 +70,12 @@ export function ToolWalkthroughLesson({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function scrollToExercise() {
+    document
+      .getElementById('lesson-exercise')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   function validate(): boolean {
     const nextErrors: FormErrors = {};
@@ -199,6 +211,14 @@ export function ToolWalkthroughLesson({
         <h1 className="text-3xl font-semibold tracking-tight">
           {lesson.title}
         </h1>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="button" onClick={scrollToExercise}>
+            Start scenario
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            Upload evidence and submit your field-mapping reflection below.
+          </p>
+        </div>
       </header>
 
       {objectives.length > 0 ? (
@@ -216,7 +236,23 @@ export function ToolWalkthroughLesson({
         </Card>
       ) : null}
 
-      <div id="lesson-content" tabIndex={-1} className="outline-none">
+      {scenarioBrief ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Scenario</CardTitle>
+            <CardDescription>
+              Complete the walkthrough using this exact brief.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div id="lesson-content" tabIndex={-1} className="outline-none">
+              <LessonContent content={scenarioBrief} />
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div id="lesson-exercise" tabIndex={-1} className="outline-none">
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
           <Card>
             <CardHeader>

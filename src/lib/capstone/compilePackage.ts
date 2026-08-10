@@ -295,7 +295,7 @@ export function parseSeedPackageFromTicketState(
 
 /**
  * Prefer live student artifacts; fill missing codes from seedPackage so the
- * ISSO-05 / GRC-11 AO review stays solvable standalone.
+ * sheet GRC-10 / ISSO-05 AO review stays solvable standalone.
  */
 export function mergeLivePackageWithSeed(
   live: CompiledAuthorizationPackage,

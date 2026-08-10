@@ -4,10 +4,12 @@ import {
   getUserWorkspaces,
   type WorkspaceOption,
 } from '@/lib/tenants/workspaces';
+import { getUserDisplayName } from '@/lib/users/displayName';
 
 export type AppShellUser = {
   id: string;
-  name: string;
+  /** users.display_name — null when unset (never email-derived). */
+  name: string | null;
   email: string;
   isAdmin: boolean;
   tenantId: string | null;
@@ -33,15 +35,6 @@ export type AppShellContext = {
   workspaces: WorkspaceOption[];
 };
 
-function displayNameFromEmail(email: string): string {
-  const local = email.split('@')[0] ?? email;
-  return local
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
 export async function getAppShellContext(): Promise<AppShellContext> {
   const supabase = await createClient();
   const {
@@ -60,7 +53,7 @@ export async function getAppShellContext(): Promise<AppShellContext> {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('id, email, is_admin, tenant_id')
+    .select('id, email, is_admin, tenant_id, display_name')
     .eq('id', authUser.id)
     .maybeSingle();
 
@@ -76,7 +69,7 @@ export async function getAppShellContext(): Promise<AppShellContext> {
 
   const shellUser: AppShellUser = {
     id: profile.id,
-    name: displayNameFromEmail(profile.email),
+    name: getUserDisplayName({ display_name: profile.display_name }),
     email: profile.email,
     isAdmin: profile.is_admin === true,
     tenantId: (profile.tenant_id as string | null) ?? null,

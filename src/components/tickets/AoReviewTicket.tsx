@@ -2,12 +2,18 @@
 
 import { useEffect, useState } from 'react';
 
+import { DefensePlayback } from '@/components/DefensePlayback';
+import {
+  DefenseRecorder,
+  type DefenseRecordingResult,
+} from '@/components/DefenseRecorder';
+import { CompiledPackagePanel } from '@/components/tickets/CompiledPackagePanel';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { AO_REVIEW_MIN_ANSWER_LENGTH } from '@/lib/scoring/ticketUi';
 import { cn } from '@/lib/utils';
-import type { Ticket } from '@/types';
+import type { MockDefenseRecording, Ticket } from '@/types';
 
 type AoQuestion = {
   id: string;
@@ -32,12 +38,43 @@ type SubmitResponse = {
 type AoReviewTicketProps = {
   ticket: Pick<
     Ticket,
-    'id' | 'ticket_type' | 'initial_state' | 'expected_state'
+    'id' | 'track_id' | 'ticket_type' | 'initial_state' | 'expected_state'
   >;
   readOnly?: boolean;
   className?: string;
 };
 
+function toPlaybackRecording(
+  result: DefenseRecordingResult
+): MockDefenseRecording {
+  return {
+    id: result.id,
+    url: result.url,
+    mediaType: result.mediaType,
+    durationSeconds: result.durationSeconds,
+    isPublic: result.isPublic,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function writtenAnswersComplete(
+  questions: AoQuestion[],
+  answers: Record<string, string>
+): boolean {
+  if (questions.length === 0) return false;
+  return questions.every((question) => {
+    const answer = (answers[question.id] ?? '').trim();
+    return answer.length >= AO_REVIEW_MIN_ANSWER_LENGTH;
+  });
+}
+
+/**
+ * Sheet GRC-10 / ISSO-05 / legacy GRC-11 flagship: compile GRC-03/04/09 into the
+ * package under review, generate AO questions via RAG, then defend residual risk.
+ *
+ * PI-14 (verbal defense recorder) is live — DefenseRecorder is the primary
+ * response path; written Q&A remains an explicit fallback.
+ */
 export function AoReviewTicket({
   ticket,
   readOnly = false,
@@ -51,6 +88,9 @@ export function AoReviewTicket({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
+  const [defense, setDefense] = useState<MockDefenseRecording | null>(null);
+  const [showWritten, setShowWritten] = useState(false);
+  const [reflection, setReflection] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +147,12 @@ export function AoReviewTicket({
     };
   }, [ticket.id]);
 
+  function handleDefenseSubmitted(result: DefenseRecordingResult) {
+    setDefense(toPlaybackRecording(result));
+    setFeedback(null);
+    setFeedbackTone(null);
+  }
+
   async function handleSubmit() {
     if (readOnly || isSubmitting) return;
     setIsSubmitting(true);
@@ -121,6 +167,8 @@ export function AoReviewTicket({
           type: 'ao_review',
           questions,
           answers,
+          defenseRecordingId: defense?.id ?? null,
+          reflection: reflection.trim() || undefined,
         }),
       });
       const data = (await res.json()) as SubmitResponse;
@@ -139,6 +187,15 @@ export function AoReviewTicket({
     }
   }
 
+  const hasVerbalDefense = Boolean(defense?.id);
+  const hasWrittenFallback = writtenAnswersComplete(questions, answers);
+  const canSubmit =
+    !readOnly &&
+    !loading &&
+    questions.length > 0 &&
+    !isSubmitting &&
+    (hasVerbalDefense || hasWrittenFallback);
+
   return (
     <section
       aria-labelledby="ao-review-heading"
@@ -148,17 +205,23 @@ export function AoReviewTicket({
     >
       <div className="space-y-1">
         <h2 id="ao-review-heading" className="text-base font-semibold">
-          Authorizing Official review (ISSO-05 flagship)
+          RMF package defense (AO review)
         </h2>
         <p className="text-sm text-muted-foreground">
-          Answer 5–7 residual-risk and POA&M adequacy questions grounded in your
-          compiled ATO package (ISSO-04). Questions are RAG-generated once from
-          your package (or the seeded sample when prior work is missing) and
-          stored so they do not change on every visit. Resolving this ticket
-          marks it as your track flagship portfolio item.
+          Defend residual risk and POA&M adequacy for your compiled ATO package
+          (GRC-03 SSP, GRC-04 POA&M, GRC-09 OSCAL). Record audio or video
+          answering the RAG-generated AO questions — primary path (PI-14
+          DefenseRecorder). Written answers are the fallback. Resolving this
+          ticket marks it as your track flagship portfolio item.
         </p>
         {meta ? <p className="text-xs text-muted-foreground">{meta}</p> : null}
       </div>
+
+      <CompiledPackagePanel
+        ticketId={ticket.id}
+        heading="Package under review"
+        description="Your GRC-03, GRC-04, and GRC-09 artifacts compiled for this student and track. AO questions are grounded in this package."
+      />
 
       {loading ? (
         <p className="text-sm text-muted-foreground">
@@ -172,42 +235,139 @@ export function AoReviewTicket({
         </p>
       ) : null}
 
-      <ol className="space-y-5">
-        {questions.map((question, index) => (
-          <li key={question.id} className="space-y-2">
-            <Label
-              htmlFor={`ao-${question.id}`}
-              className="text-sm leading-snug"
-            >
-              {index + 1}. {question.prompt}
-            </Label>
-            <Textarea
-              id={`ao-${question.id}`}
-              value={answers[question.id] ?? ''}
-              disabled={readOnly}
-              rows={4}
-              placeholder={`Write a substantiated answer (min ${AO_REVIEW_MIN_ANSWER_LENGTH} characters)…`}
-              onChange={(event) =>
-                setAnswers((prev) => ({
-                  ...prev,
-                  [question.id]: event.target.value,
-                }))
-              }
-            />
+      {!loading && !loadError && questions.length > 0 ? (
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold">Primary: verbal defense</h3>
             <p className="text-xs text-muted-foreground">
-              {(answers[question.id] ?? '').trim().length} characters
+              {/* PI-14 live: DefenseRecorder is the primary AO response path. */}
+              Answer the AO questions aloud, then confirm upload before
+              submitting the ticket.
             </p>
-          </li>
-        ))}
-      </ol>
+          </div>
+
+          {defense ? (
+            <div className="space-y-3">
+              <DefensePlayback
+                recording={defense}
+                persistVisibility={!defense.id.startsWith('defense-local-')}
+                showVisibilityToggle={!defense.id.startsWith('defense-local-')}
+                onPublicChange={(next) =>
+                  setDefense((prev) =>
+                    prev ? { ...prev, isPublic: next } : prev
+                  )
+                }
+              />
+              {!readOnly ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDefense(null)}
+                >
+                  Record again
+                </Button>
+              ) : null}
+            </div>
+          ) : (
+            <DefenseRecorder
+              artifactId={ticket.id}
+              trackId={ticket.track_id}
+              promptQuestions={questions}
+              onSubmitted={handleDefenseSubmitted}
+            />
+          )}
+        </div>
+      ) : null}
+
+      <div className="space-y-3 border-t border-border pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold">
+              Fallback: written responses
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Use if you cannot record, or to add a short written reflection
+              alongside your recording. Complete every question (
+              {AO_REVIEW_MIN_ANSWER_LENGTH}+ characters) to submit without a
+              recording.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setShowWritten((open) => !open)}
+          >
+            {showWritten ? 'Hide written path' : 'Show written path'}
+          </Button>
+        </div>
+
+        {showWritten ? (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="ao-reflection" className="text-sm">
+                Optional reflection (not required when a recording is uploaded)
+              </Label>
+              <Textarea
+                id="ao-reflection"
+                value={reflection}
+                disabled={readOnly}
+                rows={3}
+                placeholder="Optional notes for graders or your portfolio…"
+                onChange={(event) => setReflection(event.target.value)}
+              />
+            </div>
+
+            <ol className="space-y-5">
+              {questions.map((question, index) => (
+                <li key={question.id} className="space-y-2">
+                  <Label
+                    htmlFor={`ao-${question.id}`}
+                    className="text-sm leading-snug"
+                  >
+                    {index + 1}. {question.prompt}
+                  </Label>
+                  <Textarea
+                    id={`ao-${question.id}`}
+                    value={answers[question.id] ?? ''}
+                    disabled={readOnly}
+                    rows={4}
+                    placeholder={`Written answer (min ${AO_REVIEW_MIN_ANSWER_LENGTH} characters if used without a recording)…`}
+                    onChange={(event) =>
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [question.id]: event.target.value,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {(answers[question.id] ?? '').trim().length} characters
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : null}
+      </div>
 
       <Button
         type="button"
-        disabled={readOnly || loading || questions.length === 0 || isSubmitting}
+        disabled={!canSubmit}
         onClick={() => void handleSubmit()}
       >
-        {isSubmitting ? 'Submitting…' : 'Submit AO responses'}
+        {isSubmitting ? 'Submitting…' : 'Submit AO defense'}
       </Button>
+
+      {!hasVerbalDefense &&
+      !hasWrittenFallback &&
+      !loading &&
+      questions.length > 0 ? (
+        <p className="text-xs text-muted-foreground">
+          Upload a verbal defense recording (primary), or complete written
+          answers for every question (fallback) to enable submit.
+        </p>
+      ) : null}
 
       {feedback ? (
         <p

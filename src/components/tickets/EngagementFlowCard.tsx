@@ -2,6 +2,8 @@ import Link from 'next/link';
 
 import { TicketStatusBadge } from '@/components/tickets/TicketStatusBadge';
 import { Badge } from '@/components/ui/badge';
+import { Eyebrow } from '@/components/ui/eyebrow';
+import { StatusDot } from '@/components/ui/status-dot';
 import {
   formatEngagementScopeLines,
   type EngagementFlowView,
@@ -27,16 +29,31 @@ export function EngagementFlowCard({
     <section
       aria-labelledby={`engagement-${flow.engagement.id}-heading`}
       className={cn(
-        'space-y-4 rounded-lg border border-border bg-card px-5 py-5',
+        'space-y-4 rounded-lg border border-border bg-surface px-5 py-5 text-surface-foreground shadow-xs',
         className
       )}
       data-engagement-id={flow.engagement.id}
     >
       <header className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">Engagement</Badge>
-          <Badge variant="outline">
-            {flow.resolvedCount}/{flow.totalCount} stages resolved
+          <Eyebrow as="span">Engagement</Eyebrow>
+          <Badge
+            variant="outline"
+            className="h-5 gap-1.5 rounded-md px-2 py-0 font-mono text-[10px] font-medium uppercase tracking-wider tabular-nums"
+          >
+            <StatusDot
+              className={
+                progressPct >= 100
+                  ? 'bg-emerald-700'
+                  : progressPct > 0
+                    ? 'bg-amber-700'
+                    : 'bg-muted-foreground/45'
+              }
+              pulse={progressPct > 0 && progressPct < 100}
+            />
+            <span>
+              {flow.resolvedCount}/{flow.totalCount} resolved
+            </span>
           </Badge>
         </div>
         <h2
@@ -89,7 +106,15 @@ export function EngagementFlowCard({
                   <span className="capitalize text-muted-foreground">
                     {stage.ticket.ticket_type.replace(/_/g, ' ')}
                   </span>
-                  {locked ? <Badge variant="outline">Locked</Badge> : null}
+                  {locked ? (
+                    <Badge
+                      variant="outline"
+                      className="h-5 gap-1.5 rounded-md px-2 py-0 font-mono text-[10px] font-medium uppercase tracking-wider"
+                    >
+                      <StatusDot className="bg-muted-foreground/45" />
+                      Locked
+                    </Badge>
+                  ) : null}
                 </div>
                 <p className="line-clamp-2 text-foreground/90">
                   {stage.ticket.scenario_brief}

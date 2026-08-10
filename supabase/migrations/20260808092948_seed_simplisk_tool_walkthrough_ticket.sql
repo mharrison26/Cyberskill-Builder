@@ -1,8 +1,14 @@
--- Seed SimpleRisk tool-walkthrough ticket (GRC track).
+-- Seed SimpleRisk tool-walkthrough ticket (GRC-02 / GRC track).
 --
--- Students log a risk in a self-hosted SimpleRisk instance, then submit:
+-- Students assess a Northwind SaaS vendor scenario with SP 800-30, log the
+-- risk in a self-hosted SimpleRisk instance, then submit:
 --   - risk register entry ID (deterministic format check)
 --   - likelihood/impact justification (RAG-graded vs pinned SP 800-30 text)
+--
+-- Vendor profile facts (scenario data):
+--   - data types: customer PII
+--   - integration: REST API with OAuth
+--   - vendor posture: SOC 2 Type I only, no penetration test history
 --
 -- toolUrl default:
 --   http://localhost — official SimpleRisk Docker publish on host port 80:
@@ -16,7 +22,7 @@
 --   1. Admin → Tickets → create or edit a ticket with ticket_type = tool_walkthrough
 --      (aliases: simplerisk_walkthrough, simplerisk)
 --   2. Set initial_state.toolUrl to your self-hosted SimpleRisk base URL
---   3. Adjust initial_state.steps for your lab scenario
+--   3. Adjust initial_state.steps / vendor profile for your lab scenario
 --   4. Optional expected_state knobs:
 --        riskIdPattern, minJustificationLength, guidanceTopics, topKGuidanceSections
 --
@@ -52,40 +58,58 @@ SELECT
   'tool_walkthrough',
   'medium',
   45,
-  'SimpleRisk: Log exposed remote administration risk and justify likelihood/impact',
-  jsonb_build_object(
-    'toolName', 'SimpleRisk',
-    'toolUrl', 'http://localhost',
-    'toolHint', 'Use the self-hosted SimpleRisk instance for this lab (default http://localhost). Start it with: docker run --name simplerisk -d -p 80:80 -p 443:443 simplerisk/simplerisk. Your instructor may share a different cohort URL.',
-    'steps', jsonb_build_array(
-      jsonb_build_object(
-        'title', 'Sign in',
-        'body', 'Open SimpleRisk and sign in with the credentials provided for your cohort.'
-      ),
-      jsonb_build_object(
-        'title', 'Submit a risk',
-        'body', 'Create a new risk for internet-exposed remote administration (for example RDP/SSH) on a system that stores sensitive operational data. Include a clear subject and description.'
-      ),
-      jsonb_build_object(
-        'title', 'Set likelihood and impact',
-        'body', 'Assign likelihood and impact values in SimpleRisk using factors you can defend (threat capability/intent or non-adversarial frequency, control gaps, and magnitude of harm to mission/assets/individuals).'
-      ),
-      jsonb_build_object(
-        'title', 'Record the risk ID',
-        'body', 'After the risk is saved, copy the risk register entry ID shown in SimpleRisk. You will submit that ID plus a written likelihood/impact justification in this ticket.'
-      )
-    )
-  ),
-  jsonb_build_object(
-    'riskIdPattern', '^(?:RISK[-_:]?)?\d{1,10}$',
-    'minJustificationLength', 80,
-    'guidanceTopics', jsonb_build_array(
-      'likelihood',
-      'impact',
-      'risk-determination'
-    ),
-    'topKGuidanceSections', 4
-  ),
+  $brief$SimpleRisk: Northwind is onboarding a new SaaS vendor that will have API access to customer PII. Conduct a risk assessment using SP 800-30 methodology: identify at least two threat sources, estimate likelihood and impact using 800-30's qualitative scale, and log the resulting risk in SimpleRisk with a documented rationale.$brief$,
+  $initial${
+    "ticketCode": "GRC-02",
+    "toolName": "SimpleRisk",
+    "toolUrl": "http://localhost",
+    "toolHint": "Use the self-hosted SimpleRisk instance for this lab (default http://localhost). Start it with: docker run --name simplerisk -d -p 80:80 -p 443:443 simplerisk/simplerisk. Your instructor may share a different cohort URL.",
+    "organization": {
+      "name": "Northwind"
+    },
+    "vendor": {
+      "dataTypes": ["customer PII"],
+      "integration": "REST API with OAuth",
+      "posture": {
+        "soc2": "Type I only",
+        "penetrationTestHistory": "none"
+      },
+      "postureSummary": "SOC 2 Type I only, no penetration test history"
+    },
+    "steps": [
+      {
+        "title": "Review the vendor profile",
+        "body": "Northwind is onboarding a SaaS vendor with API access to customer PII. Note the integration (REST API with OAuth) and stated posture (SOC 2 Type I only; no penetration test history)."
+      },
+      {
+        "title": "Sign in to SimpleRisk",
+        "body": "Open SimpleRisk and sign in with the credentials provided for your cohort."
+      },
+      {
+        "title": "Submit a risk",
+        "body": "Create a new risk for this vendor onboarding scenario. Identify at least two threat sources, and include a clear subject and description that reflects the PII / API exposure and posture gaps."
+      },
+      {
+        "title": "Set likelihood and impact",
+        "body": "Assign likelihood and impact in SimpleRisk using SP 800-30 qualitative factors you can defend (threat capability/intent or non-adversarial frequency, control gaps such as Type I-only assurance and missing pen-test evidence, and magnitude of harm to customer PII / mission)."
+      },
+      {
+        "title": "Record the risk ID",
+        "body": "After the risk is saved, copy the risk register entry ID shown in SimpleRisk. You will submit that ID plus a written likelihood/impact justification in this ticket."
+      }
+    ]
+  }$initial$::jsonb,
+  $expected${
+    "riskIdPattern": "^(?:RISK[-_:]?)?\\d{1,10}$",
+    "minJustificationLength": 80,
+    "guidanceTopics": [
+      "threat-sources",
+      "likelihood",
+      "impact",
+      "risk-determination"
+    ],
+    "topKGuidanceSections": 5
+  }$expected$::jsonb,
   '612',
   20
 FROM (

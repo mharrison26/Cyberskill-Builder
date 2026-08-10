@@ -23,7 +23,14 @@ import type {
  * Deterministic:
  *   - every in-scope practice scored (met / partial / not_met)
  *   - readiness % present (0–100)
+ *   - when expected_state.expectedPracticeScores is set: classifications
+ *     must match the answer key and readiness % must equal
+ *     calculateCmmcReadinessPercent (or expectedReadinessPercent)
  *   - gap analysis meets minimum length
+ *
+ * Readiness formula (default, overridable via expected_state weights):
+ *   readinessPercent = round(100 * Σ weight(score_i) / N)
+ *   weight(met)=1, weight(partial)=0.5, weight(not_met)=0
  *
  * RAG / LLM (F26 pattern):
  *   - retrieve pinned CMMC practice descriptions
@@ -41,11 +48,31 @@ import {
   type CmmcPracticeScoreValue,
 } from '@/lib/scoring/ticketUi';
 
+/** Default weights for readiness %: met=1, partial=0.5, not_met=0. */
+export const DEFAULT_CMMC_READINESS_WEIGHTS: Record<
+  CmmcPracticeScoreValue,
+  number
+> = {
+  met: 1,
+  partial: 0.5,
+  not_met: 0,
+};
+
 export type CmmcGapAnalysisExpectedState = {
   minGapAnalysisLength?: number;
   topKPractices?: number;
   /** Optional override; defaults to initial_state.practiceIds. */
   practiceIds?: string[];
+  /** Answer-key classifications (GRC-07 deliberate mix). */
+  expectedPracticeScores?: CmmcPracticeScoreEntry[];
+  /** Expected readiness % derived from the answer-key mix. */
+  expectedReadinessPercent?: number;
+  /**
+   * Optional weight override. Defaults: met=1, partial=0.5, not_met=0.
+   * Formula: round(100 * Σ weight(score) / N).
+   */
+  readinessWeights?: Partial<Record<CmmcPracticeScoreValue, number>>;
+  readinessFormula?: string;
 };
 
 export type CmmcGapAnalysisInitialState = {
@@ -53,6 +80,7 @@ export type CmmcGapAnalysisInitialState = {
   companySummary?: string;
   implementationSummary?: string;
   practiceIds?: string[];
+  readinessFormula?: string;
 };
 
 export type CmmcPracticeScoreEntry = {
@@ -73,8 +101,12 @@ export type CmmcGapAnalysisStructuredResult = {
   scoredPracticeIds: string[];
   missingPracticeIds: string[];
   invalidScores: string[];
+  mismatchedPracticeIds: string[];
   readinessPercent: number | null;
+  expectedReadinessPercent: number | null;
+  calculatedReadinessPercent: number | null;
   readinessPercentOk: boolean;
+  practiceScoresMatchExpected: boolean | null;
   gapAnalysisLength: number;
   minGapAnalysisLength: number;
   gapAnalysisLengthOk: boolean;
@@ -87,6 +119,53 @@ export type CmmcGapAnalysisStructuredResult = {
   };
   reason?: string;
 };
+
+/**
+ * Calculate checkable readiness % from practice scores.
+ *
+ * Formula: round(100 * Σ weight(score_i) / N)
+ * Default weights: met=1, partial=0.5, not_met=0
+ */
+export function calculateCmmcReadinessPercent(
+  scores: Array<{ score: CmmcPracticeScoreValue }>,
+  weights: Partial<
+    Record<CmmcPracticeScoreValue, number>
+  > = DEFAULT_CMMC_READINESS_WEIGHTS
+): number {
+  if (scores.length === 0) {
+    return 0;
+  }
+  const resolved = {
+    ...DEFAULT_CMMC_READINESS_WEIGHTS,
+    ...weights,
+  };
+  const total = scores.reduce((sum, entry) => sum + resolved[entry.score], 0);
+  return Math.round((100 * total) / scores.length);
+}
+
+export function parseExpectedPracticeScores(
+  expected: CmmcGapAnalysisExpectedState
+): CmmcPracticeScoreEntry[] {
+  if (!Array.isArray(expected.expectedPracticeScores)) {
+    return [];
+  }
+  const out: CmmcPracticeScoreEntry[] = [];
+  for (const entry of expected.expectedPracticeScores) {
+    if (!isPlainObject(entry)) continue;
+    const practiceIdRaw =
+      entry.practiceId ??
+      (entry as { practice_id?: unknown }).practice_id ??
+      (entry as { id?: unknown }).id;
+    const scoreRaw =
+      entry.score ??
+      (entry as { status?: unknown }).status ??
+      (entry as { value?: unknown }).value;
+    if (typeof practiceIdRaw !== 'string' || !practiceIdRaw.trim()) continue;
+    if (!isPracticeScoreValue(scoreRaw)) continue;
+    out.push({ practiceId: practiceIdRaw.trim(), score: scoreRaw });
+  }
+  return out;
+}
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -229,6 +308,17 @@ export function evaluateCmmcGapAnalysisDeterministic(
 
   const parsed = extractCmmcGapAnalysisSubmission(submission);
 
+  const expectedScores = parseExpectedPracticeScores(expected);
+  const hasAnswerKey = expectedScores.length > 0;
+  const readinessWeights = expected.readinessWeights;
+  const expectedReadinessFromKey =
+    typeof expected.expectedReadinessPercent === 'number' &&
+    Number.isFinite(expected.expectedReadinessPercent)
+      ? Math.round(expected.expectedReadinessPercent)
+      : hasAnswerKey
+        ? calculateCmmcReadinessPercent(expectedScores, readinessWeights)
+        : null;
+
   if (!parsed) {
     const structured: CmmcGapAnalysisStructuredResult = {
       style: 'cmmc_gap_analysis',
@@ -236,8 +326,12 @@ export function evaluateCmmcGapAnalysisDeterministic(
       scoredPracticeIds: [],
       missingPracticeIds: practiceIds,
       invalidScores: [],
+      mismatchedPracticeIds: [],
       readinessPercent: null,
+      expectedReadinessPercent: expectedReadinessFromKey,
+      calculatedReadinessPercent: null,
       readinessPercentOk: false,
+      practiceScoresMatchExpected: hasAnswerKey ? false : null,
       gapAnalysisLength: 0,
       minGapAnalysisLength: minLength,
       gapAnalysisLengthOk: false,
@@ -271,10 +365,58 @@ export function evaluateCmmcGapAnalysisDeterministic(
     }
   }
 
-  const readinessPercentOk =
+  const orderedScores = practiceIds
+    .map((id) => scoreById.get(id.toLowerCase()))
+    .filter((entry): entry is CmmcPracticeScoreEntry => Boolean(entry));
+
+  const calculatedReadinessPercent =
+    orderedScores.length > 0
+      ? calculateCmmcReadinessPercent(orderedScores, readinessWeights)
+      : null;
+
+  const readinessInRange =
     Number.isFinite(parsed.readinessPercent) &&
     parsed.readinessPercent >= 0 &&
     parsed.readinessPercent <= 100;
+
+  const mismatchedPracticeIds: string[] = [];
+  if (hasAnswerKey) {
+    const expectedById = new Map(
+      expectedScores.map((entry) => [
+        entry.practiceId.toLowerCase(),
+        entry.score,
+      ])
+    );
+    for (const id of practiceIds) {
+      const submitted = scoreById.get(id.toLowerCase());
+      const expectedScore = expectedById.get(id.toLowerCase());
+      if (!submitted || !expectedScore) continue;
+      if (submitted.score !== expectedScore) {
+        mismatchedPracticeIds.push(id);
+      }
+    }
+    // Also flag answer-key practices missing from ticket practiceIds (config drift).
+    for (const entry of expectedScores) {
+      if (
+        !practiceIds.some(
+          (id) => id.toLowerCase() === entry.practiceId.toLowerCase()
+        )
+      ) {
+        mismatchedPracticeIds.push(entry.practiceId);
+      }
+    }
+  }
+
+  const practiceScoresMatchExpected = hasAnswerKey
+    ? mismatchedPracticeIds.length === 0 && missingPracticeIds.length === 0
+    : null;
+
+  const readinessPercentOk = hasAnswerKey
+    ? readinessInRange &&
+      expectedReadinessFromKey !== null &&
+      Math.round(parsed.readinessPercent) === expectedReadinessFromKey &&
+      calculatedReadinessPercent === expectedReadinessFromKey
+    : readinessInRange;
 
   const gapAnalysisLength = parsed.gapAnalysis.length;
   const gapAnalysisLengthOk = gapAnalysisLength >= minLength;
@@ -285,8 +427,12 @@ export function evaluateCmmcGapAnalysisDeterministic(
     scoredPracticeIds: parsed.practiceScores.map((entry) => entry.practiceId),
     missingPracticeIds,
     invalidScores,
+    mismatchedPracticeIds,
     readinessPercent: parsed.readinessPercent,
+    expectedReadinessPercent: expectedReadinessFromKey,
+    calculatedReadinessPercent,
     readinessPercentOk,
+    practiceScoresMatchExpected,
     gapAnalysisLength,
     minGapAnalysisLength: minLength,
     gapAnalysisLengthOk,
@@ -304,13 +450,36 @@ export function evaluateCmmcGapAnalysisDeterministic(
     };
   }
 
-  if (!readinessPercentOk) {
+  if (!readinessInRange) {
     structured.reason = 'invalid_readiness_percent';
     return {
       parsed,
       structured,
       ok: false,
       feedback: 'Overall readiness percentage must be a number from 0 to 100.',
+    };
+  }
+
+  if (hasAnswerKey && mismatchedPracticeIds.length > 0) {
+    structured.reason = 'practice_scores_mismatch';
+    return {
+      parsed,
+      structured,
+      ok: false,
+      feedback: `Practice classifications do not match the implementation evidence. Revisit: ${mismatchedPracticeIds.join(', ')}.`,
+    };
+  }
+
+  if (hasAnswerKey && !readinessPercentOk) {
+    structured.reason = 'readiness_percent_mismatch';
+    return {
+      parsed,
+      structured,
+      ok: false,
+      feedback:
+        expectedReadinessFromKey !== null
+          ? `Overall readiness must equal ${expectedReadinessFromKey}% using readinessPercent = round(100 × Σ weight(score) / N) with met=1, partial=0.5, not_met=0. Your submitted value (${Math.round(parsed.readinessPercent)}%) does not match the designed practice mix.`
+          : 'Overall readiness percentage does not match the designed practice mix.',
     };
   }
 
@@ -348,8 +517,9 @@ export function evaluateCmmcGapAnalysisDeterministic(
     parsed,
     structured,
     ok: true,
-    feedback:
-      'Deterministic checks passed. Grading gap analysis against pinned CMMC practice descriptions…',
+    feedback: hasAnswerKey
+      ? 'Practice scores and readiness % match the answer key. Grading gap analysis against pinned CMMC practice descriptions…'
+      : 'Deterministic checks passed. Grading gap analysis against pinned CMMC practice descriptions…',
   };
 }
 
