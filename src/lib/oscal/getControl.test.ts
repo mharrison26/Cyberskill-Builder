@@ -32,8 +32,12 @@ describe('getControlText', () => {
     const result = getControlText('ia-5.1');
 
     expect(result.assessmentObjective.length).toBeGreaterThan(0);
-    expect(result.assessmentObjective).toMatch(/password-based authentication/i);
-    expect(result.assessmentObjective).toMatch(/commonly used, expected, or compromised passwords/i);
+    expect(result.assessmentObjective).toMatch(
+      /password-based authentication/i
+    );
+    expect(result.assessmentObjective).toMatch(
+      /commonly used, expected, or compromised passwords/i
+    );
     // Assessment objectives are distinct from the control statement prose.
     expect(result.assessmentObjective).not.toBe(result.statement);
     expect(result.assessmentMethods.examine).toMatch(/password policy/i);
@@ -89,7 +93,9 @@ describe('getAssessmentObjectiveText', () => {
     expect(result.assessmentObjective).toMatch(
       /commonly used, expected, or compromised passwords/i
     );
-    expect(result.assessmentMethods.examine).toMatch(/password configurations/i);
+    expect(result.assessmentMethods.examine).toMatch(
+      /password configurations/i
+    );
     expect(result.assessmentMethods.interview).toMatch(
       /authenticator management responsibilities/i
     );
@@ -105,7 +111,9 @@ describe('getAssessmentObjectiveText', () => {
     const paren = getAssessmentObjectiveText('IA-5(1)');
 
     expect(paren.assessmentObjective).toBe(base.assessmentObjective);
-    expect(paren.assessmentMethods.examine).toBe(base.assessmentMethods.examine);
+    expect(paren.assessmentMethods.examine).toBe(
+      base.assessmentMethods.examine
+    );
   });
 
   it('retrieves live SP 800-53A assessment content for ac-2', () => {

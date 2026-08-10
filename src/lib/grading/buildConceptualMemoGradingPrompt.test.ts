@@ -7,7 +7,8 @@ describe('buildConceptualMemoGradingPrompt', () => {
     const prompt = buildConceptualMemoGradingPrompt({
       lessonTitle: 'Core Framework Differences',
       scenarioBrief: 'Draft a one-page orientation memo.',
-      gradingFocus: 'Distinguish voluntary commercial vs mandatory federal frameworks.',
+      gradingFocus:
+        'Distinguish voluntary commercial vs mandatory federal frameworks.',
       memo: 'Commercial frameworks are attestation-based; RMF is authorization-based.',
     });
 

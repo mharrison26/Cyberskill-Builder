@@ -64,7 +64,7 @@ function stringFromExpected(
 /**
  * GRC-09 OSCAL automation capstone: WebContainer sandbox seeded with the
  * sample JSON template. On submit, the script is re-run against that sample
- * input; the server grades via OSCAL SSP schema validation only.
+ * input; the server grades schema validation + basic script structure checks.
  */
 export function OscalGeneratorTicket({
   ticket,
@@ -124,14 +124,18 @@ export function OscalGeneratorTicket({
       <p className="max-w-prose text-sm text-muted-foreground">{prompt}</p>
 
       <p className="max-w-prose text-sm text-muted-foreground">
-        Edit <code className="text-foreground">{scriptPath}</code> to read{' '}
+        Edit <code className="text-foreground">{scriptPath}</code> (or replace
+        it with a Python{' '}
+        <code className="text-foreground">generate_ssp.py</code>) to read{' '}
         <code className="text-foreground">{inputPath}</code> (sample template
         with <code className="text-foreground">system_name</code>,{' '}
         <code className="text-foreground">fips_199_category</code>, and{' '}
         <code className="text-foreground">controls</code>) and write a valid
         OSCAL SSP to <code className="text-foreground">output/ssp.json</code>.
-        Submit runs your script against the sample input in the sandbox; pass
-        / fail is SSP schema validation only.
+        Submit re-runs your script against the sample input in the sandbox. You
+        pass when the generated OSCAL schema-validates and the script passes
+        basic structure checks (reads input, writes JSON, not a stub) — not a
+        full code review.
       </p>
 
       <CodeSandbox

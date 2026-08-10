@@ -98,10 +98,7 @@ export function QueueVolumeSparkline({
           </defs>
           {isEmpty ? (
             <path
-              d={
-                line ||
-                `M 0 ${height - 2} L ${width} ${height - 2}`
-              }
+              d={line || `M 0 ${height - 2} L ${width} ${height - 2}`}
               fill="none"
               stroke="currentColor"
               strokeOpacity="0.45"

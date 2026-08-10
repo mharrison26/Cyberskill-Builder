@@ -178,6 +178,7 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
       scriptPath: 'generate_ssp.js',
       inputPath: 'input/system.json',
       outputPath: 'output/ssp.json',
+      requireStaticChecks: true,
     },
     dcwf_code: '612',
     sort_order: 90,
@@ -207,6 +208,9 @@ describe('runStaticScriptChecks', () => {
     expect(checks.find((c) => c.id === 'min_length')?.passed).toBe(false);
     expect(checks.find((c) => c.id === 'reads_input')?.passed).toBe(false);
     expect(checks.find((c) => c.id === 'writes_json')?.passed).toBe(false);
+    expect(checks.find((c) => c.id === 'handles_missing_field')?.passed).toBe(
+      false
+    );
   });
 });
 
@@ -222,18 +226,11 @@ describe('parseJsonFromStdout', () => {
 });
 
 describe('evaluateOscalGenerator / oscalGeneratorTicketScorer', () => {
-  it('resolves when SSP schema validation passes (static checks advisory)', async () => {
-    // Intentionally stubby script — schema pass/fail is the gate.
-    const stubScript = `const fs = require('fs');
-const input = JSON.parse(fs.readFileSync('input/system.json','utf8'));
-fs.mkdirSync('output',{recursive:true});
-fs.writeFileSync('output/ssp.json', JSON.stringify({ ok: true }));
-`;
-
+  it('resolves when SSP schema validation and static checks both pass', async () => {
     const result = await oscalGeneratorTicketScorer.score(
       {
         files: {
-          'generate_ssp.js': stubScript,
+          'generate_ssp.js': GOOD_SCRIPT,
           'input/system.json': JSON.stringify(SAMPLE_INPUT),
           'output/ssp.json': JSON.stringify(VALID_SSP),
         },
@@ -245,10 +242,11 @@ fs.writeFileSync('output/ssp.json', JSON.stringify({ ok: true }));
     expect(result.structuredResult).toMatchObject({
       style: 'oscal_generator',
       schemaValid: true,
+      staticPassed: true,
       documentKind: 'ssp',
     });
-    // Static checks may fail on the stub; they must not gate pass/fail.
-    expect(result.structuredResult.staticPassed).toBe(false);
+    expect(result.feedback).toMatch(/Capstone accepted/i);
+    expect(result.feedback).toMatch(/structure checks passed/i);
   });
 
   it('needs revision when OSCAL output fails SSP schema validation', async () => {
@@ -281,6 +279,7 @@ fs.writeFileSync('output/ssp.json', JSON.stringify({ ok: true }));
       ticket()
     );
     expect(result.status).toBe('needs_revision');
+    expect(result.feedback).toMatch(/schema validation/i);
   });
 
   it('accepts valid SSP JSON from stdout when output file is missing', async () => {
@@ -298,6 +297,7 @@ fs.writeFileSync('output/ssp.json', JSON.stringify({ ok: true }));
     expect(result.status).toBe('resolved');
     expect(result.structuredResult).toMatchObject({
       schemaValid: true,
+      staticPassed: true,
       outputSource: 'stdout',
     });
   });
@@ -319,6 +319,7 @@ fs.writeFileSync('output/ssp.json', JSON.stringify({ ok: true }));
     expect(result.structuredResult).toMatchObject({
       reason: 'sandbox_run_failed',
     });
+    expect(result.feedback).toMatch(/sandbox failed/i);
   });
 
   it('needs revision when generated output is missing', async () => {
@@ -336,9 +337,10 @@ fs.writeFileSync('output/ssp.json', JSON.stringify({ ok: true }));
     expect(result.structuredResult).toMatchObject({
       reason: 'missing_output',
     });
+    expect(result.feedback).toMatch(/could not find generated OSCAL/i);
   });
 
-  it('can still require static checks when expected_state.requireStaticChecks', async () => {
+  it('needs revision when schema is valid but static structure checks fail', async () => {
     const stubScript = `const fs = require('fs');
 fs.writeFileSync('output/ssp.json', '{}');
 `;
@@ -367,5 +369,41 @@ fs.writeFileSync('output/ssp.json', '{}');
       schemaValid: true,
       staticPassed: false,
     });
+    expect(result.feedback).toMatch(/Script structure checks failed/i);
+    expect(result.feedback).not.toMatch(/Capstone accepted/i);
+  });
+
+  it('treats static checks as advisory when requireStaticChecks is false', async () => {
+    const stubScript = `const fs = require('fs');
+const input = JSON.parse(fs.readFileSync('input/system.json','utf8'));
+fs.mkdirSync('output',{recursive:true});
+fs.writeFileSync('output/ssp.json', JSON.stringify({ ok: true }));
+`;
+
+    const result = await oscalGeneratorTicketScorer.score(
+      {
+        files: {
+          'generate_ssp.js': stubScript,
+          'input/system.json': JSON.stringify(SAMPLE_INPUT),
+          'output/ssp.json': JSON.stringify(VALID_SSP),
+        },
+      },
+      ticket({
+        expected_state: {
+          documentKind: 'ssp',
+          scriptPath: 'generate_ssp.js',
+          inputPath: 'input/system.json',
+          outputPath: 'output/ssp.json',
+          requireStaticChecks: false,
+        },
+      })
+    );
+
+    expect(result.status).toBe('resolved');
+    expect(result.structuredResult).toMatchObject({
+      schemaValid: true,
+      staticPassed: false,
+    });
+    expect(result.feedback).toMatch(/Advisory script notes/i);
   });
 });

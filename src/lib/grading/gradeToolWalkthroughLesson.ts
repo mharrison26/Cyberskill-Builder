@@ -79,10 +79,7 @@ export async function loadPriorFindingForLesson(input: {
   }
 
   const lessonJoin = data.lesson as
-    | { title?: string | null }
-    | { title?: string | null }[]
-    | null
-    | undefined;
+    { title?: string | null } | { title?: string | null }[] | null | undefined;
   const sourceLessonTitle = Array.isArray(lessonJoin)
     ? (lessonJoin[0]?.title ?? null)
     : (lessonJoin?.title ?? null);

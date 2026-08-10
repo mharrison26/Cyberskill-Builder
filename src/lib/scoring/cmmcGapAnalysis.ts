@@ -128,7 +128,9 @@ export type CmmcGapAnalysisStructuredResult = {
  */
 export function calculateCmmcReadinessPercent(
   scores: Array<{ score: CmmcPracticeScoreValue }>,
-  weights: Partial<Record<CmmcPracticeScoreValue, number>> = DEFAULT_CMMC_READINESS_WEIGHTS
+  weights: Partial<
+    Record<CmmcPracticeScoreValue, number>
+  > = DEFAULT_CMMC_READINESS_WEIGHTS
 ): number {
   if (scores.length === 0) {
     return 0;
@@ -380,7 +382,10 @@ export function evaluateCmmcGapAnalysisDeterministic(
   const mismatchedPracticeIds: string[] = [];
   if (hasAnswerKey) {
     const expectedById = new Map(
-      expectedScores.map((entry) => [entry.practiceId.toLowerCase(), entry.score])
+      expectedScores.map((entry) => [
+        entry.practiceId.toLowerCase(),
+        entry.score,
+      ])
     );
     for (const id of practiceIds) {
       const submitted = scoreById.get(id.toLowerCase());

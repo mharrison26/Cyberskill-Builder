@@ -233,13 +233,50 @@ function defaultRunCommand(scriptPath: string): string[] {
   return ['node', scriptPath];
 }
 
+/** Prefer configured path; if missing, try common Node↔Python swap for generators. */
+async function resolveRunnableScriptPath(
+  container: WebContainer,
+  configured: string
+): Promise<string> {
+  const scriptPath = normalizePath(configured);
+  try {
+    await container.fs.readFile(scriptPath, 'utf8');
+    return scriptPath;
+  } catch {
+    // Fall through to alternates.
+  }
+
+  const alternates: string[] = [];
+  if (/\.js$/i.test(scriptPath)) {
+    alternates.push(scriptPath.replace(/\.js$/i, '.py'));
+  } else if (/\.py$/i.test(scriptPath)) {
+    alternates.push(scriptPath.replace(/\.py$/i, '.js'));
+  }
+  // Capstone convention: generate_ssp.* regardless of configured extension.
+  const base = scriptPath.replace(/\.[^.]+$/, '');
+  for (const ext of ['.js', '.mjs', '.cjs', '.py', '.ts']) {
+    const candidate = `${base}${ext}`;
+    if (candidate !== scriptPath) alternates.push(candidate);
+  }
+
+  for (const candidate of alternates) {
+    try {
+      await container.fs.readFile(candidate, 'utf8');
+      return candidate;
+    } catch {
+      // try next
+    }
+  }
+  return scriptPath;
+}
+
 async function runScriptInContainer(
   container: WebContainer,
   run: CodeSandboxRunOnSubmit,
   terminal: Terminal | null
 ): Promise<{ stdout: string; exitCode: number }> {
   const inputPath = normalizePath(run.inputPath);
-  const scriptPath = normalizePath(run.scriptPath);
+  const scriptPath = await resolveRunnableScriptPath(container, run.scriptPath);
   const dir = inputPath.includes('/')
     ? inputPath.slice(0, inputPath.lastIndexOf('/'))
     : '';
@@ -260,16 +297,18 @@ async function runScriptInContainer(
 
   const process = await container.spawn(bin, args);
   let stdout = '';
-  process.output.pipeTo(
-    new WritableStream({
-      write(chunk) {
-        stdout += chunk;
-        terminal?.write(chunk);
-      },
-    })
-  ).catch(() => {
-    // Ignore late pipe errors after process exit.
-  });
+  process.output
+    .pipeTo(
+      new WritableStream({
+        write(chunk) {
+          stdout += chunk;
+          terminal?.write(chunk);
+        },
+      })
+    )
+    .catch(() => {
+      // Ignore late pipe errors after process exit.
+    });
 
   const timeoutMs = run.timeoutMs ?? 20_000;
   const exitCode = await Promise.race([
@@ -326,6 +365,10 @@ export function CodeSandbox({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitFeedback, setSubmitFeedback] = useState<string | null>(null);
+  const [submitScoreStatus, setSubmitScoreStatus] = useState<
+    'resolved' | 'needs_revision' | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -525,6 +568,8 @@ export function CodeSandbox({
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitSuccess(false);
+    setSubmitFeedback(null);
+    setSubmitScoreStatus(null);
 
     try {
       await persistActiveFile();
@@ -594,6 +639,24 @@ export function CodeSandbox({
         return;
       }
 
+      const feedback =
+        typeof body === 'object' &&
+        body !== null &&
+        'feedback' in body &&
+        typeof (body as { feedback: unknown }).feedback === 'string'
+          ? (body as { feedback: string }).feedback.trim()
+          : '';
+      const scoreStatus =
+        typeof body === 'object' &&
+        body !== null &&
+        'status' in body &&
+        ((body as { status: unknown }).status === 'resolved' ||
+          (body as { status: unknown }).status === 'needs_revision')
+          ? (body as { status: 'resolved' | 'needs_revision' }).status
+          : null;
+
+      setSubmitFeedback(feedback || null);
+      setSubmitScoreStatus(scoreStatus);
       setSubmitSuccess(true);
       onSubmitComplete?.({ ok: true, status: response.status, body });
     } catch {
@@ -749,12 +812,26 @@ export function CodeSandbox({
         </p>
       ) : null}
       {submitSuccess ? (
-        <p
-          className="border-t border-border px-4 py-2 text-sm text-[color:var(--status-satisfied-foreground)]"
-          role="status"
+        <div
+          className={cn(
+            'space-y-1 border-t border-border px-4 py-2 text-sm',
+            submitScoreStatus === 'needs_revision'
+              ? 'text-destructive'
+              : 'text-[color:var(--status-satisfied-foreground)]'
+          )}
+          role={submitScoreStatus === 'needs_revision' ? 'alert' : 'status'}
         >
-          Submission received.
-        </p>
+          <p className="font-medium">
+            {submitScoreStatus === 'resolved'
+              ? 'Lab accepted.'
+              : submitScoreStatus === 'needs_revision'
+                ? 'Needs revision.'
+                : 'Submission received.'}
+          </p>
+          {submitFeedback ? (
+            <p className="text-muted-foreground">{submitFeedback}</p>
+          ) : null}
+        </div>
       ) : null}
     </section>
   );

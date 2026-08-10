@@ -37,8 +37,7 @@ describe('buildToolWalkthroughFieldMappingPrompt', () => {
       externalReference: 'RISK-42',
       reflection:
         'Mapped CCCER Condition to SimpleRisk Subject, Criteria to Control tagging, Cause to Notes, and Recommendation to Mitigation plan for RISK-42.',
-      storagePath:
-        'tenant/student/lesson/screenshot.png',
+      storagePath: 'tenant/student/lesson/screenshot.png',
       lessonTitle: 'Open-Source Tracking Workflows',
     });
 

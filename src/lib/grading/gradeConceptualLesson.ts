@@ -72,7 +72,9 @@ export async function gradeConceptualLesson(
   const submission = progress.submission as ConceptualSubmission;
   const content = (lesson.content ?? {}) as LessonContentPayload;
   const scenarioBrief =
-    typeof content.scenarioBrief === 'string' ? content.scenarioBrief : undefined;
+    typeof content.scenarioBrief === 'string'
+      ? content.scenarioBrief
+      : undefined;
   const gradingFocus =
     typeof content.gradingFocus === 'string' ? content.gradingFocus : undefined;
 

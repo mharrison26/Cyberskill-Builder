@@ -92,8 +92,8 @@ export function PoamTicketWork({
     [initialState]
   );
 
-  const [priorFindings, setPriorFindings] = useState<PoamPriorFinding[]>(
-    () => (usesStudentHistory ? [] : seedFindings)
+  const [priorFindings, setPriorFindings] = useState<PoamPriorFinding[]>(() =>
+    usesStudentHistory ? [] : seedFindings
   );
   const [drafts, setDrafts] = useState<Record<string, EntryDraft>>(() =>
     draftsFromFindings(usesStudentHistory ? [] : seedFindings)

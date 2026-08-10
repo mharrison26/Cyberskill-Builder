@@ -1,3 +1,4 @@
+import { sortPortfolioItemsFlagshipFirst } from '@/lib/portfolio/sortPortfolioItems';
 import { createPublicClient } from '@/lib/supabase/public';
 import type { OscalObservation } from '@/lib/oscal/toAssessmentFinding';
 import type {
@@ -174,7 +175,7 @@ export async function getPublicPortfolioItems(
     }
   }
 
-  return (data ?? []).map((row) => {
+  const items: PublicPortfolioItem[] = (data ?? []).map((row) => {
     const itemKind = row.item_kind as PortfolioItemKind;
     const structured =
       (row.structured_result as Record<string, unknown> | null) ?? {};
@@ -243,6 +244,8 @@ export async function getPublicPortfolioItems(
       defense,
     };
   });
+
+  return sortPortfolioItemsFlagshipFirst(items);
 }
 
 /** @deprecated Use getPublicPortfolioItems. */

@@ -1,7 +1,6 @@
--- GRC-08: populate sec_materiality with the Northwind payment-vendor breach
--- scenario from the GRC lesson sheet. Ambiguity is deliberate: vendor breach
--- (not a direct Northwind breach) affecting a subset of customers — materiality
--- is a judgment call graded on factor reasoning, not a forced yes/no answer key.
+-- GRC-08: ensure both Commercial and DoD tenants have the full Northwind
+-- payment-vendor breach scenario + SEC materiality scoring gates.
+-- DoD was missing breach{} / judgmentCall / requiredFactors after earlier seeds.
 
 UPDATE public.tickets AS t
 SET
@@ -63,6 +62,14 @@ FROM public.tracks AS tr
 WHERE t.track_id = tr.id
   AND tr.slug = 'grc'
   AND t.ticket_type IN ('sec_materiality', 'sec_cyber_materiality')
+  AND (
+    t.initial_state->>'sheetId' = 'GRC-08'
+    OR t.initial_state->>'ticketCode' = 'GRC-08'
+    OR (
+      COALESCE(t.initial_state->>'sheetId', '') = ''
+      AND COALESCE(t.initial_state->>'ticketCode', '') = ''
+    )
+  )
   AND t.tenant_id IN (
     '00000000-0000-4000-8000-000000000001'::uuid,
     '00000000-0000-4000-8000-000000000003'::uuid

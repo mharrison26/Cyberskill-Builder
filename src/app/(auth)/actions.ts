@@ -55,8 +55,7 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options:
-      Object.keys(metadata).length > 0 ? { data: metadata } : undefined,
+    options: Object.keys(metadata).length > 0 ? { data: metadata } : undefined,
   });
 
   if (error) return { error: error.message };

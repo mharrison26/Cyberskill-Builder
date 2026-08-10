@@ -176,7 +176,11 @@ export function ArtifactLabLesson({
         </Card>
       ) : null}
 
-      <div id="lesson-exercise" tabIndex={-1} className="space-y-6 outline-none">
+      <div
+        id="lesson-exercise"
+        tabIndex={-1}
+        className="space-y-6 outline-none"
+      >
         <EvidenceCodeBlock
           code={evidenceCode}
           language="json"

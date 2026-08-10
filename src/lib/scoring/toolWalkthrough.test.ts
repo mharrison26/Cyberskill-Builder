@@ -47,6 +47,27 @@ const solidJustification =
   'Likelihood is moderate because the exposed RDP service is internet-reachable and known exploits exist for weak passwords; adversary capability and intent against remote admin interfaces are high. Impact is high because successful compromise enables confidentiality loss of sensitive operational data and disruption of a critical business process supporting the mission.';
 
 describe('vendorProfileTextFromToolWalkthroughTicket', () => {
+  it('reads vendorPosture from thin vendorProfile seed shape', () => {
+    const text = vendorProfileTextFromToolWalkthroughTicket(
+      ticket({
+        initial_state: {
+          vendorProfile: {
+            name: 'Northwind SaaS Vendor (fictional)',
+            dataTypes: ['customer PII'],
+            integration: 'REST API with OAuth',
+            vendorPosture: 'SOC 2 Type I only, no penetration test history',
+          },
+        },
+      })
+    );
+
+    expect(text).toContain('data types: customer PII');
+    expect(text).toContain('integration: REST API with OAuth');
+    expect(text).toContain(
+      'vendor posture: SOC 2 Type I only, no penetration test history'
+    );
+  });
+
   it('formats GRC-02 vendor profile facts for RAG grading', () => {
     const text = vendorProfileTextFromToolWalkthroughTicket(
       ticket({
@@ -57,8 +78,7 @@ describe('vendorProfileTextFromToolWalkthroughTicket', () => {
           vendor: {
             dataTypes: ['customer PII'],
             integration: 'REST API with OAuth',
-            postureSummary:
-              'SOC 2 Type I only, no penetration test history',
+            postureSummary: 'SOC 2 Type I only, no penetration test history',
           },
         },
         expected_state: {
@@ -176,7 +196,8 @@ describe('toolWalkthroughTicketScorer', () => {
   it('retrieves required SP 800-30 sections and includes vendor profile in prompt', async () => {
     vi.mocked(callClaudeGrading).mockResolvedValue({
       finding_state: 'satisfied',
-      feedback: 'Threat sources and likelihood/impact are grounded in SP 800-30.',
+      feedback:
+        'Threat sources and likelihood/impact are grounded in SP 800-30.',
       strengths: ['Named two threat sources'],
       gaps: [],
     });
@@ -198,8 +219,7 @@ describe('toolWalkthroughTicketScorer', () => {
           vendor: {
             dataTypes: ['customer PII'],
             integration: 'REST API with OAuth',
-            postureSummary:
-              'SOC 2 Type I only, no penetration test history',
+            postureSummary: 'SOC 2 Type I only, no penetration test history',
           },
         },
         expected_state: {

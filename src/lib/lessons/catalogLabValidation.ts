@@ -54,9 +54,7 @@ export function isCatalogLabSubmission(
 
 export function validateCatalogLabSubmission(
   body: unknown
-):
-  | { ok: true; data: CatalogLabSubmission }
-  | { ok: false; error: string } {
+): { ok: true; data: CatalogLabSubmission } | { ok: false; error: string } {
   if (!body || typeof body !== 'object') {
     return { ok: false, error: 'Request body must be a JSON object.' };
   }

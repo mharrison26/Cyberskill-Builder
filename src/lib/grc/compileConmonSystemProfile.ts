@@ -202,8 +202,7 @@ export function extractSystemProfileFromSspPayload(
   return {
     name: name ?? 'GRC-03 system',
     description:
-      description ??
-      'System description from your GRC-03 SSP fragment.',
+      description ?? 'System description from your GRC-03 SSP fragment.',
     authorizationBoundary: authorizationBoundary ?? undefined,
     components: controlLines.length > 0 ? controlLines : undefined,
     constraints:
@@ -267,12 +266,14 @@ export async function compileConmonSystemProfile(
     };
   }
 
-  const sspTickets = ((tickets ?? []) as Array<{
-    id: string;
-    ticket_type: string;
-    initial_state: unknown;
-    sort_order: number;
-  }>)
+  const sspTickets = (
+    (tickets ?? []) as Array<{
+      id: string;
+      ticket_type: string;
+      initial_state: unknown;
+      sort_order: number;
+    }>
+  )
     .filter((t) => typeSet.has(ticketTypeBase(t.ticket_type)))
     .sort((a, b) => a.sort_order - b.sort_order);
 
@@ -295,19 +296,21 @@ export async function compileConmonSystemProfile(
 
   const ticketIds = sspTickets.map((t) => t.id);
 
-  const [{ data: progressRows, error: progressError }, { data: portfolioRows }] =
-    await Promise.all([
-      input.supabase
-        .from('ticket_progress')
-        .select('ticket_id, status, submission')
-        .eq('student_id', input.studentId)
-        .in('ticket_id', ticketIds),
-      input.supabase
-        .from('portfolio_items')
-        .select('ticket_id, structured_result, submission, score_status')
-        .eq('student_id', input.studentId)
-        .in('ticket_id', ticketIds),
-    ]);
+  const [
+    { data: progressRows, error: progressError },
+    { data: portfolioRows },
+  ] = await Promise.all([
+    input.supabase
+      .from('ticket_progress')
+      .select('ticket_id, status, submission')
+      .eq('student_id', input.studentId)
+      .in('ticket_id', ticketIds),
+    input.supabase
+      .from('portfolio_items')
+      .select('ticket_id, structured_result, submission, score_status')
+      .eq('student_id', input.studentId)
+      .in('ticket_id', ticketIds),
+  ]);
 
   if (progressError) {
     console.warn(
@@ -348,7 +351,10 @@ export async function compileConmonSystemProfile(
     if (fromSsp) {
       chosenTicket = candidate;
       profile = fromSsp;
-      if (progress?.status === 'resolved' || portfolio?.score_status === 'resolved') {
+      if (
+        progress?.status === 'resolved' ||
+        portfolio?.score_status === 'resolved'
+      ) {
         break;
       }
     }

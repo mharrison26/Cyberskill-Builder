@@ -159,9 +159,7 @@ export function summarizeL02Submission(submission: unknown): string | null {
   return parts.join('\n\n');
 }
 
-export function extractControlIdsFromSubmission(
-  submission: unknown
-): string[] {
+export function extractControlIdsFromSubmission(submission: unknown): string[] {
   if (!isPlainObject(submission)) return [];
   return parseStringList(
     submission.controlIds ??

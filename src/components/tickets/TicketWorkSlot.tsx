@@ -268,7 +268,7 @@ export function isCoachingFeedbackTicketType(ticketType: string): boolean {
 /**
  * Extension point for ticket-type-specific work UIs.
  * oscal_generator / capstone_oscal (GRC-09) mount OscalGeneratorTicket:
- *   WebContainer + run-on-submit against sample JSON; schema-only scoring.
+ *   WebContainer + run-on-submit against sample JSON; schema + static structure scoring.
  * Other scripting tickets mount CodeSandbox.
  * script_remediation / scripting_lab (spooler_fix, sandbox_script, service_restart,
  * script_fixtures) also mounts CodeSandbox; scoring composes config-diff state /

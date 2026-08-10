@@ -16,9 +16,7 @@ export function isConceptualSubmission(
 
 export function validateConceptualSubmission(
   body: unknown
-):
-  | { ok: true; data: ConceptualSubmission }
-  | { ok: false; error: string } {
+): { ok: true; data: ConceptualSubmission } | { ok: false; error: string } {
   if (!body || typeof body !== 'object') {
     return { ok: false, error: 'Request body must be a JSON object.' };
   }

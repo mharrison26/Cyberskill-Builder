@@ -134,7 +134,9 @@ export function CatalogLabLesson({
       };
 
       if (!response.ok) {
-        throw new Error(payload.error ?? 'Failed to save catalog lab submission.');
+        throw new Error(
+          payload.error ?? 'Failed to save catalog lab submission.'
+        );
       }
 
       setSubmitSuccess(true);
@@ -161,7 +163,9 @@ export function CatalogLabLesson({
             <Badge variant="outline">{lesson.dcwf_code}</Badge>
           ) : null}
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight">{lesson.title}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          {lesson.title}
+        </h1>
         <div className="flex flex-wrap items-center gap-3">
           <Button type="button" onClick={scrollToExercise}>
             Start scenario
@@ -227,7 +231,8 @@ export function CatalogLabLesson({
           <CardDescription>
             List every IA-family control ID for the shortlist. Separately note
             authentication-adjacent AC controls (e.g. AC-7) and explain why they
-            are adjacent but not IA — including why AC-2 must not be cited as IA.
+            are adjacent but not IA — including why AC-2 must not be cited as
+            IA.
           </CardDescription>
         </CardHeader>
         <CardContent>

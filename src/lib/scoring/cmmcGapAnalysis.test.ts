@@ -107,7 +107,10 @@ describe('calculateCmmcReadinessPercent', () => {
     // All met
     expect(
       calculateCmmcReadinessPercent(
-        PRACTICE_IDS.map((practiceId) => ({ practiceId, score: 'met' as const }))
+        PRACTICE_IDS.map((practiceId) => ({
+          practiceId,
+          score: 'met' as const,
+        }))
       )
     ).toBe(100);
 
@@ -123,10 +126,7 @@ describe('calculateCmmcReadinessPercent', () => {
 
     // 1 met + 1 partial → (1 + 0.5) / 2 * 100 = 75
     expect(
-      calculateCmmcReadinessPercent([
-        { score: 'met' },
-        { score: 'partial' },
-      ])
+      calculateCmmcReadinessPercent([{ score: 'met' }, { score: 'partial' }])
     ).toBe(75);
 
     // Rounding: 1 met + 2 partial of 3 → (1 + 1) / 3 * 100 = 66.666… → 67

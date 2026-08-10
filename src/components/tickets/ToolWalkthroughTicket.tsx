@@ -99,7 +99,12 @@ function parseVendorProfile(
 
   const posture = asRecord(source.posture ?? source.securityPosture);
   const postureSummary =
-    readString(source, ['postureSummary', 'posture_summary']) ??
+    readString(source, [
+      'postureSummary',
+      'posture_summary',
+      'vendorPosture',
+      'vendor_posture',
+    ]) ??
     (() => {
       const soc2 = readString(posture, ['soc2', 'soc2Status']);
       const penTest = readString(posture, [
@@ -117,7 +122,12 @@ function parseVendorProfile(
       return bits.length > 0 ? bits.join(', ') : undefined;
     })();
 
-  if (!organization && dataTypes.length === 0 && !integration && !postureSummary) {
+  if (
+    !organization &&
+    dataTypes.length === 0 &&
+    !integration &&
+    !postureSummary
+  ) {
     return null;
   }
 
@@ -355,7 +365,9 @@ export function ToolWalkthroughTicket({
               ) : null}
               {vendorProfile.postureSummary ? (
                 <div className="sm:col-span-2">
-                  <dt className="font-medium text-foreground">Vendor posture</dt>
+                  <dt className="font-medium text-foreground">
+                    Vendor posture
+                  </dt>
                   <dd className="text-muted-foreground">
                     {vendorProfile.postureSummary}
                   </dd>

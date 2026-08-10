@@ -104,7 +104,10 @@ export function CompiledPackageArtifacts({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   return (
-    <div className={cn('space-y-3', className)} data-compiled-package={ticketId}>
+    <div
+      className={cn('space-y-3', className)}
+      data-compiled-package={ticketId}
+    >
       <div className="space-y-1">
         <h3 className="text-sm font-semibold">{heading}</h3>
         <p className="text-xs text-muted-foreground">{description}</p>

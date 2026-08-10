@@ -46,7 +46,9 @@ export function TrackModuleTabs({
   children,
 }: TrackModuleTabsProps) {
   const router = useRouter();
-  const [activeSlug, setActiveSlug] = useState<string | null>(initialActiveSlug);
+  const [activeSlug, setActiveSlug] = useState<string | null>(
+    initialActiveSlug
+  );
 
   useEffect(() => {
     setActiveSlug(initialActiveSlug);

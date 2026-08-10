@@ -127,6 +127,11 @@ export function vendorProfileTextFromToolWalkthroughTicket(
     vendor.postureSummary.trim()
   ) {
     parts.push(`vendor posture: ${vendor.postureSummary.trim()}`);
+  } else if (
+    typeof vendor.vendorPosture === 'string' &&
+    vendor.vendorPosture.trim()
+  ) {
+    parts.push(`vendor posture: ${vendor.vendorPosture.trim()}`);
   } else {
     const posture = isPlainObject(vendor.posture)
       ? vendor.posture

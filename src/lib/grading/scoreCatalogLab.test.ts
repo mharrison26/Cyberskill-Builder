@@ -49,7 +49,10 @@ describe('scoreCatalogLabSubmission', () => {
   it('fails when AC-2 is listed as an IA control', () => {
     const result = scoreCatalogLabSubmission(
       baseSubmission({
-        controlIds: [...listControlIdsByFamilyPrefix('ia', { baseOnly: true }), 'ac-2'],
+        controlIds: [
+          ...listControlIdsByFamilyPrefix('ia', { baseOnly: true }),
+          'ac-2',
+        ],
       })
     );
     expect(result.passed).toBe(false);

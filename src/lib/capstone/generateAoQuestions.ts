@@ -76,7 +76,7 @@ function buildGenerationPrompt(
   packageSectionsText: string,
   guidanceText: string
 ): string {
-  return `You are simulating an Authorizing Official (AO) reviewing a student's compiled ATO package (ISSO-04 / GRC-10).
+  return `You are simulating an Authorizing Official (AO) reviewing a student's compiled ATO package (sheet GRC-10 / ISSO-05; sources GRC-03 SSP, GRC-04 POA&M, GRC-09 OSCAL).
 
 Generate ${AO_QUESTION_MIN}–${AO_QUESTION_MAX} pointed written questions. The set MUST cover BOTH:
 1) Residual risk acceptance (what risk remains, why it is tolerable, compensating controls, revisit conditions)

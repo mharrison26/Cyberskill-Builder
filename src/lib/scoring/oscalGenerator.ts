@@ -19,12 +19,13 @@ import type {
  * GRC-09 / Capstone OSCAL generator scoring (PI-04 WebContainer submissions).
  *
  * Students write a Node/Python script that reads a sample JSON input template
- * and emits an OSCAL SSP. On submit, the browser sandbox re-runs the script
- * against the seeded sample input, then the server validates the resulting
- * JSON against the vendored OSCAL SSP schema.
+ * and emits an OSCAL SSP (or Assessment Results when configured). On submit,
+ * the browser sandbox re-runs the script against the seeded sample input, then
+ * the server validates the resulting JSON against the vendored OSCAL schema.
  *
- * Pass/fail is **schema validation only** (not subjective code quality).
- * Optional static structure checks are advisory feedback only.
+ * Pass/fail gates (when expected_state.requireStaticChecks is true, as for
+ * GRC-09): (a) generated OSCAL schema-validates, and (b) the script passes
+ * basic static structure checks — not a full code review.
  *
  * expected_state (optional knobs):
  * {
@@ -32,8 +33,8 @@ import type {
  *   scriptPath?: string;
  *   inputPath?: string;    // default: input/system.json
  *   outputPath?: string;   // default: output/ssp.json
- *   minScriptChars?: number; // advisory static check only
- *   requireStaticChecks?: boolean; // default false — when true, gates pass
+ *   minScriptChars?: number;
+ *   requireStaticChecks?: boolean; // GRC-09 seeds true — both gates pass/fail
  * }
  */
 
@@ -45,7 +46,7 @@ export type OscalGeneratorExpectedState = {
   inputPath?: string;
   outputPath?: string;
   minScriptChars?: number;
-  /** When true, static structure checks also gate pass/fail. Default false. */
+  /** When true, static structure checks also gate pass/fail (GRC-09 default). */
   requireStaticChecks?: boolean;
 };
 
@@ -296,7 +297,11 @@ export function resolveGeneratedOscal(args: {
   submission: TicketSubmission;
   files: Record<string, string>;
   outputPath: string | null;
-}): { document: unknown | null; source: 'file' | 'generatedOscal' | 'stdout' | null; outputPath: string | null } {
+}): {
+  document: unknown | null;
+  source: 'file' | 'generatedOscal' | 'stdout' | null;
+  outputPath: string | null;
+} {
   const { submission, files, outputPath } = args;
 
   if (outputPath && files[outputPath] !== undefined) {
@@ -363,7 +368,8 @@ function languageFromPath(scriptPath: string): 'js' | 'py' {
 }
 
 /**
- * Basic static structure / I/O intent checks (advisory; not a full code review).
+ * Basic static structure / I/O intent checks (not a full code review).
+ * When expected_state.requireStaticChecks is true these gate pass/fail.
  * Exported for focused unit tests.
  */
 export function runStaticScriptChecks(args: {
@@ -466,6 +472,20 @@ export function runStaticScriptChecks(args: {
       : 'Script appears to write or serialize JSON output',
   });
 
+  // Best-effort: defaults, optional chaining, try/except, or dict.get.
+  const handlesMissingField =
+    /\|\||\?\?|\?\.|\bor\s+['"`]|getattr\s*\(|\.get\s*\(/.test(stripped) ||
+    (language === 'py'
+      ? /\btry\s*:/.test(stripped) || /\bexcept\b/.test(stripped)
+      : /\btry\s*\{/.test(stripped) || /\bcatch\s*\(/.test(stripped));
+
+  checks.push({
+    id: 'handles_missing_field',
+    passed: handlesMissingField,
+    summary:
+      'Script appears to handle a missing/optional input field gracefully',
+  });
+
   return checks;
 }
 
@@ -473,8 +493,6 @@ function feedbackFromResult(
   result: OscalGeneratorStructuredResult,
   requireStaticChecks: boolean
 ): string {
-  const parts: string[] = [];
-
   if (result.reason === 'missing_files') {
     return 'No sandbox files were submitted. Open the lab sandbox, complete the script, submit so it runs against the sample input, then try again.';
   }
@@ -493,26 +511,27 @@ function feedbackFromResult(
     return 'The sandbox failed to run your script against the sample input. Check the terminal output, fix runtime errors, and resubmit.';
   }
 
-  if (requireStaticChecks && !result.staticPassed) {
-    const failed = result.staticChecks
-      .filter((c) => !c.passed)
-      .map((c) => c.summary);
-    parts.push(`Script structure checks failed: ${failed.join('; ')}.`);
-  } else if (!result.staticPassed && result.staticChecks.length > 0) {
-    const failed = result.staticChecks
-      .filter((c) => !c.passed)
-      .map((c) => c.summary);
-    if (failed.length > 0) {
-      parts.push(
-        `Advisory script notes (not graded): ${failed.join('; ')}.`
-      );
-    }
+  const parts: string[] = [];
+  const failedStatic = result.staticChecks
+    .filter((c) => !c.passed)
+    .map((c) => c.summary);
+
+  if (requireStaticChecks && !result.staticPassed && failedStatic.length > 0) {
+    parts.push(`Script structure checks failed: ${failedStatic.join('; ')}.`);
+  } else if (
+    !requireStaticChecks &&
+    !result.staticPassed &&
+    failedStatic.length > 0
+  ) {
+    parts.push(
+      `Advisory script notes (not graded): ${failedStatic.join('; ')}.`
+    );
   }
 
   if (!result.schemaValid) {
     const detail = formatSspSchemaErrors(result.schemaErrors);
     parts.push(
-      `Generated OSCAL document failed SSP schema validation${
+      `Generated OSCAL document failed schema validation${
         result.documentKind ? ` (${result.documentKind})` : ''
       }.`
     );
@@ -520,11 +539,20 @@ function feedbackFromResult(
     return parts.join(' ');
   }
 
-  parts.unshift(
-    `Generated OSCAL SSP validates against the NIST OSCAL SSP JSON Schema${
-      result.outputSource ? ` (via ${result.outputSource})` : ''
-    }.`
-  );
+  const schemaOk = `Generated OSCAL validates against the NIST OSCAL JSON Schema${
+    result.outputSource ? ` (via ${result.outputSource})` : ''
+  }.`;
+
+  // Schema passed but static gate failed — do not claim acceptance.
+  if (requireStaticChecks && !result.staticPassed) {
+    parts.push(schemaOk);
+    return parts.join(' ');
+  }
+
+  parts.unshift(schemaOk);
+  if (requireStaticChecks && result.staticPassed) {
+    parts.splice(1, 0, 'Script structure checks passed.');
+  }
   return `Capstone accepted. ${parts.join(' ')}`;
 }
 
@@ -640,7 +668,13 @@ export function evaluateOscalGenerator(
   const staticPassed =
     staticChecks.length === 0 ? true : staticChecks.every((c) => c.passed);
 
-  if (!scriptPath && Object.keys(files).length > 0 && !submission.generatedOscal && !submission.oscalDocument && typeof submission.stdout !== 'string') {
+  if (
+    !scriptPath &&
+    Object.keys(files).length > 0 &&
+    !submission.generatedOscal &&
+    !submission.oscalDocument &&
+    typeof submission.stdout !== 'string'
+  ) {
     return {
       style: 'oscal_generator',
       scriptPath: null,
@@ -724,7 +758,10 @@ export const oscalGeneratorTicketScorer: TicketScorer = {
     return {
       status: resolved ? 'resolved' : 'needs_revision',
       structuredResult: structured,
-      feedback: feedbackFromResult(structured, expected.requireStaticChecks === true),
+      feedback: feedbackFromResult(
+        structured,
+        expected.requireStaticChecks === true
+      ),
     };
   },
 };

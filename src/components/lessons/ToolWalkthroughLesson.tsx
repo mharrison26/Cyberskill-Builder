@@ -252,11 +252,7 @@ export function ToolWalkthroughLesson({
         </Card>
       ) : null}
 
-      <div
-        id="lesson-exercise"
-        tabIndex={-1}
-        className="outline-none"
-      >
+      <div id="lesson-exercise" tabIndex={-1} className="outline-none">
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
           <Card>
             <CardHeader>

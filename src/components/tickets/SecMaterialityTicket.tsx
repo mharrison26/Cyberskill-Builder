@@ -114,8 +114,7 @@ export function SecMaterialityTicket({
         typeof nested.businessImpact === 'string'
           ? nested.businessImpact
           : 'See scenario brief.',
-      scopeNote:
-        typeof nested.scopeNote === 'string' ? nested.scopeNote : null,
+      scopeNote: typeof nested.scopeNote === 'string' ? nested.scopeNote : null,
     };
   }, [initialState]);
 

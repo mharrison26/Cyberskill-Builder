@@ -32,9 +32,7 @@ function toRow(
 ) {
   // Seed exercises use text finding keys (e.g. FIND-AC-2-01). When the
   // findingId is a real oscal_findings UUID (GRC-04 student history), link it.
-  const oscalFindingId = UUID_RE.test(entry.findingId)
-    ? entry.findingId
-    : null;
+  const oscalFindingId = UUID_RE.test(entry.findingId) ? entry.findingId : null;
 
   return {
     tenant_id: input.tenantId,

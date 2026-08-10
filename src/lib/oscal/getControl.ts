@@ -135,17 +135,17 @@ export function listControlIdsByFamilyPrefix(
   const needle = `${prefix}-`;
   const ids = new Set<string>();
 
-  for (const entry of loadControlIndex().values()) {
+  Array.from(loadControlIndex().values()).forEach((entry) => {
     // Prefer OSCAL id (dot enhancements) then normalize label forms like IA-5(1).
     const id = normalizeControlId(entry.oscalId || entry.controlId);
-    if (!id.startsWith(needle)) continue;
+    if (!id.startsWith(needle)) return;
     if (options?.baseOnly && !new RegExp(`^${prefix}-\\d+$`).test(id)) {
-      continue;
+      return;
     }
     ids.add(id);
-  }
+  });
 
-  return [...ids].sort((a, b) =>
+  return Array.from(ids).sort((a, b) =>
     a.localeCompare(b, undefined, { numeric: true })
   );
 }

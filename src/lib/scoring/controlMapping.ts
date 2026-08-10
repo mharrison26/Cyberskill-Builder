@@ -126,7 +126,9 @@ export function parseOverlapNarrative(submission: TicketSubmission): string {
   return '';
 }
 
-function passThresholdFromExpected(expected: ControlMappingExpectedState): number {
+function passThresholdFromExpected(
+  expected: ControlMappingExpectedState
+): number {
   const value = expected.passThresholdPercent;
   if (
     typeof value === 'number' &&

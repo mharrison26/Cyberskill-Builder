@@ -58,6 +58,13 @@ const ROWS: ControlMappingRow[] = [
   {
     source_framework: 'nist_800_53',
     source_control_id: 'AC-2',
+    target_framework: 'soc2',
+    target_control_id: 'CC6.3',
+    mapping_confidence: 'high',
+  },
+  {
+    source_framework: 'nist_800_53',
+    source_control_id: 'AC-2',
     target_framework: 'iso27001',
     target_control_id: 'A.5.15',
     mapping_confidence: 'high',
@@ -67,6 +74,13 @@ const ROWS: ControlMappingRow[] = [
     source_control_id: 'AC-2',
     target_framework: 'iso27001',
     target_control_id: 'A.5.16',
+    mapping_confidence: 'high',
+  },
+  {
+    source_framework: 'nist_800_53',
+    source_control_id: 'AC-2',
+    target_framework: 'iso27001',
+    target_control_id: 'A.5.18',
     mapping_confidence: 'high',
   },
 ];
@@ -91,11 +105,11 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
       targets: [
         {
           framework: 'soc2',
-          options: ['CC6.1', 'CC6.2', 'CC7.1'],
+          options: ['CC6.1', 'CC6.2', 'CC6.3', 'CC7.1', 'A1.2'],
         },
         {
           framework: 'iso27001',
-          options: ['A.5.15', 'A.5.16', 'A.5.7'],
+          options: ['A.5.15', 'A.5.16', 'A.5.18', 'A.5.7', 'A.8.9'],
         },
       ],
     },
@@ -113,8 +127,8 @@ describe('evaluateControlMapping', () => {
     const result = await evaluateControlMapping(
       {
         answers: {
-          soc2: ['CC6.1', 'CC6.2'],
-          iso27001: ['A.5.15', 'A.5.16'],
+          soc2: ['CC6.1', 'CC6.2', 'CC6.3'],
+          iso27001: ['A.5.15', 'A.5.16', 'A.5.18'],
         },
       },
       ticket(),
@@ -142,18 +156,18 @@ describe('evaluateControlMapping', () => {
     expect(result.percentage).toBeLessThan(100);
     const soc2 = result.targets.find((t) => t.framework === 'soc2');
     expect(soc2?.falsePositives).toEqual(['CC7.1']);
-    expect(soc2?.falseNegatives).toEqual(['CC6.2']);
+    expect(soc2?.falseNegatives).toEqual(['CC6.2', 'CC6.3']);
 
     const iso = result.targets.find((t) => t.framework === 'iso27001');
-    expect(iso?.falseNegatives).toEqual(['A.5.16']);
+    expect(iso?.falseNegatives).toEqual(['A.5.16', 'A.5.18']);
   });
 
   it('normalizes control ID case when comparing selections', async () => {
     const result = await evaluateControlMapping(
       {
         answers: {
-          soc2: ['cc6.1', 'cc6.2'],
-          iso27001: ['a.5.15', 'a.5.16'],
+          soc2: ['cc6.1', 'cc6.2', 'cc6.3'],
+          iso27001: ['a.5.15', 'a.5.16', 'a.5.18'],
         },
       },
       ticket(),
@@ -167,8 +181,8 @@ describe('evaluateControlMapping', () => {
     const resolved = await scorer.score(
       {
         answers: {
-          soc2: ['CC6.1', 'CC6.2'],
-          iso27001: ['A.5.15', 'A.5.16'],
+          soc2: ['CC6.1', 'CC6.2', 'CC6.3'],
+          iso27001: ['A.5.15', 'A.5.16', 'A.5.18'],
         },
       },
       ticket()
@@ -213,17 +227,17 @@ describe('controlMappingTicketScorer overlap narrative RAG', () => {
     );
     expect(result.status).toBe('needs_revision');
     expect(callClaudeGrading).not.toHaveBeenCalled();
-    expect(
-      (result.structuredResult as { reason?: string }).reason
-    ).toBe('control_ids_mismatch');
+    expect((result.structuredResult as { reason?: string }).reason).toBe(
+      'control_ids_mismatch'
+    );
   });
 
   it('requires a long enough overlap narrative after IDs pass', async () => {
     const result = await scorer.score(
       {
         answers: {
-          soc2: ['CC6.1', 'CC6.2'],
-          iso27001: ['A.5.15', 'A.5.16'],
+          soc2: ['CC6.1', 'CC6.2', 'CC6.3'],
+          iso27001: ['A.5.15', 'A.5.16', 'A.5.18'],
         },
         overlapNarrative: 'too short',
       },
@@ -245,8 +259,8 @@ describe('controlMappingTicketScorer overlap narrative RAG', () => {
     const result = await scorer.score(
       {
         answers: {
-          soc2: ['CC6.1', 'CC6.2'],
-          iso27001: ['A.5.15', 'A.5.16'],
+          soc2: ['CC6.1', 'CC6.2', 'CC6.3'],
+          iso27001: ['A.5.15', 'A.5.16', 'A.5.18'],
         },
         overlapNarrative: OVERLAP_NARRATIVE,
       },

@@ -64,17 +64,11 @@ function buildCrumbs(
   }
 
   if (pathname.startsWith('/account')) {
-    return [
-      { label: 'Dashboard', href: '/dashboard' },
-      { label: 'Account' },
-    ];
+    return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Account' }];
   }
 
   if (pathname.startsWith('/portfolio')) {
-    return [
-      { label: 'Dashboard', href: '/dashboard' },
-      { label: 'Portfolio' },
-    ];
+    return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Portfolio' }];
   }
 
   return crumbs;

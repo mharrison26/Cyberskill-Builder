@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { OscalObservation } from '@/lib/oscal/toAssessmentFinding';
+import { sortPortfolioItemsFlagshipFirst } from '@/lib/portfolio/sortPortfolioItems';
 import type { PortfolioItemKind, PortfolioScoreStatus } from '@/types';
 
 export type MyPortfolioDefense = {
@@ -191,7 +192,7 @@ export async function getMyPortfolioItems(
     }
   }
 
-  return (data ?? []).map((row) => {
+  const items: MyPortfolioItem[] = (data ?? []).map((row) => {
     const itemKind = row.item_kind as PortfolioItemKind;
     const structured =
       (row.structured_result as Record<string, unknown> | null) ?? {};
@@ -271,4 +272,6 @@ export async function getMyPortfolioItems(
       defense,
     };
   });
+
+  return sortPortfolioItemsFlagshipFirst(items);
 }

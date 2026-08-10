@@ -70,7 +70,8 @@ export function buildToolWalkthroughFieldMappingPrompt(
   submission: ToolWalkthroughFieldMappingSubmission
 ): string {
   const priorBlock = formatPriorFindingForFieldMapping(priorFinding);
-  const lessonLabel = submission.lessonTitle?.trim() || 'Open-Source Tracking Workflows';
+  const lessonLabel =
+    submission.lessonTitle?.trim() || 'Open-Source Tracking Workflows';
 
   return `You are evaluating a student's open-source compliance tracking walkthrough. They must explain how fields in their tracking tool map to elements of THEIR OWN prior assessment finding.
 

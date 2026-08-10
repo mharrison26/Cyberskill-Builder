@@ -112,7 +112,9 @@ function formatLoadedProfile(
     lines.push(profile.description.trim());
   }
   if (profile.authorizationBoundary?.trim()) {
-    lines.push(`Authorization boundary: ${profile.authorizationBoundary.trim()}`);
+    lines.push(
+      `Authorization boundary: ${profile.authorizationBoundary.trim()}`
+    );
   }
   if (profile.impact?.trim()) {
     lines.push(`Impact: ${profile.impact.trim()}`);
@@ -160,9 +162,10 @@ export function ConMonStrategyTicket({
         ? initialState.ticket_code.trim()
         : null;
 
-  const [loadedProfile, setLoadedProfile] = useState<ConmonSystemProfile | null>(
-    () => (usesStudentProfile ? null : seedProfile)
-  );
+  const [loadedProfile, setLoadedProfile] =
+    useState<ConmonSystemProfile | null>(() =>
+      usesStudentProfile ? null : seedProfile
+    );
   const [profileSource, setProfileSource] = useState<
     'student_grc03' | 'seed' | 'empty' | null
   >(usesStudentProfile ? null : seedProfile ? 'seed' : 'empty');
@@ -296,7 +299,8 @@ export function ConMonStrategyTicket({
     setFamilyRows((prev) => {
       const byFamily = new Map(prev.map((row) => [row.family, row]));
       return families.map(
-        (family) => byFamily.get(family) ?? { family, cadence: '', rationale: '' }
+        (family) =>
+          byFamily.get(family) ?? { family, cadence: '', rationale: '' }
       );
     });
   }, [families]);

@@ -309,7 +309,9 @@ function formatBreachScenarioText(
     lines.push(keyArtifact.trim());
   }
 
-  const breach = isPlainObject(initialState.breach) ? initialState.breach : null;
+  const breach = isPlainObject(initialState.breach)
+    ? initialState.breach
+    : null;
   if (breach) {
     const fields: Array<[string, string]> = [
       ['Company', 'company'],

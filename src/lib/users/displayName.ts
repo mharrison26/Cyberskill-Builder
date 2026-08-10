@@ -22,7 +22,9 @@ export function getUserDisplayName(user: {
 }
 
 /** Greeting fragment: "Welcome back, {name}." or "Welcome back, there." */
-export function formatWelcomeBack(displayName: string | null | undefined): string {
+export function formatWelcomeBack(
+  displayName: string | null | undefined
+): string {
   const name = normalizeDisplayName(displayName);
   return `Welcome back, ${name ?? 'there'}.`;
 }

@@ -206,7 +206,7 @@ describe('oscalSspTicketScorer', () => {
           systemName: 'Northwind CUI Enclave',
           systemDescription,
           authorizationBoundary:
-            'Isolated VPC enclave that processes, stores, and transmits CUI for Northwind\'s DoD subcontract.',
+            "Isolated VPC enclave that processes, stores, and transmits CUI for Northwind's DoD subcontract.",
           sspTitle:
             'Northwind CUI Enclave — NIST SP 800-171 Rev 3 SSP fragment (03.01.01, 03.01.02)',
           requirements: acRequirements.map((req) => ({ ...req })),

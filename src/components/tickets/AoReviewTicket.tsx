@@ -359,7 +359,10 @@ export function AoReviewTicket({
         {isSubmitting ? 'Submitting…' : 'Submit AO defense'}
       </Button>
 
-      {!hasVerbalDefense && !hasWrittenFallback && !loading && questions.length > 0 ? (
+      {!hasVerbalDefense &&
+      !hasWrittenFallback &&
+      !loading &&
+      questions.length > 0 ? (
         <p className="text-xs text-muted-foreground">
           Upload a verbal defense recording (primary), or complete written
           answers for every question (fallback) to enable submit.

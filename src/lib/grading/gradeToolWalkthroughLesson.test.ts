@@ -100,7 +100,8 @@ describe('gradeToolWalkthroughLesson', () => {
   it('RAG-grades reflection against the student prior finding after screenshot gate', async () => {
     vi.mocked(callClaudeGrading).mockResolvedValue({
       finding_state: 'satisfied',
-      feedback: 'Field mapping clearly traces CCCER elements into tracker fields.',
+      feedback:
+        'Field mapping clearly traces CCCER elements into tracker fields.',
       strengths: ['Named concrete tool fields'],
       gaps: [],
     });

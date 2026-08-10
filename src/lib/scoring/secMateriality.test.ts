@@ -105,6 +105,38 @@ describe('evaluateSecMaterialityDeterministic', () => {
     expect(result.structured.missingFactors).toEqual([]);
     expect(result.structured.rationaleOk).toBe(true);
   });
+
+  it('enforces GRC-08 requiredFactors and min lengths from expected_state', () => {
+    const factors = solidFactors();
+    delete factors.reputational_legal;
+
+    const missing = evaluateSecMaterialityDeterministic(
+      {
+        determination: 'not_material',
+        determinationRationale: solidRationale,
+        factors,
+      },
+      ticket({
+        expected_state: {
+          judgmentCall: true,
+          minFactorLength: 40,
+          minRationaleLength: 60,
+          requiredFactors: [
+            'nature_scope',
+            'data_compromise',
+            'operational_impact',
+            'financial_impact',
+            'reputational_legal',
+            'reasonable_investor',
+          ],
+        },
+      })
+    );
+    expect(missing.ok).toBe(false);
+    expect(missing.structured.missingFactors).toEqual(['reputational_legal']);
+    expect(missing.structured.minFactorLength).toBe(40);
+    expect(missing.structured.minRationaleLength).toBe(60);
+  });
 });
 
 describe('secMaterialityTicketScorer', () => {
