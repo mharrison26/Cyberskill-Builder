@@ -1,36 +1,18 @@
-import {
-  Ban,
-  CheckCircle2,
-  CircleDashed,
-  AlertTriangle,
-  Clock3,
-  LoaderCircle,
-  type LucideIcon,
-} from 'lucide-react';
-
 import { Badge } from '@/components/ui/badge';
+import { StatusDot } from '@/components/ui/status-dot';
 import {
   getStatusColorClass,
+  getStatusDotClass,
   normalizeStatus,
   STATUS_DESCRIPTIONS,
   STATUS_LABELS,
-  type StatusKey,
 } from '@/lib/status';
 import { cn } from '@/lib/utils';
-
-const STATUS_ICONS: Record<StatusKey, LucideIcon> = {
-  satisfied: CheckCircle2,
-  insufficient_evidence: AlertTriangle,
-  not_satisfied: Ban,
-  not_started: CircleDashed,
-  submitted: Clock3,
-  graded: CheckCircle2,
-  in_progress: LoaderCircle,
-};
 
 type StatusBadgeProps = {
   status: string;
   className?: string;
+  /** When false, renders label only (no status dot). */
   showIcon?: boolean;
 };
 
@@ -40,22 +22,23 @@ export function StatusBadge({
   showIcon = true,
 }: StatusBadgeProps) {
   const normalized = normalizeStatus(status);
-  const Icon = STATUS_ICONS[normalized];
   const label = STATUS_LABELS[normalized];
   const description = STATUS_DESCRIPTIONS[normalized];
+  const pulse =
+    normalized === 'in_progress' || normalized === 'insufficient_evidence';
 
   return (
     <Badge
       variant="outline"
       className={cn(
-        'gap-1.5 font-normal',
+        'h-5 gap-1.5 rounded-md px-2 py-0 font-mono text-[10px] font-medium uppercase tracking-wider',
         getStatusColorClass(normalized),
         className
       )}
       title={description}
     >
       {showIcon ? (
-        <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+        <StatusDot className={getStatusDotClass(normalized)} pulse={pulse} />
       ) : null}
       <span>{label}</span>
     </Badge>

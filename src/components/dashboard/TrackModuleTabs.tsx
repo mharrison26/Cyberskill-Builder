@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { Eyebrow } from '@/components/ui/eyebrow';
 import { resolveTrackFilter } from '@/lib/dashboard/resolveTrackFilter';
 import { cn } from '@/lib/utils';
 
@@ -78,13 +79,11 @@ export function TrackModuleTabs({
       <div className={cn('space-y-4', className)}>
         <div className="space-y-2">
           <div className="flex items-baseline justify-between gap-3">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              Module select
-            </p>
+            <Eyebrow>Module select</Eyebrow>
             {activeTrack?.hasTickets ? (
               <Link
                 href={`/tracks/${activeTrack.slug}/console`}
-                className="font-mono text-[11px] text-primary underline-offset-2 hover:underline"
+                className="rounded-sm font-mono text-[11px] text-primary underline-offset-2 transition-hover hover:underline focus:outline-none focus-visible:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 open console →
               </Link>
@@ -148,10 +147,10 @@ function ModuleTab({
       aria-pressed={active}
       onClick={onSelect}
       className={cn(
-        'rounded px-2.5 py-1.5 uppercase tracking-wide transition-colors',
+        'rounded px-2 py-1 uppercase tracking-wider transition-layout focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-secondary',
         active
-          ? 'bg-primary text-primary-foreground shadow-sm'
-          : 'text-muted-foreground hover:bg-card/70 hover:text-foreground'
+          ? 'bg-primary text-primary-foreground shadow-xs'
+          : 'text-muted-foreground hover:bg-surface/70 hover:text-foreground'
       )}
     >
       {label}

@@ -11,6 +11,7 @@ import {
 import { LessonCard } from '@/components/LessonCard';
 import { SlaComplianceStat } from '@/components/tickets/SlaComplianceStat';
 import { Button } from '@/components/ui/button';
+import { Eyebrow } from '@/components/ui/eyebrow';
 import { Separator } from '@/components/ui/separator';
 import {
   getAppShellContext,
@@ -205,7 +206,7 @@ export default async function DashboardPage({
       </header>
 
       {enrolledTracks.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-8 text-center shadow-sm">
+        <div className="rounded-lg border border-border bg-surface p-8 text-center text-surface-foreground shadow-xs">
           <h2 className="text-lg font-semibold">No active enrollments</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Enroll in a training track to access lessons and track your
@@ -223,13 +224,14 @@ export default async function DashboardPage({
           >
             <QueueVolumeSparkline series={queueSeries} />
             <SystemsStatusPanel systems={systems} />
-            <div className="flex min-h-[5.5rem] flex-col justify-between rounded-md border border-border bg-card px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                SLA compliance
-              </p>
+            <div className="flex min-h-[5.5rem] flex-col justify-between rounded-md border border-border bg-surface px-3 py-3 text-surface-foreground shadow-xs transition-hover hover:shadow-sm">
+              <div className="flex items-baseline justify-between gap-2">
+                <Eyebrow>SLA compliance</Eyebrow>
+                <Eyebrow as="span">resolved</Eyebrow>
+              </div>
               <SlaComplianceStat
                 items={slaItems}
-                className="mt-2 border-0 bg-transparent p-0"
+                className="mt-2 border-0 bg-transparent p-0 shadow-none"
               />
             </div>
           </section>
@@ -261,7 +263,7 @@ export default async function DashboardPage({
                         >
                           {track.name}
                         </h2>
-                        <p className="mt-0.5 font-mono text-sm text-muted-foreground">
+                        <p className="mt-1 font-mono text-sm text-muted-foreground">
                           /tracks/{track.slug}
                         </p>
                       </div>
@@ -291,9 +293,9 @@ export default async function DashboardPage({
                               {index > 0 ? (
                                 <Separator className="mb-4" />
                               ) : null}
-                              <h3 className="mb-2 text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                              <Eyebrow as="h3" className="mb-2 text-xs">
                                 Tier {tier}
-                              </h3>
+                              </Eyebrow>
                               <div className="grid gap-3 sm:grid-cols-2">
                                 {tierLessons.map((lesson) => (
                                   <LessonCard

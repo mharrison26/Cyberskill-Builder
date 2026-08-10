@@ -77,3 +77,21 @@ export function getStatusColorClass(status: StatusKey): string {
       return 'bg-status-not-started text-status-not-started-foreground border-status-not-started-foreground/20';
   }
 }
+
+/** Solid fill for StatusDot, aligned with status foreground tokens. */
+export function getStatusDotClass(status: StatusKey): string {
+  switch (status) {
+    case 'satisfied':
+    case 'graded':
+      return 'bg-status-satisfied-foreground';
+    case 'insufficient_evidence':
+    case 'submitted':
+    case 'in_progress':
+      return 'bg-status-insufficient-foreground';
+    case 'not_satisfied':
+      return 'bg-status-blocked-foreground';
+    case 'not_started':
+    default:
+      return 'bg-status-not-started-foreground';
+  }
+}

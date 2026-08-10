@@ -19,9 +19,36 @@
  * - Body foreground #1F2937 on white: 14.7:1 ✓
  */
 
+/*
+ * Spacing: prefer Tailwind’s default 4px grid (p-1=4px, p-2=8px, …).
+ * Avoid half-steps (p-0.5, p-1.5, p-2.5, p-3.5) in app UI.
+ * Elevation: shadow-xs (resting), shadow-sm (hover), shadow-md (overlays).
+ *
+ * Motion:
+ * - Hover / color / elevation feedback: duration-150 ease-out
+ * - Layout shifts (Module Select pills, sheets): duration-200
+ * - Interactive controls should pair hover with focus-visible (ring tokens)
+ */
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Hover / feedback — 150ms ease-out */
+  .transition-hover {
+    transition-property:
+      color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+
+  /* Layout / selection shifts — 200ms */
+  .transition-layout {
+    transition-property:
+      color, background-color, border-color, box-shadow, transform;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
   }
 
   .sr-only-focusable:not(:focus):not(:focus-within) {
@@ -47,10 +74,13 @@
     color-scheme: light;
     --background: #f8f9fb;
     --foreground: #1f2937;
-    --card: #ffffff;
-    --card-foreground: #1f2937;
-    --popover: #ffffff;
-    --popover-foreground: #1f2937;
+    /* Raised panels distinct from page background (navy/slate identity) */
+    --surface: #ffffff;
+    --surface-foreground: #1f2937;
+    --card: var(--surface);
+    --card-foreground: var(--surface-foreground);
+    --popover: var(--surface);
+    --popover-foreground: var(--surface-foreground);
     --primary: #1f4e78;
     --primary-foreground: #ffffff;
     --secondary: #eef1f5;
@@ -81,16 +111,24 @@
     --status-blocked-foreground: #7f1d1d;
     --status-not-started: #f3f4f6;
     --status-not-started-foreground: #374151;
+    /* 3-tier elevation — very low-opacity navy/slate shadows */
+    --shadow-xs: 0 1px 2px 0 rgb(15 20 25 / 0.04);
+    --shadow-sm:
+      0 1px 3px 0 rgb(15 20 25 / 0.06), 0 1px 2px -1px rgb(15 20 25 / 0.05);
+    --shadow-md:
+      0 4px 10px -2px rgb(15 20 25 / 0.08), 0 2px 4px -2px rgb(15 20 25 / 0.05);
   }
 
   .dark {
     color-scheme: dark;
     --background: #0f1419;
     --foreground: #e5e7eb;
-    --card: #171d26;
-    --card-foreground: #e5e7eb;
-    --popover: #171d26;
-    --popover-foreground: #e5e7eb;
+    --surface: #171d26;
+    --surface-foreground: #e5e7eb;
+    --card: var(--surface);
+    --card-foreground: var(--surface-foreground);
+    --popover: var(--surface);
+    --popover-foreground: var(--surface-foreground);
     --primary: #6b9fd4;
     --primary-foreground: #0f1419;
     --secondary: #1e2733;
@@ -120,6 +158,11 @@
     --status-blocked-foreground: #fecaca;
     --status-not-started: #1f2937;
     --status-not-started-foreground: #d1d5db;
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.28);
+    --shadow-sm:
+      0 1px 3px 0 rgb(0 0 0 / 0.32), 0 1px 2px -1px rgb(0 0 0 / 0.28);
+    --shadow-md:
+      0 4px 12px -2px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.28);
   }
 
   * {

@@ -14,6 +14,7 @@ import {
   Ticket,
 } from 'lucide-react';
 
+import { Eyebrow } from '@/components/ui/eyebrow';
 import { Separator } from '@/components/ui/separator';
 import type { SidebarLesson, SidebarTrack } from '@/lib/auth/appShell';
 import { cn } from '@/lib/utils';
@@ -42,6 +43,12 @@ const ADMIN_ITEMS = [
   { href: '/admin', label: 'Admin Home', icon: Settings },
 ];
 
+const navItemBase =
+  'relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-hover hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar';
+
+const navItemActive =
+  'bg-sidebar-accent font-medium text-sidebar-accent-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-primary';
+
 export function AppSidebar({
   isAdmin = false,
   activeTrackSlug,
@@ -69,7 +76,7 @@ export function AppSidebar({
         <Link
           href="/dashboard"
           onClick={onNavigate}
-          className="text-base font-semibold text-primary hover:text-primary/80 focus:outline-none focus-visible:underline"
+          className="rounded-sm text-base font-semibold text-primary transition-hover hover:text-primary/80 focus:outline-none focus-visible:text-primary/80 focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
         >
           CyberSkill Builder
         </Link>
@@ -87,10 +94,9 @@ export function AppSidebar({
                   onClick={onNavigate}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                    'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-                    active && 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    navItemBase,
+                    'font-medium',
+                    active && navItemActive
                   )}
                 >
                   <Icon className="size-4 shrink-0" aria-hidden="true" />
@@ -103,9 +109,9 @@ export function AppSidebar({
 
         {enrollments.length > 0 ? (
           <div>
-            <h2 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Eyebrow as="h2" className="mb-2 px-3">
               Track consoles
-            </h2>
+            </Eyebrow>
             <ul className="space-y-1" role="list">
               {enrollments.map((track) => {
                 const href = `/tracks/${track.slug}/console`;
@@ -116,13 +122,7 @@ export function AppSidebar({
                       href={href}
                       onClick={onNavigate}
                       aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-                        'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-                        active &&
-                          'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                      )}
+                      className={cn(navItemBase, active && navItemActive)}
                     >
                       <Monitor className="size-4 shrink-0" aria-hidden="true" />
                       <span className="truncate">{track.name}</span>
@@ -136,9 +136,9 @@ export function AppSidebar({
 
         {activeTrackSlug && trackLessons.length > 0 ? (
           <div>
-            <h2 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Eyebrow as="h2" className="mb-2 px-3">
               {activeTrackName ?? 'Current Track'}
-            </h2>
+            </Eyebrow>
             <ul className="space-y-1" role="list">
               {trackLessons.map((lesson) => {
                 const href = `/tracks/${activeTrackSlug}/lessons/${lesson.id}`;
@@ -149,13 +149,7 @@ export function AppSidebar({
                       href={href}
                       onClick={onNavigate}
                       aria-current={active ? 'page' : undefined}
-                      className={cn(
-                        'block rounded-md px-3 py-2 text-sm transition-colors',
-                        'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-                        active &&
-                          'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                      )}
+                      className={cn(navItemBase, active && navItemActive)}
                     >
                       <span className="line-clamp-2">{lesson.title}</span>
                     </Link>
@@ -170,9 +164,9 @@ export function AppSidebar({
           <>
             <Separator />
             <div>
-              <h2 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Eyebrow as="h2" className="mb-2 px-3">
                 Admin
-              </h2>
+              </Eyebrow>
               <ul className="space-y-1" role="list">
                 {ADMIN_ITEMS.map((item) => {
                   const Icon = item.icon;
@@ -184,11 +178,9 @@ export function AppSidebar({
                         onClick={onNavigate}
                         aria-current={active ? 'page' : undefined}
                         className={cn(
-                          'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                          'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-                          active &&
-                            'bg-sidebar-accent text-sidebar-accent-foreground'
+                          navItemBase,
+                          'font-medium',
+                          active && navItemActive
                         )}
                       >
                         <Icon className="size-4 shrink-0" aria-hidden="true" />
