@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { AdminGradingTable } from '@/components/admin/AdminGradingTable';
+import { isConceptualSubmission } from '@/lib/lessons/conceptualValidation';
 import { createClient } from '@/lib/supabase/server';
 import type { AdminGradingRow } from '@/types';
 
@@ -60,13 +61,42 @@ function getSubmissionPreview(
   return parts.join(' · ');
 }
 
+function getProgressSubmissionText(submission: unknown): string {
+  if (isConceptualSubmission(submission)) {
+    return submission.memo;
+  }
+
+  if (!submission || typeof submission !== 'object') {
+    return '';
+  }
+
+  const record = submission as Record<string, unknown>;
+  if (typeof record.memo === 'string' && record.memo.trim()) {
+    return record.memo;
+  }
+  if (typeof record.explanation === 'string' && record.explanation.trim()) {
+    return record.explanation;
+  }
+
+  try {
+    return JSON.stringify(submission);
+  } catch {
+    return '';
+  }
+}
+
 export default async function AdminGradingPage() {
   const supabase = await createClient();
 
-  const { data: findings, error } = await supabase
-    .from('oscal_findings')
-    .select(
-      `
+  const [
+    { data: findings, error },
+    { data: pendingProgress, error: pendingError },
+    { data: tracks, error: tracksError },
+  ] = await Promise.all([
+    supabase
+      .from('oscal_findings')
+      .select(
+        `
       id,
       control_id,
       finding_state,
@@ -74,18 +104,59 @@ export default async function AdminGradingPage() {
       student_narrative,
       is_reviewed,
       created_at,
+      lesson_id,
+      student_id,
       student:users!oscal_findings_student_id_fkey(email),
       lesson:lessons!oscal_findings_lesson_id_fkey(title),
       track:tracks!oscal_findings_track_id_fkey(name)
     `
-    )
-    .order('created_at', { ascending: false });
+      )
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('lesson_progress')
+      .select(
+        `
+      id,
+      status,
+      submission,
+      grading_error,
+      submitted_at,
+      student_id,
+      lesson_id,
+      student:users!lesson_progress_student_id_fkey(email),
+      lesson:lessons!lesson_progress_lesson_id_fkey(title, lesson_type, track_id)
+    `
+      )
+      .eq('status', 'submitted')
+      .order('submitted_at', { ascending: false }),
+    supabase.from('tracks').select('id, name'),
+  ]);
 
   if (error) {
     throw new Error(`Failed to load grading queue: ${error.message}`);
   }
 
-  const rows: AdminGradingRow[] = (findings ?? []).map((finding) => {
+  if (pendingError) {
+    throw new Error(
+      `Failed to load pending submissions: ${pendingError.message}`
+    );
+  }
+
+  if (tracksError) {
+    throw new Error(`Failed to load tracks: ${tracksError.message}`);
+  }
+
+  const trackNameById = new Map(
+    (tracks ?? []).map((track) => [track.id as string, track.name as string])
+  );
+
+  const findingKeys = new Set(
+    (findings ?? []).map(
+      (finding) => `${finding.student_id}:${finding.lesson_id}`
+    )
+  );
+
+  const findingRows: AdminGradingRow[] = (findings ?? []).map((finding) => {
     const student = Array.isArray(finding.student)
       ? finding.student[0]
       : finding.student;
@@ -114,15 +185,57 @@ export default async function AdminGradingPage() {
       submissionPreview: truncate(submission),
       submissionFull: submission,
       isReviewed: finding.is_reviewed,
+      rowKind: 'finding',
+      gradingError: null,
     };
   });
+
+  const pendingRows: AdminGradingRow[] = (pendingProgress ?? [])
+    .filter((row) => !findingKeys.has(`${row.student_id}:${row.lesson_id}`))
+    .map((row) => {
+      const student = Array.isArray(row.student) ? row.student[0] : row.student;
+      const lesson = Array.isArray(row.lesson) ? row.lesson[0] : row.lesson;
+      const trackId =
+        lesson && typeof lesson.track_id === 'string' ? lesson.track_id : null;
+      const submission = getProgressSubmissionText(row.submission);
+      const gradingError =
+        typeof row.grading_error === 'string' && row.grading_error.trim()
+          ? row.grading_error.trim()
+          : null;
+      const feedback = gradingError
+        ? gradingError
+        : 'AI grading has not completed yet.';
+
+      return {
+        id: `progress:${row.id}`,
+        studentEmail: student?.email ?? 'Unknown',
+        lessonTitle: lesson?.title ?? 'Unknown lesson',
+        trackName:
+          (trackId ? trackNameById.get(trackId) : undefined) ?? 'Unknown track',
+        controlId:
+          typeof lesson?.lesson_type === 'string'
+            ? lesson.lesson_type
+            : 'pending',
+        findingState: gradingError ? 'not_satisfied' : 'submitted',
+        aiFeedback: feedback,
+        aiFeedbackPreview: truncate(feedback),
+        submissionPreview: truncate(submission),
+        submissionFull: submission,
+        isReviewed: false,
+        rowKind: 'pending_submission' as const,
+        gradingError,
+      };
+    });
+
+  const rows = [...pendingRows, ...findingRows];
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <header>
         <h1 className="text-2xl font-semibold">Grading Queue</h1>
         <p className="mt-1 text-muted-foreground">
-          Student submissions awaiting assessor review. AI finding states are
+          Student submissions awaiting assessor review. Pending free-text memos
+          appear here even before AI grading finishes. AI finding states are
           preliminary.
         </p>
       </header>

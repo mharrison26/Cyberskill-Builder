@@ -2,11 +2,18 @@
 
 import { useMemo, useState } from 'react';
 
+import { TrainingFeedbackPanel } from '@/components/feedback/TrainingFeedbackPanel';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { parseControlMappingInitialState } from '@/lib/control-mappings/parseInitialState';
+import { parseControlMappingOptions } from '@/lib/control-mappings/parseOptions';
 import type { ControlFramework } from '@/lib/control-mappings/types';
+import {
+  extractTrainingFeedback,
+  isTrainingFeedback,
+  type TrainingFeedback,
+} from '@/lib/feedback';
 import { CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH } from '@/lib/scoring/ticketUi';
 import { cn } from '@/lib/utils';
 import type { Ticket } from '@/types';
@@ -27,6 +34,8 @@ type SubmitResponse = {
   success?: boolean;
   status?: string;
   feedback?: string;
+  structuredResult?: Record<string, unknown>;
+  trainingFeedback?: TrainingFeedback;
   error?: string;
 };
 
@@ -76,6 +85,8 @@ export function ControlMappingWorkArea({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
+  const [trainingFeedback, setTrainingFeedback] =
+    useState<TrainingFeedback | null>(null);
 
   if (!prompt) {
     return (
@@ -104,6 +115,7 @@ export function ControlMappingWorkArea({
     });
     setFeedback(null);
     setFeedbackTone(null);
+    setTrainingFeedback(null);
   }
 
   async function handleSubmit() {
@@ -117,12 +129,14 @@ export function ControlMappingWorkArea({
         `Overlap narrative must be at least ${minOverlapNarrativeLength} characters.`
       );
       setFeedbackTone('error');
+      setTrainingFeedback(null);
       return;
     }
 
     setIsSubmitting(true);
     setFeedback(null);
     setFeedbackTone(null);
+    setTrainingFeedback(null);
 
     const answers: Partial<Record<ControlFramework, string[]>> = {};
     for (const target of prompt!.targets) {
@@ -148,6 +162,12 @@ export function ControlMappingWorkArea({
       }
       setFeedback(body.feedback ?? 'Submission received.');
       setFeedbackTone(body.status === 'resolved' ? 'ok' : 'error');
+      const rich =
+        (isTrainingFeedback(body.trainingFeedback)
+          ? body.trainingFeedback
+          : null) ??
+        extractTrainingFeedback(body.structuredResult ?? null);
+      setTrainingFeedback(rich);
     } catch {
       setFeedback('Network error while submitting.');
       setFeedbackTone('error');
@@ -191,7 +211,7 @@ export function ControlMappingWorkArea({
 
       <div className="space-y-6">
         {prompt.targets.map((target) => {
-          const options = target.options ?? [];
+          const options = parseControlMappingOptions(target.options);
           const groupSelected = selected[target.framework] ?? new Set();
           const label = target.label ?? FRAMEWORK_LABELS[target.framework];
 
@@ -206,7 +226,8 @@ export function ControlMappingWorkArea({
                 </p>
               ) : (
                 <ul className="space-y-2">
-                  {options.map((controlId) => {
+                  {options.map((option) => {
+                    const controlId = option.id;
                     const inputId = `${ticket.id}-${target.framework}-${controlId}`;
                     const checked = groupSelected.has(controlId);
                     return (
@@ -229,7 +250,9 @@ export function ControlMappingWorkArea({
                             disabled={readOnly}
                             onChange={() => toggle(target.framework, controlId)}
                           />
-                          <span className="font-mono text-sm">{controlId}</span>
+                          <span className="font-mono text-sm">
+                            {option.label ?? controlId}
+                          </span>
                         </Label>
                       </li>
                     );
@@ -256,6 +279,7 @@ export function ControlMappingWorkArea({
               setOverlapNarrative(event.target.value);
               setFeedback(null);
               setFeedbackTone(null);
+              setTrainingFeedback(null);
             }}
           />
           <p className="text-xs text-muted-foreground">
@@ -279,7 +303,9 @@ export function ControlMappingWorkArea({
         ) : null}
       </div>
 
-      {feedback ? (
+      {trainingFeedback ? (
+        <TrainingFeedbackPanel feedback={trainingFeedback} />
+      ) : feedback ? (
         <p
           role={feedbackTone === 'error' ? 'alert' : 'status'}
           className={cn(

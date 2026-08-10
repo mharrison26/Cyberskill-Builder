@@ -2,10 +2,16 @@
 
 import { useMemo, useState } from 'react';
 
+import { TrainingFeedbackPanel } from '@/components/feedback/TrainingFeedbackPanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  extractTrainingFeedback,
+  isTrainingFeedback,
+  type TrainingFeedback,
+} from '@/lib/feedback';
 import { AUDIT_PLANNING_MEMO_MIN_FIELD_LENGTH } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
@@ -73,6 +79,8 @@ export function AuditPlanningMemoTicket({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [trainingFeedback, setTrainingFeedback] =
+    useState<TrainingFeedback | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -101,6 +109,7 @@ export function AuditPlanningMemoTicket({
     setSubmitError(null);
     setFeedback(null);
     setScoreStatus(null);
+    setTrainingFeedback(null);
     if (!validate()) return;
 
     setIsSubmitting(true);
@@ -120,12 +129,20 @@ export function AuditPlanningMemoTicket({
         error?: string;
         feedback?: string;
         status?: string;
+        structuredResult?: Record<string, unknown>;
+        trainingFeedback?: TrainingFeedback;
       };
       if (!response.ok) {
         throw new Error(payload.error ?? 'Failed to submit planning memo.');
       }
       setScoreStatus(payload.status ?? null);
       setFeedback(payload.feedback ?? 'Submission recorded.');
+      setTrainingFeedback(
+        (isTrainingFeedback(payload.trainingFeedback)
+          ? payload.trainingFeedback
+          : null) ??
+          extractTrainingFeedback(payload.structuredResult ?? null)
+      );
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -208,7 +225,9 @@ export function AuditPlanningMemoTicket({
             {submitError}
           </p>
         ) : null}
-        {feedback ? (
+        {trainingFeedback ? (
+          <TrainingFeedbackPanel feedback={trainingFeedback} />
+        ) : feedback ? (
           <div
             role="status"
             className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm"

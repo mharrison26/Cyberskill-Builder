@@ -1,3 +1,4 @@
+import { AppHeaderErrorBoundary } from '@/components/layout/AppHeaderErrorBoundary';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { AppTopBar } from '@/components/layout/AppTopBar';
 import { PublicFooter } from '@/components/layout/PublicFooter';
@@ -27,14 +28,16 @@ export default async function AppLayout({
       </div>
       <div className="flex min-h-screen flex-1 flex-col">
         {user ? (
-          <AppTopBar
-            user={user}
-            activeTrackSlug={activeTrack?.slug}
-            activeTrackName={activeTrack?.name}
-            trackLessons={trackLessons}
-            enrollments={enrollments}
-            workspaces={workspaces}
-          />
+          <AppHeaderErrorBoundary>
+            <AppTopBar
+              user={user}
+              activeTrackSlug={activeTrack?.slug}
+              activeTrackName={activeTrack?.name}
+              trackLessons={trackLessons}
+              enrollments={enrollments}
+              workspaces={workspaces}
+            />
+          </AppHeaderErrorBoundary>
         ) : null}
         <div className="flex-1 space-y-4 p-4 md:p-6">
           <main id="content">{children}</main>

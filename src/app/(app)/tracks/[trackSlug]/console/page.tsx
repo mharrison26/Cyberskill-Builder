@@ -61,6 +61,7 @@ export default async function TrackConsolePage({ params }: ConsolePageProps) {
       'id, tenant_id, track_id, tier, ticket_type, difficulty, sla_minutes, scenario_brief, initial_state, expected_state, dcwf_code, sort_order, engagement_id, engagement_stage'
     )
     .eq('track_id', track.id)
+    .eq('tenant_id', user.tenant_id)
     .order('sort_order', { ascending: true });
 
   if (ticketsError) {

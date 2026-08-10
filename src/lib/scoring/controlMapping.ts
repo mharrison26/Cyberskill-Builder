@@ -6,15 +6,26 @@ import {
 } from '@/lib/grading/callClaudeGrading';
 import { parseControlMappingInitialState } from '@/lib/control-mappings/parseInitialState';
 import {
+  controlMappingOptionIds,
+  controlMappingOptionMetaMap,
+} from '@/lib/control-mappings/parseOptions';
+import {
   createSupabaseControlMappingLookup,
   type ControlMappingLookup,
 } from '@/lib/control-mappings/lookup';
 import { normalizeControlIdList } from '@/lib/control-mappings/normalize';
 import type {
   ControlFramework,
+  ControlMappingOption,
   ControlMappingRow,
   ControlMappingSubmission,
 } from '@/lib/control-mappings/types';
+import {
+  buildChecklistTrainingFeedback,
+  buildFreeTextTrainingFeedback,
+  mergeHybridTrainingFeedback,
+  type TrainingFeedback,
+} from '@/lib/feedback';
 import { getControlText } from '@/lib/oscal/getControl';
 import { captureFeatureException } from '@/lib/observability/sentry';
 import { CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH } from '@/lib/scoring/ticketUi';
@@ -30,6 +41,8 @@ export type ControlMappingOptionResult = {
   shouldSelect: boolean;
   selected: boolean;
   passed: boolean;
+  rationale?: string;
+  label?: string;
 };
 
 export type ControlMappingTargetResult = {
@@ -74,6 +87,7 @@ export type ControlMappingStructuredResult = {
     strengths: string[];
     gaps: string[];
   };
+  trainingFeedback?: TrainingFeedback;
   reason?: string;
 };
 
@@ -145,21 +159,25 @@ function scoreTargetWithOptions(args: {
   framework: ControlFramework;
   selected: string[];
   mappedIds: string[];
-  options: string[];
+  options: Array<string | ControlMappingOption>;
 }): ControlMappingTargetResult {
   const mappedSet = new Set(args.mappedIds);
   const selectedSet = new Set(args.selected);
-  const options = normalizeControlIdList(args.options);
+  const meta = controlMappingOptionMetaMap(args.options);
+  const options = controlMappingOptionIds(args.options);
 
   const optionResults: ControlMappingOptionResult[] = options.map(
     (controlId) => {
       const shouldSelect = mappedSet.has(controlId);
       const selected = selectedSet.has(controlId);
+      const optionMeta = meta.get(controlId);
       return {
         controlId,
         shouldSelect,
         selected,
         passed: shouldSelect === selected,
+        rationale: optionMeta?.rationale,
+        label: optionMeta?.label ?? controlId,
       };
     }
   );
@@ -261,6 +279,62 @@ export function controlMappingFeedback(
   return parts.join(' ');
 }
 
+function buildControlMappingTrainingFeedback(args: {
+  structured: ControlMappingStructuredResult;
+  status: 'resolved' | 'needs_revision';
+  summary: string;
+  ticket: ScorableTicket;
+  submission: TicketSubmission;
+}): TrainingFeedback | undefined {
+  const options = args.structured.targets.flatMap((target) =>
+    target.optionResults.map((option) => ({
+      optionId: `${target.framework}:${option.controlId}`,
+      label: `${target.framework} · ${option.label ?? option.controlId}`,
+      selected: option.selected,
+      shouldSelect: option.shouldSelect,
+      rationale: option.rationale,
+      controlId: option.controlId,
+    }))
+  );
+
+  const checklist =
+    options.length > 0
+      ? buildChecklistTrainingFeedback({
+          options,
+          scorePercent: args.structured.percentage,
+          status: args.status,
+          summary: args.summary,
+          expectedState: args.ticket.expected_state,
+          initialState: args.ticket.initial_state,
+        })
+      : null;
+
+  const freeText = buildFreeTextTrainingFeedback({
+    expectedState: args.ticket.expected_state,
+    submission: {
+      ...args.submission,
+      overlapNarrative:
+        typeof args.submission.overlapNarrative === 'string'
+          ? args.submission.overlapNarrative
+          : typeof args.submission.overlap_narrative === 'string'
+            ? args.submission.overlap_narrative
+            : '',
+    },
+    status: args.status,
+    summary: args.summary,
+    scorePercent: args.structured.percentage,
+    initialState: args.ticket.initial_state,
+  });
+
+  const merged = mergeHybridTrainingFeedback(
+    checklist,
+    freeText,
+    args.summary,
+    args.status
+  );
+  return merged ?? undefined;
+}
+
 /**
  * Deterministic control-mapping evaluation against a lookup of
  * public.control_mappings (no LLM).
@@ -353,6 +427,33 @@ async function collectRetrievedMappingRows(
   return rows;
 }
 
+function withControlMappingTrainingFeedback(
+  result: TicketScoreResult,
+  ticket: ScorableTicket,
+  submission: TicketSubmission
+): TicketScoreResult {
+  const structured = result.structuredResult as ControlMappingStructuredResult;
+  if (structured.style !== 'control_mapping') return result;
+
+  const trainingFeedback = buildControlMappingTrainingFeedback({
+    structured,
+    status: result.status,
+    summary: result.feedback,
+    ticket,
+    submission,
+  });
+
+  if (!trainingFeedback) return result;
+
+  return {
+    ...result,
+    structuredResult: {
+      ...structured,
+      trainingFeedback,
+    },
+  };
+}
+
 export function createControlMappingTicketScorer(
   lookup: ControlMappingLookup = createSupabaseControlMappingLookup()
 ): TicketScorer {
@@ -379,34 +480,47 @@ export function createControlMappingTicketScorer(
       );
 
       if (structured.targets.length === 0) {
-        return {
-          status: 'needs_revision',
-          structuredResult: structured,
-          feedback: 'No target frameworks configured for this mapping ticket.',
-        };
+        return withControlMappingTrainingFeedback(
+          {
+            status: 'needs_revision',
+            structuredResult: structured,
+            feedback:
+              'No target frameworks configured for this mapping ticket.',
+          },
+          ticket,
+          submission
+        );
       }
 
       const idsResolved =
         structured.percentage >= structured.passThresholdPercent;
 
       if (!idsResolved) {
-        return {
-          status: 'needs_revision',
-          structuredResult: {
-            ...structured,
-            reason: 'control_ids_mismatch',
+        return withControlMappingTrainingFeedback(
+          {
+            status: 'needs_revision',
+            structuredResult: {
+              ...structured,
+              reason: 'control_ids_mismatch',
+            },
+            feedback: controlMappingFeedback(structured),
           },
-          feedback: controlMappingFeedback(structured),
-        };
+          ticket,
+          submission
+        );
       }
 
       // Legacy tickets: deterministic ID match only.
       if (expected.gradeOverlapNarrative !== true) {
-        return {
-          status: 'resolved',
-          structuredResult: structured,
-          feedback: controlMappingFeedback(structured),
-        };
+        return withControlMappingTrainingFeedback(
+          {
+            status: 'resolved',
+            structuredResult: structured,
+            feedback: controlMappingFeedback(structured),
+          },
+          ticket,
+          submission
+        );
       }
 
       const overlapNarrative = parseOverlapNarrative(submission);
@@ -428,11 +542,15 @@ export function createControlMappingTicketScorer(
 
       if (!overlapNarrativeLengthOk) {
         structured.reason = 'overlap_narrative_too_short';
-        return {
-          status: 'needs_revision',
-          structuredResult: structured,
-          feedback: `Control IDs match the crosswalk, but the overlap narrative must be at least ${minOverlapNarrativeLength} characters. Explain where mappings are strong versus only partially overlapping.`,
-        };
+        return withControlMappingTrainingFeedback(
+          {
+            status: 'needs_revision',
+            structuredResult: structured,
+            feedback: `Control IDs match the crosswalk, but the overlap narrative must be at least ${minOverlapNarrativeLength} characters. Explain where mappings are strong versus only partially overlapping.`,
+          },
+          ticket,
+          submission
+        );
       }
 
       try {
@@ -468,11 +586,15 @@ export function createControlMappingTicketScorer(
         };
 
         if (grading.finding_state === 'satisfied') {
-          return {
-            status: 'resolved',
-            structuredResult: structured,
-            feedback: grading.feedback,
-          };
+          return withControlMappingTrainingFeedback(
+            {
+              status: 'resolved',
+              structuredResult: structured,
+              feedback: grading.feedback,
+            },
+            ticket,
+            submission
+          );
         }
 
         structured.reason = `grading_${grading.finding_state}`;
@@ -481,20 +603,28 @@ export function createControlMappingTicketScorer(
             ? ` Gaps: ${grading.gaps.slice(0, 3).join(' ')}`
             : '';
 
-        return {
-          status: 'needs_revision',
-          structuredResult: structured,
-          feedback: `${grading.feedback}${gapHint}`,
-        };
+        return withControlMappingTrainingFeedback(
+          {
+            status: 'needs_revision',
+            structuredResult: structured,
+            feedback: `${grading.feedback}${gapHint}`,
+          },
+          ticket,
+          submission
+        );
       } catch (error) {
         if (error instanceof MissingAnthropicApiKeyError) {
           structured.reason = 'grading_unavailable_missing_api_key';
-          return {
-            status: 'needs_revision',
-            structuredResult: structured,
-            feedback:
-              'Control IDs match, but overlap-narrative grading is unavailable (missing Anthropic API key). Try again once grading is configured.',
-          };
+          return withControlMappingTrainingFeedback(
+            {
+              status: 'needs_revision',
+              structuredResult: structured,
+              feedback:
+                'Control IDs match, but overlap-narrative grading is unavailable (missing Anthropic API key). Try again once grading is configured.',
+            },
+            ticket,
+            submission
+          );
         }
 
         captureFeatureException(error, {
@@ -506,12 +636,16 @@ export function createControlMappingTicketScorer(
           extras: { sourceControlId: prompt.source_control_id },
         });
         structured.reason = 'grading_error';
-        return {
-          status: 'needs_revision',
-          structuredResult: structured,
-          feedback:
-            'Control IDs match, but overlap-narrative grading failed unexpectedly. Please retry.',
-        };
+        return withControlMappingTrainingFeedback(
+          {
+            status: 'needs_revision',
+            structuredResult: structured,
+            feedback:
+              'Control IDs match, but overlap-narrative grading failed unexpectedly. Please retry.',
+          },
+          ticket,
+          submission
+        );
       }
     },
   };

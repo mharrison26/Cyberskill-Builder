@@ -1,3 +1,7 @@
+import {
+  buildFreeTextTrainingFeedback,
+  type TrainingFeedback,
+} from '@/lib/feedback';
 import type {
   ScorableTicket,
   TicketScoreResult,
@@ -43,6 +47,7 @@ export type AuditPlanningMemoStructuredResult = {
   plannedProceduresLength: number;
   minFieldLength: number;
   fieldsOk: boolean;
+  trainingFeedback?: TrainingFeedback;
   reason?: string;
 };
 
@@ -189,9 +194,23 @@ export function evaluateAuditPlanningMemoDeterministic(
 export const auditPlanningMemoTicketScorer: TicketScorer = {
   score(submission, ticket): TicketScoreResult {
     const result = evaluateAuditPlanningMemoDeterministic(submission, ticket);
+    const status = result.ok ? 'resolved' : 'needs_revision';
+    const scorePercent = result.ok ? 100 : result.structured.fieldsOk ? 60 : 25;
+    const trainingFeedback = buildFreeTextTrainingFeedback({
+      expectedState: ticket.expected_state,
+      submission: (result.parsed ?? submission) as Record<string, unknown>,
+      status,
+      summary: result.feedback,
+      scorePercent,
+      initialState: ticket.initial_state,
+    });
+
     return {
-      status: result.ok ? 'resolved' : 'needs_revision',
-      structuredResult: result.structured,
+      status,
+      structuredResult: {
+        ...result.structured,
+        ...(trainingFeedback ? { trainingFeedback } : {}),
+      },
       feedback: result.feedback,
     };
   },

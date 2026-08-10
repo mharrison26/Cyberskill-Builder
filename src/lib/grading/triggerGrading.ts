@@ -10,10 +10,11 @@ import type { ToolWalkthroughSubmission } from '@/lib/lessons/toolWalkthroughVal
 import type { CCCERValues } from '@/types';
 
 /**
- * Queue or run AI grading after a lesson submission.
+ * Run AI grading after a lesson submission has already been persisted.
  *
  * Calls the shared grading pipeline directly (same logic as POST
- * /api/lessons/[lessonId]/grade).
+ * /api/lessons/[lessonId]/grade). Failures are recorded on lesson_progress
+ * so the client can show an explicit retry state instead of indefinite pending.
  */
 export type TriggerGradingInput = {
   supabase: SupabaseClient;
@@ -31,11 +32,62 @@ export type TriggerGradingInput = {
 };
 
 export type TriggerGradingResult = {
-  queued: boolean;
+  status: 'completed' | 'failed';
   findingId?: string;
   aiFindingState?: string;
   error?: string;
 };
+
+async function markGradingStarted(
+  supabase: SupabaseClient,
+  progressId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('lesson_progress')
+    .update({
+      grading_started_at: new Date().toISOString(),
+      grading_error: null,
+    })
+    .eq('id', progressId);
+
+  if (error) {
+    console.error('[grading] Failed to mark grading started:', error);
+  }
+}
+
+async function markGradingFailed(
+  supabase: SupabaseClient,
+  progressId: string,
+  message: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('lesson_progress')
+    .update({
+      grading_error: message.slice(0, 1000),
+    })
+    .eq('id', progressId);
+
+  if (error) {
+    console.error('[grading] Failed to persist grading_error:', error);
+  }
+}
+
+async function markGradingSucceeded(
+  supabase: SupabaseClient,
+  progressId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('lesson_progress')
+    .update({
+      grading_error: null,
+      graded_at: new Date().toISOString(),
+    })
+    .eq('id', progressId);
+
+  if (error) {
+    console.error('[grading] Failed to clear grading_error:', error);
+  }
+}
 
 export async function triggerGrading(
   input: TriggerGradingInput
@@ -48,6 +100,8 @@ export async function triggerGrading(
     lessonId,
   });
 
+  await markGradingStarted(supabase, progressId);
+
   try {
     const result = await gradeSubmission({
       supabase,
@@ -56,26 +110,33 @@ export async function triggerGrading(
       tenantId,
     });
 
+    await markGradingSucceeded(supabase, progressId);
+
     return {
-      queued: false,
+      status: 'completed',
       findingId: result.finding.id,
       aiFindingState: result.aiFindingState,
     };
   } catch (error) {
     if (error instanceof MissingAnthropicApiKeyError) {
-      console.warn('[grading] Skipped: ANTHROPIC_API_KEY is not configured');
+      console.warn('[grading] Failed: ANTHROPIC_API_KEY is not configured');
+      const message =
+        'Grading failed: AI grading is not configured. Your answer is saved — retry once grading is enabled, or contact an admin.';
+      await markGradingFailed(supabase, progressId, message);
       return {
-        queued: true,
-        error: error.message,
+        status: 'failed',
+        error: message,
       };
     }
 
     const message =
       error instanceof Error ? error.message : 'Unknown grading error';
     console.error('[grading] Failed:', message);
+    const userMessage = `Grading failed, your answer is saved. You can retry. (${message})`;
+    await markGradingFailed(supabase, progressId, userMessage);
     return {
-      queued: true,
-      error: message,
+      status: 'failed',
+      error: userMessage,
     };
   }
 }

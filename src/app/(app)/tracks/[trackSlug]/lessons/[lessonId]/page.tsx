@@ -9,6 +9,10 @@ import { ConceptualLesson } from '@/components/lessons/ConceptualLesson';
 import { ToolWalkthroughLesson } from '@/components/lessons/ToolWalkthroughLesson';
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
 import { requireEnrollment } from '@/lib/auth/requireEnrollment';
+import {
+  extractMemoFromSubmission,
+  resolveLessonGradingPhase,
+} from '@/lib/grading/lessonGradingStatus';
 import { isDodAdjacentTenant } from '@/lib/tenants/isDodAdjacentTenant';
 import { isLessonGradedStatus } from '@/lib/status';
 import { createClient } from '@/lib/supabase/server';
@@ -65,14 +69,19 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
   const { data: progress } = await supabase
     .from('lesson_progress')
-    .select('status')
+    .select(
+      'status, submission, grading_error, submitted_at, grading_started_at, graded_at'
+    )
     .eq('student_id', user.id)
     .eq('lesson_id', lessonId)
     .maybeSingle();
 
   const progressStatus = progress?.status ?? 'not_started';
   const isGraded = isLessonGradedStatus(progressStatus);
+  const gradingError =
+    typeof progress?.grading_error === 'string' ? progress.grading_error : null;
   const isSubmitted = progressStatus === 'submitted';
+  const isGradingFailed = isSubmitted && Boolean(gradingError?.trim());
 
   let finding: {
     id: string;
@@ -89,7 +98,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
     is_public: boolean;
   } | null = null;
 
-  if (isGraded) {
+  if (isGraded || isSubmitted) {
     const { data: latestFinding } = await supabase
       .from('oscal_findings')
       .select(
@@ -104,13 +113,24 @@ export default async function LessonPage({ params }: LessonPageProps) {
     finding = latestFinding;
   }
 
+  const conceptualPhase = resolveLessonGradingPhase({
+    status: progressStatus,
+    gradingError,
+    hasFinding: Boolean(finding) && isGraded,
+  });
+  const conceptualMemo =
+    extractMemoFromSubmission(progress?.submission) ??
+    (typeof finding?.student_narrative === 'string'
+      ? finding.student_narrative
+      : null);
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       {showSimulatedDataBanner ? <SimulatedDataBanner /> : null}
 
       <p className="text-sm font-medium text-muted-foreground">{track.name}</p>
 
-      {isSubmitted ? (
+      {isSubmitted && !isGradingFailed ? (
         <div
           role="status"
           className="flex items-start gap-3 rounded-lg border border-status-insufficient-foreground/20 bg-status-insufficient px-4 py-3 text-sm text-status-insufficient-foreground"
@@ -119,10 +139,25 @@ export default async function LessonPage({ params }: LessonPageProps) {
           <div>
             <p className="font-medium">Awaiting grading</p>
             <p className="mt-0.5 text-status-insufficient-foreground/90">
-              Your submission is with an assessor. Results will appear here once
-              grading is complete.
+              Your submission is saved. Results will appear here once grading is
+              complete.
             </p>
           </div>
+        </div>
+      ) : null}
+
+      {isGradingFailed ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
+        >
+          <p className="font-medium text-destructive">
+            Grading failed — your answer is saved
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            {gradingError ??
+              'Grading failed, your answer is saved. You can retry from the memo form below.'}
+          </p>
         </div>
       ) : null}
 
@@ -176,6 +211,10 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 ? `## Scenario\n\n${lesson.content.scenarioBrief}`
                 : null
           }
+          initialMemo={conceptualMemo}
+          initialPhase={conceptualPhase}
+          initialGradingError={gradingError}
+          initialSubmittedAt={progress?.submitted_at ?? null}
         />
       ) : null}
 

@@ -13,11 +13,28 @@ export type ControlMappingRow = {
   mapping_confidence: MappingConfidence;
 };
 
+/** Candidate option for multi-select control mapping (string id or rich object). */
+export type ControlMappingOption = {
+  /** Control identifier shown/scored (e.g. CC6.1, A.5.15). */
+  id: string;
+  label?: string;
+  /** Authored teaching rationale shown after grading. */
+  rationale?: string;
+  /**
+   * Optional NIST (or other) control to deep-link from feedback.
+   * Defaults to `id` when it looks like a NIST control id.
+   */
+  controlId?: string;
+};
+
 export type ControlMappingTargetPrompt = {
   framework: ControlFramework;
   label?: string;
-  /** Candidate control IDs shown in the UI (correct + distractors). */
-  options?: string[];
+  /**
+   * Candidate control IDs shown in the UI (correct + distractors).
+   * Prefer rich `{ id, rationale }` objects; plain strings remain supported.
+   */
+  options?: Array<string | ControlMappingOption>;
 };
 
 /** Shape of tickets.initial_state for ticket_type = control_mapping. */

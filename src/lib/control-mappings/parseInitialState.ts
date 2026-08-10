@@ -1,3 +1,4 @@
+import { parseControlMappingOptions } from '@/lib/control-mappings/parseOptions';
 import {
   isControlFramework,
   type ControlFramework,
@@ -11,11 +12,8 @@ function parseTarget(raw: unknown): ControlMappingTargetPrompt | null {
   const obj = raw as Record<string, unknown>;
   if (!isControlFramework(obj.framework)) return null;
 
-  const options = Array.isArray(obj.options)
-    ? obj.options.filter(
-        (v): v is string => typeof v === 'string' && v.trim().length > 0
-      )
-    : undefined;
+  const parsedOptions = parseControlMappingOptions(obj.options);
+  const options = parsedOptions.length > 0 ? parsedOptions : undefined;
 
   return {
     framework: obj.framework,

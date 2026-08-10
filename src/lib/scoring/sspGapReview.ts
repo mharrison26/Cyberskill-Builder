@@ -1,3 +1,7 @@
+import {
+  buildChecklistTrainingFeedback,
+  type TrainingFeedback,
+} from '@/lib/feedback';
 import type {
   ScorableTicket,
   TicketScoreResult,
@@ -68,6 +72,10 @@ export type SspCandidateGap = {
   id: string;
   label: string;
   detail?: string;
+  /** Authored teaching rationale shown after grading. */
+  rationale?: string;
+  /** Optional control id for catalog deep-link (e.g. AC-6). */
+  controlId?: string;
 };
 
 export type SspGapReviewExpectedState = {
@@ -82,9 +90,12 @@ export type SspGapReviewSubmission = {
 
 export type SspGapOptionResult = {
   gapId: string;
+  label: string;
   shouldSelect: boolean;
   selected: boolean;
   passed: boolean;
+  rationale?: string;
+  controlId?: string;
 };
 
 export type SspGapReviewStructuredResult = {
@@ -101,6 +112,7 @@ export type SspGapReviewStructuredResult = {
   recallPercent: number;
   percentage: number;
   passThresholdPercent: number;
+  trainingFeedback?: TrainingFeedback;
   reason?: string;
 };
 
@@ -247,7 +259,19 @@ export function parseSspCandidateGaps(
             entry.description.trim() !== label
           ? entry.description.trim()
           : undefined;
-    gaps.push({ id, label, detail });
+    const rationale =
+      typeof entry.rationale === 'string' && entry.rationale.trim()
+        ? entry.rationale.trim()
+        : typeof entry.explanation === 'string' && entry.explanation.trim()
+          ? entry.explanation.trim()
+          : undefined;
+    const controlId =
+      typeof entry.controlId === 'string' && entry.controlId.trim()
+        ? entry.controlId.trim()
+        : typeof entry.control_id === 'string' && entry.control_id.trim()
+          ? entry.control_id.trim()
+          : undefined;
+    gaps.push({ id, label, detail, rationale, controlId });
   }
   return gaps;
 }
@@ -420,9 +444,12 @@ export function evaluateSspGapReviewDeterministic(
     const selected = selectedSet.has(gap.id);
     return {
       gapId: gap.id,
+      label: gap.label,
       shouldSelect,
       selected,
       passed: shouldSelect === selected,
+      rationale: gap.rationale ?? gap.detail,
+      controlId: gap.controlId,
     };
   });
 
@@ -493,9 +520,29 @@ export function evaluateSspGapReviewDeterministic(
 export const sspGapReviewTicketScorer: TicketScorer = {
   score(submission, ticket): TicketScoreResult {
     const result = evaluateSspGapReviewDeterministic(submission, ticket);
+    const status = result.ok ? 'resolved' : 'needs_revision';
+    const trainingFeedback = buildChecklistTrainingFeedback({
+      options: result.structured.optionResults.map((option) => ({
+        optionId: option.gapId,
+        label: option.label,
+        selected: option.selected,
+        shouldSelect: option.shouldSelect,
+        rationale: option.rationale,
+        controlId: option.controlId,
+      })),
+      scorePercent: result.structured.percentage,
+      status,
+      summary: result.feedback,
+      expectedState: ticket.expected_state,
+      initialState: ticket.initial_state,
+    });
+
     return {
-      status: result.ok ? 'resolved' : 'needs_revision',
-      structuredResult: result.structured,
+      status,
+      structuredResult: {
+        ...result.structured,
+        trainingFeedback,
+      },
       feedback: result.feedback,
     };
   },

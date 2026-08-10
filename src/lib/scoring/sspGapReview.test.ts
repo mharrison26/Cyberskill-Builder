@@ -166,6 +166,15 @@ describe('sspGapReview', () => {
     expect(scored.structuredResult.percentage).toBe(100);
     expect(scored.structuredResult.recallPercent).toBe(100);
     expect(scored.structuredResult.foundCount).toBe(4);
+    const training = scored.structuredResult.trainingFeedback as {
+      kind?: string;
+      checklist?: { options: Array<{ verdict: string; optionId: string }> };
+    };
+    expect(training?.kind).toBe('checklist');
+    expect(training?.checklist?.options.length).toBe(6);
+    expect(
+      training?.checklist?.options.some((o) => o.verdict === 'true_positive')
+    ).toBe(true);
   });
 
   it('respects a lowered passThresholdPercent for resolve', async () => {

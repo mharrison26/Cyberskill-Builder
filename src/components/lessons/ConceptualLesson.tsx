@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { LoaderCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 import { LessonContent } from '@/components/LessonContent';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +16,7 @@ import {
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import type { LessonGradingPhase } from '@/lib/grading/lessonGradingStatus';
 import { CONCEPTUAL_MIN_MEMO_LENGTH } from '@/lib/lessons/conceptualValidation';
 import type { Lesson } from '@/types';
 import { cn } from '@/lib/utils';
@@ -22,6 +25,10 @@ type ConceptualLessonProps = {
   lesson: Lesson;
   content?: string | null;
   className?: string;
+  initialMemo?: string | null;
+  initialPhase?: LessonGradingPhase;
+  initialGradingError?: string | null;
+  initialSubmittedAt?: string | null;
 };
 
 function parseObjectives(text: string | null): string[] {
@@ -52,6 +59,15 @@ function resolveLessonMarkdown(
   return objectives.map((objective) => `- ${objective}`).join('\n');
 }
 
+function formatElapsed(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes <= 0) {
+    return `${seconds}s`;
+  }
+  return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+}
+
 const SAMPLE_MARKDOWN = `## Overview
 
 This conceptual lesson introduces core governance, risk, and compliance concepts aligned to **NIST SP 800-53 Rev. 5**.
@@ -68,11 +84,18 @@ RMF Step 2 (Select) → choose baseline → tailor controls → document in SSP
 
 > Full lesson content will replace this sample once published in the CMS.`;
 
+const POLL_INTERVAL_MS = 2500;
+
 export function ConceptualLesson({
   lesson,
   content,
   className,
+  initialMemo = null,
+  initialPhase = 'not_submitted',
+  initialGradingError = null,
+  initialSubmittedAt = null,
 }: ConceptualLessonProps) {
+  const router = useRouter();
   const objectives = parseObjectives(lesson.learning_objectives);
   const scenarioBrief =
     typeof lesson.content?.scenarioBrief === 'string' &&
@@ -83,12 +106,99 @@ export function ConceptualLesson({
     resolveLessonMarkdown(content, scenarioBrief, objectives) ??
     SAMPLE_MARKDOWN;
 
-  const [started, setStarted] = useState(false);
-  const [memo, setMemo] = useState('');
+  const [started, setStarted] = useState(
+    Boolean(initialMemo) || initialPhase !== 'not_submitted'
+  );
+  const [memo, setMemo] = useState(initialMemo ?? '');
   const [memoError, setMemoError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [phase, setPhase] = useState<LessonGradingPhase>(initialPhase);
+  const [gradingError, setGradingError] = useState<string | null>(
+    initialGradingError
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const waitStartedAtRef = useRef<number | null>(
+    initialPhase === 'pending' && initialSubmittedAt
+      ? Date.parse(initialSubmittedAt)
+      : null
+  );
+
+  useEffect(() => {
+    if (phase !== 'pending') {
+      return;
+    }
+
+    if (waitStartedAtRef.current == null) {
+      waitStartedAtRef.current = Date.now();
+    }
+
+    const tick = () => {
+      const startedAt = waitStartedAtRef.current ?? Date.now();
+      setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== 'pending') {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function pollStatus() {
+      try {
+        const response = await fetch(`/api/lessons/${lesson.id}/status`, {
+          method: 'GET',
+          cache: 'no-store',
+        });
+        if (!response.ok || cancelled) return;
+
+        const payload = (await response.json()) as {
+          phase?: LessonGradingPhase;
+          memo?: string | null;
+          gradingError?: string | null;
+        };
+
+        if (cancelled) return;
+
+        if (payload.memo?.trim()) {
+          setMemo(payload.memo);
+        }
+
+        if (payload.phase === 'completed') {
+          setPhase('completed');
+          setGradingError(null);
+          router.refresh();
+          return;
+        }
+
+        if (payload.phase === 'failed') {
+          setPhase('failed');
+          setGradingError(
+            payload.gradingError ??
+              'Grading failed, your answer is saved. You can retry.'
+          );
+        }
+      } catch {
+        // Keep polling; transient network errors should not clear pending state.
+      }
+    }
+
+    void pollStatus();
+    const timer = window.setInterval(() => {
+      void pollStatus();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [phase, lesson.id, router]);
 
   function scrollToExercise() {
     setStarted(true);
@@ -101,8 +211,10 @@ export function ConceptualLesson({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (phase === 'pending' || phase === 'completed') return;
+
     setSubmitError(null);
-    setSubmitSuccess(false);
+    setGradingError(null);
 
     const trimmed = memo.trim();
     if (!trimmed) {
@@ -132,13 +244,40 @@ export function ConceptualLesson({
       const payload = (await response.json()) as {
         error?: string;
         success?: boolean;
+        grading?: {
+          status?: 'completed' | 'failed';
+          error?: string | null;
+          findingId?: string | null;
+          aiFindingState?: string | null;
+        };
       };
 
       if (!response.ok) {
         throw new Error(payload.error ?? 'Failed to save memo submission.');
       }
 
-      setSubmitSuccess(true);
+      // Answer is saved before grading; reflect that immediately.
+      setMemo(trimmed);
+      waitStartedAtRef.current = Date.now();
+      setElapsedSeconds(0);
+
+      if (payload.grading?.status === 'completed') {
+        setPhase('completed');
+        setGradingError(null);
+        router.refresh();
+        return;
+      }
+
+      if (payload.grading?.status === 'failed') {
+        setPhase('failed');
+        setGradingError(
+          payload.grading.error ??
+            'Grading failed, your answer is saved. You can retry.'
+        );
+        return;
+      }
+
+      setPhase('pending');
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -149,6 +288,57 @@ export function ConceptualLesson({
       setIsSubmitting(false);
     }
   }
+
+  async function handleRetryGrading() {
+    setIsRetrying(true);
+    setSubmitError(null);
+    setGradingError(null);
+    waitStartedAtRef.current = Date.now();
+    setElapsedSeconds(0);
+    setPhase('pending');
+
+    try {
+      const response = await fetch(`/api/lessons/${lesson.id}/grade`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        grading?: { status?: string; error?: string | null };
+      };
+
+      if (!response.ok) {
+        setPhase('failed');
+        setGradingError(
+          payload.error ??
+            payload.grading?.error ??
+            'Grading failed, your answer is saved. You can retry.'
+        );
+        return;
+      }
+
+      setPhase('completed');
+      setGradingError(null);
+      router.refresh();
+    } catch (error) {
+      setPhase('failed');
+      setGradingError(
+        error instanceof Error
+          ? error.message
+          : 'Grading failed, your answer is saved. You can retry.'
+      );
+    } finally {
+      setIsRetrying(false);
+    }
+  }
+
+  const formLocked =
+    isSubmitting || isRetrying || phase === 'pending' || phase === 'completed';
+  const showPending = phase === 'pending';
+  const showFailed = phase === 'failed';
+  const showCompleted = phase === 'completed';
 
   return (
     <article className={cn('space-y-6', className)}>
@@ -222,12 +412,12 @@ export function ConceptualLesson({
                 value={memo}
                 onChange={(event) => {
                   setMemo(event.target.value);
-                  setSubmitSuccess(false);
                   if (memoError) setMemoError(null);
                 }}
                 placeholder="Write your one-page orientation memo…"
                 aria-invalid={Boolean(memoError)}
-                disabled={isSubmitting}
+                disabled={formLocked}
+                readOnly={showCompleted}
               />
               {memoError ? (
                 <p className="text-sm text-destructive">{memoError}</p>
@@ -245,15 +435,69 @@ export function ConceptualLesson({
               </p>
             ) : null}
 
-            {submitSuccess ? (
+            {showPending ? (
+              <div
+                role="status"
+                className="flex items-start gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm"
+              >
+                <LoaderCircle
+                  className="mt-0.5 size-4 shrink-0 animate-spin text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <div>
+                  <p className="font-medium text-foreground">
+                    Grading in progress
+                  </p>
+                  <p className="mt-0.5 text-muted-foreground">
+                    Memo submitted. Results will appear here once grading
+                    completes. Elapsed: {formatElapsed(elapsedSeconds)}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {showFailed ? (
+              <div
+                role="alert"
+                className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
+              >
+                <div>
+                  <p className="font-medium text-destructive">
+                    Grading failed — your answer is saved
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    {gradingError ??
+                      'Grading failed, your answer is saved. You can retry.'}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    void handleRetryGrading();
+                  }}
+                  disabled={isRetrying}
+                >
+                  {isRetrying ? 'Retrying…' : 'Retry grading'}
+                </Button>
+              </div>
+            ) : null}
+
+            {showCompleted ? (
               <p className="text-sm text-foreground" role="status">
-                Memo submitted. Results will appear here once grading completes.
+                Memo graded. Feedback appears above when available.
               </p>
             ) : null}
 
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting…' : 'Submit memo'}
-            </Button>
+            {phase === 'not_submitted' || phase === 'failed' ? (
+              <Button type="submit" disabled={isSubmitting || isRetrying}>
+                {isSubmitting
+                  ? 'Submitting…'
+                  : phase === 'failed'
+                    ? 'Resubmit memo'
+                    : 'Submit memo'}
+              </Button>
+            ) : null}
           </form>
         </CardContent>
       </Card>

@@ -17,6 +17,7 @@ import { isFlagshipEligibleTicketType } from '@/lib/helpdesk/ticketCodes';
 import { isInfraDesignCapstoneTicketType } from '@/lib/infra/ticketCodes';
 import { captureFeatureException } from '@/lib/observability/sentry';
 import { persistPoamItems } from '@/lib/poam/persistPoamItems';
+import { enrichTrainingFeedback } from '@/lib/feedback';
 import {
   resolveTicketScorer,
   scoreStatusToProgressStatus,
@@ -278,6 +279,29 @@ export async function POST(request: Request, { params }: RouteContext) {
   const now = new Date().toISOString();
   const progressStatus = scoreStatusToProgressStatus(scoreResult.status);
   const startedAt = existingProgress?.started_at ?? now;
+  const resolvedAt = progressStatus === 'resolved' ? now : null;
+
+  const { data: peerRows } = await context.supabase
+    .from('portfolio_items')
+    .select('structured_result')
+    .eq('ticket_id', ticketId)
+    .neq('student_id', context.appUser.id)
+    .limit(200);
+
+  const enriched = enrichTrainingFeedback({
+    structuredResult: scoreResult.structuredResult,
+    slaMinutes: context.ticket.sla_minutes,
+    startedAt,
+    resolvedAt: resolvedAt ?? now,
+    peerStructuredResults: (peerRows ?? []).map(
+      (row) => row.structured_result as Record<string, unknown> | null
+    ),
+  });
+
+  scoreResult = {
+    ...scoreResult,
+    structuredResult: enriched.structuredResult,
+  };
 
   const { data: progress, error: progressError } = await context.supabase
     .from('ticket_progress')
@@ -287,7 +311,7 @@ export async function POST(request: Request, { params }: RouteContext) {
         ticket_id: ticketId,
         status: progressStatus,
         started_at: startedAt,
-        resolved_at: progressStatus === 'resolved' ? now : null,
+        resolved_at: resolvedAt,
         submission,
       },
       { onConflict: 'student_id,ticket_id' }
@@ -466,6 +490,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       status: scoreResult.status,
       feedback: scoreResult.feedback,
       structuredResult: scoreResult.structuredResult,
+      trainingFeedback: enriched.trainingFeedback,
       progressId: progress.id,
       progressStatus: progress.status,
       portfolioItemId: portfolioItem.id,

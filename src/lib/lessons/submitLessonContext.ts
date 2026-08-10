@@ -114,6 +114,8 @@ export async function upsertLessonSubmission(
 ) {
   const submittedAt = new Date().toISOString();
 
+  // Persist the student's work before any grading attempt. Clear prior
+  // grading_error so a resubmit starts from a clean pending state.
   return context.supabase
     .from('lesson_progress')
     .upsert(
@@ -123,6 +125,9 @@ export async function upsertLessonSubmission(
         status: 'submitted',
         submitted_at: submittedAt,
         submission,
+        grading_error: null,
+        grading_started_at: null,
+        graded_at: null,
       },
       { onConflict: 'student_id,lesson_id' }
     )

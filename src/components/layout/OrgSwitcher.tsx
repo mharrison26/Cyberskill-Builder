@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -85,33 +86,45 @@ export function OrgSwitcher({ workspaces, className }: OrgSwitcherProps) {
           />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
-          <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          {workspaces.map((workspace) => (
+          <DropdownMenuGroup>
+            {workspaces.map((workspace) => (
+              <DropdownMenuItem
+                key={workspace.tenantId}
+                disabled={isPending}
+                onClick={() => handleSelect(workspace.tenantId)}
+                className="flex items-start justify-between gap-2"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate font-medium">
+                    {workspace.name}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {workspace.tenantKind}
+                    {workspace.role ? ` · ${workspace.role}` : ''}
+                  </span>
+                </span>
+                {workspace.isActive ? (
+                  <Check
+                    className="mt-0.5 size-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
             <DropdownMenuItem
-              key={workspace.tenantId}
-              disabled={isPending}
-              onClick={() => handleSelect(workspace.tenantId)}
-              className="flex items-start justify-between gap-2"
+              disabled
+              className="text-xs text-muted-foreground"
             >
-              <span className="min-w-0">
-                <span className="block truncate font-medium">
-                  {workspace.name}
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {workspace.tenantKind}
-                  {workspace.role ? ` · ${workspace.role}` : ''}
-                </span>
-              </span>
-              {workspace.isActive ? (
-                <Check className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              ) : null}
+              SSO-provisioned orgs appear here after enterprise setup
             </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem disabled className="text-xs text-muted-foreground">
-            SSO-provisioned orgs appear here after enterprise setup
-          </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
       {error ? (

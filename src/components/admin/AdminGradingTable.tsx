@@ -97,15 +97,38 @@ export function AdminGradingTable({ rows }: AdminGradingTableProps) {
                 {row.aiFeedback || 'No AI feedback yet.'}
               </dd>
             </div>
+            {row.gradingError ? (
+              <div>
+                <dt className="font-medium text-muted-foreground">
+                  Grading error
+                </dt>
+                <dd className="mt-1 whitespace-pre-wrap text-destructive">
+                  {row.gradingError}
+                </dd>
+              </div>
+            ) : null}
           </dl>
 
           <div className="rounded-lg border border-border bg-muted/20 p-4">
-            <h3 className="mb-4 text-sm font-medium">Review finding</h3>
-            <GradingReviewForm
-              findingId={row.id}
-              findingState={row.findingState}
-              feedback={row.aiFeedback}
-            />
+            {row.rowKind === 'pending_submission' ? (
+              <div className="space-y-2 text-sm">
+                <h3 className="text-sm font-medium">Pending AI grading</h3>
+                <p className="text-muted-foreground">
+                  This free-text submission is saved on lesson progress but does
+                  not have an OSCAL finding yet. Ask the student to retry
+                  grading, or wait for the AI job to complete.
+                </p>
+              </div>
+            ) : (
+              <>
+                <h3 className="mb-4 text-sm font-medium">Review finding</h3>
+                <GradingReviewForm
+                  findingId={row.id}
+                  findingState={row.findingState}
+                  feedback={row.aiFeedback}
+                />
+              </>
+            )}
           </div>
         </div>
       )}

@@ -1,5 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import {
+  extractTrainingFeedback,
+  type TrainingFeedback,
+} from '@/lib/feedback';
 import type { OscalObservation } from '@/lib/oscal/toAssessmentFinding';
 import { sortPortfolioItemsFlagshipFirst } from '@/lib/portfolio/sortPortfolioItems';
 import type { PortfolioItemKind, PortfolioScoreStatus } from '@/types';
@@ -41,6 +45,8 @@ export type MyPortfolioItem = {
   observation: OscalObservation | null;
   scoreStatus: PortfolioScoreStatus | null;
   ticketType: string | null;
+  /** Persisted rich training feedback for ticket resolutions (reopenable). */
+  trainingFeedback: TrainingFeedback | null;
   defense: MyPortfolioDefense | null;
 };
 
@@ -237,6 +243,7 @@ export async function getMyPortfolioItems(
         observation,
         scoreStatus: null,
         ticketType: null,
+        trainingFeedback: null,
         defense,
       };
     }
@@ -269,6 +276,7 @@ export async function getMyPortfolioItems(
       observation: null,
       scoreStatus,
       ticketType: (row.ticket_type as string | null) ?? null,
+      trainingFeedback: extractTrainingFeedback(structured),
       defense,
     };
   });

@@ -300,6 +300,9 @@ export interface AdminGradingRow {
   submissionPreview: string;
   submissionFull: string;
   isReviewed: boolean;
+  /** Finding rows are reviewable; pending_submission rows await AI grading. */
+  rowKind?: 'finding' | 'pending_submission';
+  gradingError?: string | null;
 }
 
 export interface CCCERValues {

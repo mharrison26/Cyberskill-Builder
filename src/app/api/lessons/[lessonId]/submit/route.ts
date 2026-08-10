@@ -8,9 +8,14 @@ import { validateConceptualSubmission } from '@/lib/lessons/conceptualValidation
 import {
   resolveSubmitLessonContext,
   upsertLessonSubmission,
+  type LessonSubmissionPayload,
+  type SubmitLessonContext,
 } from '@/lib/lessons/submitLessonContext';
 import { validateToolWalkthroughSubmission } from '@/lib/lessons/toolWalkthroughValidation';
 import { createClient } from '@/lib/supabase/server';
+
+/** Allow enough time for synchronous AI grading after persist. */
+export const maxDuration = 60;
 
 type RouteContext = {
   params: { lessonId: string };
@@ -43,6 +48,53 @@ function isConceptualBody(
     typeof body === 'object' &&
     body !== null &&
     (body as Record<string, unknown>).type === 'conceptual'
+  );
+}
+
+async function persistThenGrade(
+  context: SubmitLessonContext,
+  lessonId: string,
+  submission: LessonSubmissionPayload
+) {
+  const { data: progress, error: progressError } = await upsertLessonSubmission(
+    context,
+    lessonId,
+    submission
+  );
+
+  if (progressError || !progress) {
+    console.error('lesson_progress upsert failed:', progressError);
+    return NextResponse.json(
+      { error: 'Failed to save submission' },
+      { status: 500 }
+    );
+  }
+
+  // Submission is durable before grading runs. Grading failures must not
+  // roll back or hide the saved answer.
+  const grading = await triggerGrading({
+    supabase: context.supabase,
+    progressId: progress.id,
+    studentId: context.appUser.id,
+    tenantId: context.appUser.tenant_id,
+    lessonId: context.lesson.id,
+    trackId: context.lesson.track_id,
+    dcwfCode: context.lesson.dcwf_code,
+    submission,
+  });
+
+  return NextResponse.json(
+    {
+      success: true,
+      progressId: progress.id,
+      grading: {
+        status: grading.status,
+        findingId: grading.findingId ?? null,
+        aiFindingState: grading.aiFindingState ?? null,
+        error: grading.error ?? null,
+      },
+    },
+    { status: 201 }
   );
 }
 
@@ -84,32 +136,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: scanResult.error }, { status: 422 });
     }
 
-    const { data: progress, error: progressError } =
-      await upsertLessonSubmission(context, lessonId, validation.data);
-
-    if (progressError || !progress) {
-      console.error('lesson_progress upsert failed:', progressError);
-      return NextResponse.json(
-        { error: 'Failed to save submission' },
-        { status: 500 }
-      );
-    }
-
-    await triggerGrading({
-      supabase: context.supabase,
-      progressId: progress.id,
-      studentId: context.appUser.id,
-      tenantId: context.appUser.tenant_id,
-      lessonId: context.lesson.id,
-      trackId: context.lesson.track_id,
-      dcwfCode: context.lesson.dcwf_code,
-      submission: validation.data,
-    });
-
-    return NextResponse.json(
-      { success: true, progressId: progress.id },
-      { status: 201 }
-    );
+    return persistThenGrade(context, lessonId, validation.data);
   }
 
   if (isCatalogLabBody(body)) {
@@ -118,32 +145,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const { data: progress, error: progressError } =
-      await upsertLessonSubmission(context, lessonId, validation.data);
-
-    if (progressError || !progress) {
-      console.error('lesson_progress upsert failed:', progressError);
-      return NextResponse.json(
-        { error: 'Failed to save submission' },
-        { status: 500 }
-      );
-    }
-
-    await triggerGrading({
-      supabase: context.supabase,
-      progressId: progress.id,
-      studentId: context.appUser.id,
-      tenantId: context.appUser.tenant_id,
-      lessonId: context.lesson.id,
-      trackId: context.lesson.track_id,
-      dcwfCode: context.lesson.dcwf_code,
-      submission: validation.data,
-    });
-
-    return NextResponse.json(
-      { success: true, progressId: progress.id },
-      { status: 201 }
-    );
+    return persistThenGrade(context, lessonId, validation.data);
   }
 
   if (isConceptualBody(body)) {
@@ -152,32 +154,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const { data: progress, error: progressError } =
-      await upsertLessonSubmission(context, lessonId, validation.data);
-
-    if (progressError || !progress) {
-      console.error('lesson_progress upsert failed:', progressError);
-      return NextResponse.json(
-        { error: 'Failed to save submission' },
-        { status: 500 }
-      );
-    }
-
-    await triggerGrading({
-      supabase: context.supabase,
-      progressId: progress.id,
-      studentId: context.appUser.id,
-      tenantId: context.appUser.tenant_id,
-      lessonId: context.lesson.id,
-      trackId: context.lesson.track_id,
-      dcwfCode: context.lesson.dcwf_code,
-      submission: validation.data,
-    });
-
-    return NextResponse.json(
-      { success: true, progressId: progress.id },
-      { status: 201 }
-    );
+    return persistThenGrade(context, lessonId, validation.data);
   }
 
   const validation = validateCCCER(body);
@@ -185,33 +162,5 @@ export async function POST(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  const { data: progress, error: progressError } = await upsertLessonSubmission(
-    context,
-    lessonId,
-    validation.data
-  );
-
-  if (progressError || !progress) {
-    console.error('lesson_progress upsert failed:', progressError);
-    return NextResponse.json(
-      { error: 'Failed to save submission' },
-      { status: 500 }
-    );
-  }
-
-  await triggerGrading({
-    supabase: context.supabase,
-    progressId: progress.id,
-    studentId: context.appUser.id,
-    tenantId: context.appUser.tenant_id,
-    lessonId: context.lesson.id,
-    trackId: context.lesson.track_id,
-    dcwfCode: context.lesson.dcwf_code,
-    submission: validation.data,
-  });
-
-  return NextResponse.json(
-    { success: true, progressId: progress.id },
-    { status: 201 }
-  );
+  return persistThenGrade(context, lessonId, validation.data);
 }

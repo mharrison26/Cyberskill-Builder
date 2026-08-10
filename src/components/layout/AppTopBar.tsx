@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { LogOut, Menu, Settings, User } from 'lucide-react';
-import { Suspense, useTransition } from 'react';
+import { Suspense, useEffect, useState, useTransition } from 'react';
 
 import { signOut } from '@/app/(auth)/actions';
 
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -53,6 +54,15 @@ export function AppTopBar({
   workspaces = [],
 }: AppTopBarProps) {
   const [isSigningOut, startSignOut] = useTransition();
+  // Base UI Avatar.Fallback can differ between SSR and first client paint;
+  // gate initials so the trigger markup hydrates consistently.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const initials = getAvatarInitials(user.name);
 
   return (
     <header className="flex h-14 items-center gap-3 border-b border-border bg-card px-4 md:px-6">
@@ -111,9 +121,18 @@ export function AppTopBar({
             }
           >
             <Avatar className="size-7 transition-hover group-hover/button:opacity-90 group-aria-expanded/button:ring-2 group-aria-expanded/button:ring-ring/50">
-              <AvatarFallback className="bg-primary text-xs text-primary-foreground">
-                {getAvatarInitials(user.name)}
-              </AvatarFallback>
+              {mounted ? (
+                <AvatarFallback
+                  delay={0}
+                  className="bg-primary text-xs text-primary-foreground"
+                >
+                  {initials}
+                </AvatarFallback>
+              ) : (
+                <span className="flex size-full items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                  {initials}
+                </span>
+              )}
             </Avatar>
             {user.name ? (
               <span className="hidden text-sm font-medium sm:inline">
@@ -122,37 +141,43 @@ export function AppTopBar({
             ) : null}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div className="flex flex-col">
-                {user.name ? (
-                  <span>{user.name}</span>
-                ) : (
-                  <span className="font-normal text-muted-foreground">
-                    Preferred name not set
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  {user.name ? (
+                    <span>{user.name}</span>
+                  ) : (
+                    <span className="font-normal text-muted-foreground">
+                      Preferred name not set
+                    </span>
+                  )}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {user.email}
                   </span>
-                )}
-                <span className="text-xs font-normal text-muted-foreground">
-                  {user.email}
-                </span>
-              </div>
-            </DropdownMenuLabel>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/account" />}>
-              <Settings className="size-4" aria-hidden="true" />
-              {user.name ? 'Account Settings' : 'Set preferred name'}
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/portfolio" />}>
-              <User className="size-4" aria-hidden="true" />
-              My Portfolio
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem render={<Link href="/account" />}>
+                <Settings className="size-4" aria-hidden="true" />
+                {user.name ? 'Account Settings' : 'Set preferred name'}
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/portfolio" />}>
+                <User className="size-4" aria-hidden="true" />
+                My Portfolio
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={isSigningOut}
-              onClick={() => startSignOut(() => signOut())}
-            >
-              <LogOut className="size-4" aria-hidden="true" />
-              {isSigningOut ? 'Signing out…' : 'Sign Out'}
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                disabled={isSigningOut}
+                onClick={() => startSignOut(() => signOut())}
+              >
+                <LogOut className="size-4" aria-hidden="true" />
+                {isSigningOut ? 'Signing out…' : 'Sign Out'}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { Suspense } from 'react';
 
 import { ControlCatalogBrowser } from '@/components/ControlCatalogBrowser';
 import {
@@ -41,7 +42,13 @@ export default function GrcControlCatalogPage() {
         </p>
       </header>
 
-      <ControlCatalogBrowser controls={controls} />
+      <Suspense
+        fallback={
+          <p className="text-sm text-muted-foreground">Loading catalog…</p>
+        }
+      >
+        <ControlCatalogBrowser controls={controls} />
+      </Suspense>
     </div>
   );
 }

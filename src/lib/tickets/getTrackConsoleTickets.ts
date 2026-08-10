@@ -17,6 +17,10 @@ export type TrackConsoleTicketsResult = {
  * Load console tickets for a track slug.
  * Prefers live Supabase rows when the user is enrolled and tickets exist;
  * otherwise returns mock placeholders so consoles remain reviewable.
+ *
+ * Tickets are tenant-scoped content copies. Always filter by the student's
+ * tenant so admin RLS (which can read every tenant) does not fan the queue
+ * into duplicate scenarios.
  */
 export async function getTrackConsoleTickets(
   supabase: SupabaseClient,
@@ -46,7 +50,17 @@ export async function getTrackConsoleTickets(
   }
 
   let enrolled = false;
+  let tenantId: string | null = null;
+
   if (studentId) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('tenant_id')
+      .eq('id', studentId)
+      .maybeSingle();
+    tenantId =
+      typeof profile?.tenant_id === 'string' ? profile.tenant_id : null;
+
     const { data: enrollment } = await supabase
       .from('track_enrollments')
       .select('id')
@@ -57,13 +71,20 @@ export async function getTrackConsoleTickets(
     enrolled = Boolean(enrollment);
   }
 
-  const { data: ticketRows, error } = await supabase
+  let ticketsQuery = supabase
     .from('tickets')
     .select(
       'id, tenant_id, track_id, tier, ticket_type, difficulty, sla_minutes, scenario_brief, initial_state, expected_state, dcwf_code, sort_order, engagement_id, engagement_stage'
     )
-    .eq('track_id', track.id)
-    .order('sort_order', { ascending: true });
+    .eq('track_id', track.id);
+
+  if (tenantId) {
+    ticketsQuery = ticketsQuery.eq('tenant_id', tenantId);
+  }
+
+  const { data: ticketRows, error } = await ticketsQuery.order('sort_order', {
+    ascending: true,
+  });
 
   if (error || !ticketRows || ticketRows.length === 0) {
     return {

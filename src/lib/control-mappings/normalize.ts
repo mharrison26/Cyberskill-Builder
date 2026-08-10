@@ -13,11 +13,29 @@ export function normalizeControlIdList(ids: unknown): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const value of ids) {
-    if (typeof value !== 'string') continue;
-    const normalized = normalizeControlId(value);
-    if (!normalized || seen.has(normalized)) continue;
-    seen.add(normalized);
-    out.push(normalized);
+    if (typeof value === 'string') {
+      const normalized = normalizeControlId(value);
+      if (!normalized || seen.has(normalized)) continue;
+      seen.add(normalized);
+      out.push(normalized);
+      continue;
+    }
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const obj = value as Record<string, unknown>;
+      const raw =
+        typeof obj.id === 'string'
+          ? obj.id
+          : typeof obj.controlId === 'string'
+            ? obj.controlId
+            : typeof obj.control_id === 'string'
+              ? obj.control_id
+              : '';
+      if (!raw.trim()) continue;
+      const normalized = normalizeControlId(raw);
+      if (!normalized || seen.has(normalized)) continue;
+      seen.add(normalized);
+      out.push(normalized);
+    }
   }
   return out;
 }

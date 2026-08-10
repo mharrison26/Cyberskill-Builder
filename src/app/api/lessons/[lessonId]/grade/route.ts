@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 
-import {
-  gradeSubmission,
-  MissingAnthropicApiKeyError,
-} from '@/lib/grading/gradeSubmission';
+import { triggerGrading } from '@/lib/grading/triggerGrading';
+import type { CatalogLabSubmission } from '@/lib/lessons/catalogLabValidation';
+import type { ConceptualSubmission } from '@/lib/lessons/conceptualValidation';
+import type { ToolWalkthroughSubmission } from '@/lib/lessons/toolWalkthroughValidation';
 import { createClient } from '@/lib/supabase/server';
+import type { CCCERValues } from '@/types';
+
+/** Allow enough time for synchronous AI grading retries. */
+export const maxDuration = 60;
 
 type RouteContext = {
   params: { lessonId: string };
@@ -13,6 +17,12 @@ type RouteContext = {
 type GradeRequestBody = {
   studentId?: string;
 };
+
+type StoredLessonSubmission =
+  | CCCERValues
+  | ToolWalkthroughSubmission
+  | CatalogLabSubmission
+  | ConceptualSubmission;
 
 export async function POST(request: Request, { params }: RouteContext) {
   const { lessonId } = params;
@@ -74,7 +84,7 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   const { data: lesson, error: lessonError } = await supabase
     .from('lessons')
-    .select('id, track_id')
+    .select('id, track_id, dcwf_code')
     .eq('id', lessonId)
     .maybeSingle();
 
@@ -97,56 +107,82 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  try {
-    const result = await gradeSubmission({
-      supabase,
-      lessonId,
-      studentId: targetStudentId,
-      tenantId: targetUser.tenant_id,
-    });
+  const { data: progress, error: progressError } = await supabase
+    .from('lesson_progress')
+    .select('id, status, submission')
+    .eq('student_id', targetStudentId)
+    .eq('lesson_id', lessonId)
+    .eq('status', 'submitted')
+    .maybeSingle();
 
+  if (progressError || !progress) {
+    return NextResponse.json(
+      { error: 'Submitted lesson progress not found' },
+      { status: 404 }
+    );
+  }
+
+  if (!progress.submission || typeof progress.submission !== 'object') {
+    return NextResponse.json(
+      { error: 'Submission payload missing from lesson progress' },
+      { status: 404 }
+    );
+  }
+
+  const grading = await triggerGrading({
+    supabase,
+    progressId: progress.id,
+    studentId: targetStudentId,
+    tenantId: targetUser.tenant_id,
+    lessonId,
+    trackId: lesson.track_id,
+    dcwfCode: lesson.dcwf_code,
+    submission: progress.submission as StoredLessonSubmission,
+  });
+
+  if (grading.status === 'failed') {
+    const isMissingKey =
+      grading.error?.includes('not configured') ||
+      grading.error?.includes('ANTHROPIC_API_KEY');
     return NextResponse.json(
       {
-        finding: result.finding,
-        aiFindingState: result.aiFindingState,
+        error:
+          grading.error ??
+          (isMissingKey
+            ? 'Grading service unavailable: ANTHROPIC_API_KEY is not configured'
+            : 'Failed to grade submission'),
+        grading: {
+          status: grading.status,
+          error: grading.error ?? null,
+        },
+      },
+      { status: isMissingKey ? 503 : 500 }
+    );
+  }
+
+  const { data: finding } = await supabase
+    .from('oscal_findings')
+    .select(
+      'id, tenant_id, student_id, track_id, lesson_id, control_id, catalog_source, finding_state, observation, student_narrative, dcwf_code, created_at'
+    )
+    .eq('id', grading.findingId!)
+    .maybeSingle();
+
+  if (!finding) {
+    return NextResponse.json(
+      {
+        findingId: grading.findingId,
+        aiFindingState: grading.aiFindingState,
       },
       { status: 201 }
     );
-  } catch (error) {
-    if (error instanceof MissingAnthropicApiKeyError) {
-      return NextResponse.json(
-        {
-          error:
-            'Grading service unavailable: ANTHROPIC_API_KEY is not configured',
-        },
-        { status: 503 }
-      );
-    }
-
-    const message =
-      error instanceof Error ? error.message : 'Failed to grade submission';
-
-    if (
-      message.includes('Control not found') ||
-      message.includes('No control_id associated') ||
-      message.includes('depends_on_lesson_id') ||
-      message.includes('Screenshot evidence upload is required') ||
-      message.includes('No oscal_findings row found for the prerequisite')
-    ) {
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
-
-    if (
-      message.includes('Submitted lesson progress not found') ||
-      message.includes('Submission payload missing')
-    ) {
-      return NextResponse.json({ error: message }, { status: 404 });
-    }
-
-    console.error('Grading failed:', error);
-    return NextResponse.json(
-      { error: 'Failed to grade submission' },
-      { status: 500 }
-    );
   }
+
+  return NextResponse.json(
+    {
+      finding,
+      aiFindingState: grading.aiFindingState,
+    },
+    { status: 201 }
+  );
 }

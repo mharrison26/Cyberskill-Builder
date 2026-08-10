@@ -8,6 +8,7 @@ import {
   type DefensePromptQuestion,
   type DefenseRecordingResult,
 } from '@/components/DefenseRecorder';
+import { TrainingFeedbackPanel } from '@/components/feedback/TrainingFeedbackPanel';
 import { togglePortfolioItemPublic } from '@/components/portfolio/actions';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,6 +21,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { formatDcwfLabel } from '@/lib/dcwf/formatDcwfLabel';
+import type { TrainingFeedback } from '@/lib/feedback';
 import { getTicketStatusColorClass } from '@/lib/tickets/status';
 import type { MockDefenseRecording, PortfolioScoreStatus } from '@/types';
 import { cn } from '@/lib/utils';
@@ -49,6 +51,8 @@ type TicketResolutionCardProps = {
   trackId?: string | null;
   relatedFindingId?: string | null;
   promptQuestions?: DefensePromptQuestion[];
+  /** Persisted training feedback reopened from the ledger. */
+  trainingFeedback?: TrainingFeedback | null;
   className?: string;
 };
 
@@ -92,12 +96,14 @@ export function TicketResolutionCard({
   trackId = null,
   relatedFindingId = null,
   promptQuestions = [],
+  trainingFeedback = null,
   className,
 }: TicketResolutionCardProps) {
   const [localPublic, setLocalPublic] = useState(isPublic);
   const [localDefense, setLocalDefense] = useState<MockDefenseRecording | null>(
     defense
   );
+  const [showFeedback, setShowFeedback] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const normalized = normalizeScoreStatus(scoreStatus);
   const badgeTone =
@@ -194,6 +200,24 @@ export function TicketResolutionCard({
         <p className="text-sm leading-relaxed text-muted-foreground">
           {narrative}
         </p>
+
+        {trainingFeedback ? (
+          <div className="space-y-2">
+            <button
+              type="button"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+              onClick={() => setShowFeedback((open) => !open)}
+              aria-expanded={showFeedback}
+            >
+              {showFeedback
+                ? 'Hide training feedback'
+                : 'Reopen training feedback'}
+            </button>
+            {showFeedback ? (
+              <TrainingFeedbackPanel feedback={trainingFeedback} />
+            ) : null}
+          </div>
+        ) : null}
 
         {localDefense ? (
           <DefensePlayback

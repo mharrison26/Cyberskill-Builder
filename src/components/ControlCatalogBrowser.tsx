@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import type { ControlCatalogEntry } from '@/lib/oscal/parseCatalog';
@@ -33,6 +34,19 @@ export function ControlCatalogBrowser({
   controls,
 }: ControlCatalogBrowserProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
+  const initialSearch = (searchParams.get('q') ?? '').trim();
+
+  const initialExpandedId = useMemo(() => {
+    if (!initialSearch) return null;
+    const needle = initialSearch.toLowerCase();
+    const match = controls.find(
+      (c) =>
+        c.control_id.toLowerCase() === needle ||
+        c.id.toLowerCase() === needle
+    );
+    return match?.id ?? null;
+  }, [controls, initialSearch]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -68,6 +82,8 @@ export function ControlCatalogBrowser({
         columns={columns}
         searchKeys={['control_id', 'title', 'family']}
         searchPlaceholder="Search by control ID, title, or family…"
+        initialSearch={initialSearch}
+        initialExpandedId={initialExpandedId}
         expandable
         emptyMessage="No controls match your search."
         renderExpanded={(row) => (

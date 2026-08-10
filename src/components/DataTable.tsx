@@ -29,6 +29,10 @@ type DataTableProps<T extends { id: string }> = {
   columns: DataTableColumn<T>[];
   searchPlaceholder?: string;
   searchKeys?: (keyof T)[];
+  /** Prefill the search box (e.g. Control Catalog deep links). */
+  initialSearch?: string;
+  /** Expand a row on first render when it matches this id. */
+  initialExpandedId?: string | null;
   expandable?: boolean;
   renderExpanded?: (row: T) => React.ReactNode;
   emptyMessage?: string;
@@ -40,15 +44,19 @@ export function DataTable<T extends { id: string }>({
   columns,
   searchPlaceholder = 'Search…',
   searchKeys = [],
+  initialSearch = '',
+  initialExpandedId = null,
   expandable = false,
   renderExpanded,
   emptyMessage = 'No results found.',
   className,
 }: DataTableProps<T>) {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(
+    initialExpandedId
+  );
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
