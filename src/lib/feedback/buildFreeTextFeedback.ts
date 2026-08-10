@@ -1,4 +1,7 @@
-import { parseFreeTextRubric, parseReviewNext } from '@/lib/feedback/parseRubric';
+import {
+  parseFreeTextRubric,
+  parseReviewNext,
+} from '@/lib/feedback/parseRubric';
 import type {
   FreeTextRubricDefinition,
   RubricDimensionFeedback,
@@ -39,7 +42,8 @@ function quoteAroundMatch(text: string, keyword: string): string | null {
   if (idx < 0) return null;
   const start = Math.max(0, text.lastIndexOf('.', idx) + 1);
   const endCandidate = text.indexOf('.', idx + keyword.length);
-  const end = endCandidate >= 0 ? endCandidate + 1 : Math.min(text.length, idx + 120);
+  const end =
+    endCandidate >= 0 ? endCandidate + 1 : Math.min(text.length, idx + 120);
   const snippet = text.slice(start, end).trim();
   if (!snippet) return null;
   return snippet.length > 160 ? `${snippet.slice(0, 159)}…` : snippet;
@@ -209,8 +213,6 @@ export function mergeHybridTrainingFeedback(
   };
 }
 
-export function submissionRecord(
-  submission: unknown
-): Record<string, unknown> {
+export function submissionRecord(submission: unknown): Record<string, unknown> {
   return isPlainObject(submission) ? submission : {};
 }

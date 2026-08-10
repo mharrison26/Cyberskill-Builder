@@ -11,7 +11,7 @@ import {
   extractTrainingFeedback,
   isTrainingFeedback,
   type TrainingFeedback,
-} from '@/lib/feedback';
+} from '@/lib/feedback/types';
 import { AUDIT_PLANNING_MEMO_MIN_FIELD_LENGTH } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
@@ -140,8 +140,7 @@ export function AuditPlanningMemoTicket({
       setTrainingFeedback(
         (isTrainingFeedback(payload.trainingFeedback)
           ? payload.trainingFeedback
-          : null) ??
-          extractTrainingFeedback(payload.structuredResult ?? null)
+          : null) ?? extractTrainingFeedback(payload.structuredResult ?? null)
       );
     } catch (error) {
       setSubmitError(

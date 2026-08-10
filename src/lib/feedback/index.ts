@@ -1,20 +1,12 @@
 export {
-  buildChecklistOptionFeedback,
-  buildChecklistTrainingFeedback,
-  type ChecklistOptionInput,
-} from '@/lib/feedback/buildChecklistFeedback';
-export {
   buildFreeTextTrainingFeedback,
   evaluateFreeTextRubric,
   mergeHybridTrainingFeedback,
   submissionRecord,
 } from '@/lib/feedback/buildFreeTextFeedback';
-export {
-  controlCatalogHref,
-  extractControlIdFromText,
-  resolveControlLink,
-} from '@/lib/feedback/controlLink';
 export { enrichTrainingFeedback } from '@/lib/feedback/enrichTrainingFeedback';
+// Checklist / control-link builders use Node fs (OSCAL catalog) — import from
+// `@/lib/feedback/server` in server-only modules, not this barrel.
 export {
   computeScorePercentile,
   extractScorePercent,

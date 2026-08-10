@@ -13,10 +13,7 @@ export function buildSlaMetrics(args: {
     const startedMs = new Date(startedAt).getTime();
     const resolvedMs = new Date(resolvedAt).getTime();
     if (!Number.isNaN(startedMs) && !Number.isNaN(resolvedMs)) {
-      minutesTaken = Math.max(
-        0,
-        Math.round((resolvedMs - startedMs) / 60_000)
-      );
+      minutesTaken = Math.max(0, Math.round((resolvedMs - startedMs) / 60_000));
     }
   }
 

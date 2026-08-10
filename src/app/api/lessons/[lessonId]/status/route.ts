@@ -44,7 +44,10 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   let finding: LessonGradingStatusPayload['finding'] = null;
 
-  if (progress && (isLessonGradedStatus(progress.status) || progress.status === 'submitted')) {
+  if (
+    progress &&
+    (isLessonGradedStatus(progress.status) || progress.status === 'submitted')
+  ) {
     const { data: latestFinding } = await supabase
       .from('oscal_findings')
       .select(

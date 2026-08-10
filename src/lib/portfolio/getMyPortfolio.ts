@@ -1,9 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import {
-  extractTrainingFeedback,
-  type TrainingFeedback,
-} from '@/lib/feedback';
+import { extractTrainingFeedback, type TrainingFeedback } from '@/lib/feedback';
 import type { OscalObservation } from '@/lib/oscal/toAssessmentFinding';
 import { sortPortfolioItemsFlagshipFirst } from '@/lib/portfolio/sortPortfolioItems';
 import type { PortfolioItemKind, PortfolioScoreStatus } from '@/types';

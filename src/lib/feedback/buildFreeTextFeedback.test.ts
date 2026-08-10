@@ -13,7 +13,8 @@ describe('buildFreeTextTrainingFeedback', () => {
           submissionField: 'objective',
           criteria: 'States what will be assessed.',
           keywords: ['assess', 'effectiveness', 'access'],
-          modelAnswer: 'Assess ITGC operating effectiveness over logical access.',
+          modelAnswer:
+            'Assess ITGC operating effectiveness over logical access.',
         },
         {
           id: 'scope',

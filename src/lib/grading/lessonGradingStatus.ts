@@ -3,10 +3,7 @@ import { isLessonGradedStatus } from '@/lib/status';
 import { isConceptualSubmission } from '@/lib/lessons/conceptualValidation';
 
 export type LessonGradingPhase =
-  | 'not_submitted'
-  | 'pending'
-  | 'failed'
-  | 'completed';
+  'not_submitted' | 'pending' | 'failed' | 'completed';
 
 export type LessonGradingStatusPayload = {
   progressId: string | null;

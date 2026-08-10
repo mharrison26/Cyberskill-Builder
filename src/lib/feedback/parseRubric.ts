@@ -105,5 +105,9 @@ export function parseReviewNext(source: unknown): ReviewNextLink | undefined {
   const href = typeof raw.href === 'string' ? raw.href.trim() : '';
   const reason = typeof raw.reason === 'string' ? raw.reason.trim() : '';
   if (!title || !href) return undefined;
-  return { title, href, reason: reason || 'Review this next to close the gap.' };
+  return {
+    title,
+    href,
+    reason: reason || 'Review this next to close the gap.',
+  };
 }

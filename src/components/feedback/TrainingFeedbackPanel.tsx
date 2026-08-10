@@ -3,14 +3,16 @@
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
+import type {
+  ChecklistOptionFeedback,
+  OptionVerdict,
+  RubricDimensionFeedback,
+  TrainingFeedback,
+} from '@/lib/feedback/types';
 import {
   OPTION_VERDICT_HINTS,
   OPTION_VERDICT_LABELS,
-  type ChecklistOptionFeedback,
-  type OptionVerdict,
-  type RubricDimensionFeedback,
-  type TrainingFeedback,
-} from '@/lib/feedback';
+} from '@/lib/feedback/verdicts';
 import { cn } from '@/lib/utils';
 
 type TrainingFeedbackPanelProps = {
@@ -42,9 +44,7 @@ function ScoreStrip({ feedback }: { feedback: TrainingFeedback }) {
           Percentile
         </dt>
         <dd className="mt-1 font-mono text-xl font-semibold tabular-nums">
-          {feedback.percentile === null
-            ? '—'
-            : `${feedback.percentile}th`}
+          {feedback.percentile === null ? '—' : `${feedback.percentile}th`}
         </dd>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {feedback.percentile === null
@@ -62,9 +62,7 @@ function ScoreStrip({ feedback }: { feedback: TrainingFeedback }) {
             ? '—'
             : `${feedback.sla.minutesTaken}m`}
           <span className="text-sm font-normal text-muted-foreground">
-            {feedback.sla
-              ? ` / ${feedback.sla.minutesAllowed}m`
-              : ''}
+            {feedback.sla ? ` / ${feedback.sla.minutesAllowed}m` : ''}
           </span>
         </dd>
         <p className="mt-0.5 text-xs text-muted-foreground">
@@ -105,11 +103,7 @@ function ControlInline({ option }: { option: ChecklistOptionFeedback }) {
   );
 }
 
-function ChecklistSection({
-  options,
-}: {
-  options: ChecklistOptionFeedback[];
-}) {
+function ChecklistSection({ options }: { options: ChecklistOptionFeedback[] }) {
   const ordered = [...options].sort((a, b) => {
     const rank: Record<OptionVerdict, number> = {
       false_negative: 0,
@@ -149,7 +143,9 @@ function ChecklistSection({
               </Badge>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {option.selected ? 'You selected this' : 'You left this unselected'}
+              {option.selected
+                ? 'You selected this'
+                : 'You left this unselected'}
               {' · '}
               {OPTION_VERDICT_HINTS[option.verdict]}
             </p>
@@ -192,7 +188,9 @@ function RubricSection({
               </p>
             </div>
             {dim.criteria ? (
-              <p className="mt-1 text-xs text-muted-foreground">{dim.criteria}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {dim.criteria}
+              </p>
             ) : null}
             {dim.strengths.length > 0 ? (
               <div className="mt-2 space-y-1">

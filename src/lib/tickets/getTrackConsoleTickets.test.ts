@@ -30,7 +30,10 @@ function createMockSupabase(tables: Record<string, TableResult>) {
       order: () => typeof builder;
       maybeSingle: () => Promise<{ data: Row | null; error: unknown }>;
       then: (
-        onfulfilled?: (value: { data: Row[] | null; error: unknown }) => unknown,
+        onfulfilled?: (value: {
+          data: Row[] | null;
+          error: unknown;
+        }) => unknown,
         onrejected?: (reason: unknown) => unknown
       ) => Promise<unknown>;
     } = {
@@ -77,7 +80,9 @@ function createMockSupabase(tables: Record<string, TableResult>) {
   };
 }
 
-function ticketRow(overrides: Partial<Row> & { id: string; ticket_type: string }): Row {
+function ticketRow(
+  overrides: Partial<Row> & { id: string; ticket_type: string }
+): Row {
   return {
     tenant_id: 'tenant-a',
     track_id: 'track-grc',
@@ -85,7 +90,10 @@ function ticketRow(overrides: Partial<Row> & { id: string; ticket_type: string }
     difficulty: 'medium',
     sla_minutes: 45,
     scenario_brief: overrides.ticket_type,
-    initial_state: { title: overrides.ticket_type, sheetId: overrides.ticket_type },
+    initial_state: {
+      title: overrides.ticket_type,
+      sheetId: overrides.ticket_type,
+    },
     expected_state: {},
     dcwf_code: '722',
     sort_order: 10,

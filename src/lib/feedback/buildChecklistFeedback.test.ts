@@ -57,9 +57,9 @@ describe('buildChecklistTrainingFeedback', () => {
     expect(byId['gap-missing-ac-6'].rationale).toContain('AC-6');
     expect(byId['gap-missing-ac-6'].control?.controlId).toBe('AC-6');
     expect(byId['gap-missing-ac-6'].control?.catalogHref).toContain('q=AC-6');
-    expect(byId['gap-missing-ac-6'].control?.statementExcerpt.length).toBeGreaterThan(
-      0
-    );
+    expect(
+      byId['gap-missing-ac-6'].control?.statementExcerpt.length
+    ).toBeGreaterThan(0);
 
     expect(feedback.reviewNext?.href).toContain('AC-6');
   });

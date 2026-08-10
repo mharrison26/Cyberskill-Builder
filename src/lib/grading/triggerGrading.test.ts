@@ -56,9 +56,7 @@ describe('triggerGrading', () => {
   });
 
   it('persists grading_error when Claude grading fails', async () => {
-    vi.mocked(gradeSubmission).mockRejectedValue(
-      new Error('model timeout')
-    );
+    vi.mocked(gradeSubmission).mockRejectedValue(new Error('model timeout'));
     const { supabase, updates } = createSupabaseMock();
 
     const result = await triggerGrading({

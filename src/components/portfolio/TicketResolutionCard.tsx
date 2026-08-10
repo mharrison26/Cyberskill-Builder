@@ -21,7 +21,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { formatDcwfLabel } from '@/lib/dcwf/formatDcwfLabel';
-import type { TrainingFeedback } from '@/lib/feedback';
+import type { TrainingFeedback } from '@/lib/feedback/types';
 import { getTicketStatusColorClass } from '@/lib/tickets/status';
 import type { MockDefenseRecording, PortfolioScoreStatus } from '@/types';
 import { cn } from '@/lib/utils';

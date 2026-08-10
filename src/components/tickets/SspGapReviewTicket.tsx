@@ -9,11 +9,11 @@ import {
   extractTrainingFeedback,
   isTrainingFeedback,
   type TrainingFeedback,
-} from '@/lib/feedback';
+} from '@/lib/feedback/types';
 import {
   parseSspCandidateGaps,
   parseSspExcerpt,
-} from '@/lib/scoring/sspGapReview';
+} from '@/lib/scoring/sspGapReviewParse';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -135,8 +135,7 @@ export function SspGapReviewTicket({
       setTrainingFeedback(
         (isTrainingFeedback(payload.trainingFeedback)
           ? payload.trainingFeedback
-          : null) ??
-          extractTrainingFeedback(payload.structuredResult ?? null)
+          : null) ?? extractTrainingFeedback(payload.structuredResult ?? null)
       );
     } catch (error) {
       setSubmitError(

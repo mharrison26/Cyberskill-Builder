@@ -21,11 +21,11 @@ import type {
   ControlMappingSubmission,
 } from '@/lib/control-mappings/types';
 import {
-  buildChecklistTrainingFeedback,
   buildFreeTextTrainingFeedback,
   mergeHybridTrainingFeedback,
   type TrainingFeedback,
 } from '@/lib/feedback';
+import { buildChecklistTrainingFeedback } from '@/lib/feedback/server';
 import { getControlText } from '@/lib/oscal/getControl';
 import { captureFeatureException } from '@/lib/observability/sentry';
 import { CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH } from '@/lib/scoring/ticketUi';

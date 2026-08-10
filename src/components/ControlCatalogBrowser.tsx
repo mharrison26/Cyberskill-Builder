@@ -42,8 +42,7 @@ export function ControlCatalogBrowser({
     const needle = initialSearch.toLowerCase();
     const match = controls.find(
       (c) =>
-        c.control_id.toLowerCase() === needle ||
-        c.id.toLowerCase() === needle
+        c.control_id.toLowerCase() === needle || c.id.toLowerCase() === needle
     );
     return match?.id ?? null;
   }, [controls, initialSearch]);

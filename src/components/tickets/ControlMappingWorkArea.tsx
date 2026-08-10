@@ -13,7 +13,7 @@ import {
   extractTrainingFeedback,
   isTrainingFeedback,
   type TrainingFeedback,
-} from '@/lib/feedback';
+} from '@/lib/feedback/types';
 import { CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH } from '@/lib/scoring/ticketUi';
 import { cn } from '@/lib/utils';
 import type { Ticket } from '@/types';
@@ -165,8 +165,7 @@ export function ControlMappingWorkArea({
       const rich =
         (isTrainingFeedback(body.trainingFeedback)
           ? body.trainingFeedback
-          : null) ??
-        extractTrainingFeedback(body.structuredResult ?? null);
+          : null) ?? extractTrainingFeedback(body.structuredResult ?? null);
       setTrainingFeedback(rich);
     } catch {
       setFeedback('Network error while submitting.');

@@ -136,7 +136,9 @@ export function ConceptualLesson({
 
     const tick = () => {
       const startedAt = waitStartedAtRef.current ?? Date.now();
-      setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+      setElapsedSeconds(
+        Math.max(0, Math.floor((Date.now() - startedAt) / 1000))
+      );
     };
     tick();
     const timer = window.setInterval(tick, 1000);

@@ -4,10 +4,7 @@
  */
 
 export type OptionVerdict =
-  | 'true_positive'
-  | 'false_positive'
-  | 'false_negative'
-  | 'true_negative';
+  'true_positive' | 'false_positive' | 'false_negative' | 'true_negative';
 
 export type ControlLinkRef = {
   controlId: string;
