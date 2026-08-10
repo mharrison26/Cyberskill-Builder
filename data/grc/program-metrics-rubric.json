@@ -1,0 +1,132 @@
+{
+  "document": "Program Metrics Best-Practices Rubric",
+  "title": "Leadership-facing security program metrics (educational)",
+  "source_url": "internal://program-metrics-rubric",
+  "notes": "Pinned educational rubric for RAG-style grading of student metric selection and leadership rationale on ISSO/ISSM program briefs. Graders must use only retrieved section text plus the student's selected metrics, calculated values, and rationale. Distinct from helpdesk KPI report tickets (operational ticket-resolution metrics).",
+  "disclaimer": "Educational guidance only. Not a substitute for NIST SP 800-137, agency ISCM policy, FISMA reporting instructions, or organization-specific dashboard standards.",
+  "sections": [
+    {
+      "id": "leadership-metric-purpose",
+      "title": "What leadership needs from program metrics",
+      "topics": [
+        "program metrics",
+        "leadership KPIs",
+        "ISSO",
+        "ISSM",
+        "decision makers"
+      ],
+      "keywords": [
+        "leadership",
+        "program metrics",
+        "KPI",
+        "decision",
+        "oversight",
+        "ISSO",
+        "ISSM",
+        "ATO",
+        "risk posture",
+        "trend"
+      ],
+      "text": "Leadership-facing security program metrics answer whether the authorization boundary and security program are under control, improving, or degrading. Strong briefs select a small set of outcome-oriented indicators (typically two or three) that support resource decisions, risk acceptance, and oversight—not a dump of every available counter. Metrics should be explainable in one sentence, comparable over time, and tied to residual risk or control effectiveness. Vanity counts that do not change decisions (raw ticket volume, total log lines, seat count) are poor leadership metrics unless explicitly framed as capacity context alongside risk outcomes."
+    },
+    {
+      "id": "poam-aging-and-overdue",
+      "title": "POA&M aging and overdue rate",
+      "topics": ["POA&M aging", "overdue", "remediation", "program metrics"],
+      "keywords": [
+        "POA&M",
+        "aging",
+        "overdue",
+        "90 days",
+        "over_90",
+        "remediation",
+        "backlog",
+        "delay",
+        "milestone"
+      ],
+      "text": "POA&M aging is a core program health signal. Leadership cares about the share of open weaknesses that are overdue (commonly past 90 days) or aging past intermediate buckets (61–90), because overdue remediation increases residual risk and signals resource or ownership problems. Prefer rates or aged-bucket distributions over a bare total POA&M count: totals alone do not show whether the backlog is fresh and managed or stagnating. A defensible metric names the numerator and denominator (for example overdue >90 days divided by open POA&Ms) and explains what the rate implies for authorization risk and remediation capacity."
+    },
+    {
+      "id": "training-completion",
+      "title": "Security awareness training completion",
+      "topics": ["training completion", "awareness", "workforce", "AT-2"],
+      "keywords": [
+        "training",
+        "completion",
+        "awareness",
+        "required",
+        "completed",
+        "workforce",
+        "compliance",
+        "rate"
+      ],
+      "text": "Security awareness training completion rate (completed divided by required for the period) is a meaningful leadership metric because it indicates whether the workforce control is operating and where non-completion concentrates residual human-factor risk. Leadership prefers a rate with period context over a raw completed count. Strong rationales connect incomplete training to phishing susceptibility, privileged-user hygiene, or policy acknowledgment gaps—and note any material shortfall (for example below an 90% or organization threshold) as an action item, not just a number."
+    },
+    {
+      "id": "incident-severity-context",
+      "title": "Incident counts with severity context",
+      "topics": ["incidents", "severity", "trends", "program metrics"],
+      "keywords": [
+        "incident",
+        "severity",
+        "P1",
+        "P2",
+        "high severity",
+        "trend",
+        "count",
+        "share",
+        "escalation"
+      ],
+      "text": "Incident volume is useful to leadership only with severity or impact context. Prefer high-severity share or P1/P2 counts relative to total incidents, or a clear period total paired with severity breakdown, over an undifferentiated incident total that mixes noise with crises. Strong briefs explain what the period rate means for detection/response effectiveness and whether escalations require resource or control changes. Avoid presenting helpdesk ticket volume as a security-program incident metric; operational ticket noise is not the same as security incident posture."
+    },
+    {
+      "id": "avoid-vanity-metrics",
+      "title": "Avoid vanity and misaligned metrics",
+      "topics": ["vanity metrics", "distractors", "leadership KPIs"],
+      "keywords": [
+        "vanity",
+        "raw count",
+        "helpdesk",
+        "ticket volume",
+        "distractor",
+        "noise",
+        "activity",
+        "misleading"
+      ],
+      "text": "Do not select vanity or misaligned metrics for a leadership program brief. Examples of weak choices: raw helpdesk ticket volume, total open tickets without severity or SLA context, line counts of log events, or total POA&Ms without aging. These measure activity or noise rather than program risk posture. If a student includes a distractor vanity metric among preferred risk indicators, the selection is not leadership-ready unless the rationale clearly demotes it and centers overdue POA&M, training completion, and severity-aware incident posture instead."
+    },
+    {
+      "id": "rationale-quality",
+      "title": "Rationale must justify leadership relevance",
+      "topics": ["rationale", "why", "leadership", "selection"],
+      "keywords": [
+        "rationale",
+        "why",
+        "explain",
+        "decision",
+        "oversight",
+        "resource",
+        "risk",
+        "meaningful"
+      ],
+      "text": "For each selected metric, the student must explain why it matters to leadership (AO, ISSM, CISO, or program sponsor): what decision or oversight question it answers, what risk it surfaces, and what action a poor value would trigger. Generic statements such as \"important for compliance\" without linking the metric to residual risk, remediation capacity, workforce control effectiveness, or incident severity are insufficient. The rationale should reference the calculated values and the raw data context (aging buckets, completion shortfall, P1/P2 share), not merely restate the metric label."
+    },
+    {
+      "id": "selection-set-balance",
+      "title": "Balanced small set of program indicators",
+      "topics": ["selection", "balance", "program metrics", "leadership KPIs"],
+      "keywords": [
+        "select",
+        "two",
+        "three",
+        "balanced",
+        "set",
+        "POA&M",
+        "training",
+        "incident",
+        "portfolio"
+      ],
+      "text": "A strong brief selects two to three complementary metrics that together cover remediation health (POA&M aging/overdue), preventive workforce control (training completion), and detective/response posture (severity-aware incidents). Selecting only vanity metrics, or selecting a single metric when the ticket asks for a small set, fails the leadership-brief purpose. Prefer covering distinct risk lenses over three variants of the same raw count."
+    }
+  ]
+}

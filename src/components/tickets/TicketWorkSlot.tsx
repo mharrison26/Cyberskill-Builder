@@ -3,6 +3,7 @@ import { MockDirectoryPanel } from '@/components/MockDirectoryPanel';
 import { AoReviewTicket } from '@/components/tickets/AoReviewTicket';
 import { AssessmentProceduresTicket } from '@/components/tickets/AssessmentProceduresTicket';
 import { AuditCommitteeBriefTicket } from '@/components/tickets/AuditCommitteeBriefTicket';
+import { BoardFindingsSummaryTicket } from '@/components/tickets/BoardFindingsSummaryTicket';
 import { AuditPlanningMemoTicket } from '@/components/tickets/AuditPlanningMemoTicket';
 import { AuditWorkpaperTicket } from '@/components/tickets/AuditWorkpaperTicket';
 import { AuthorizationPackageTicket } from '@/components/tickets/AuthorizationPackageTicket';
@@ -23,9 +24,13 @@ import { HelpdeskCapstoneTicket } from '@/components/tickets/HelpdeskCapstoneTic
 import { InfraDesignCapstoneTicket } from '@/components/tickets/InfraDesignCapstoneTicket';
 import { IncidentNotificationTicket } from '@/components/tickets/IncidentNotificationTicket';
 import { IssmEscalationTicket } from '@/components/tickets/IssmEscalationTicket';
+import { IssmQualityReviewTicket } from '@/components/tickets/IssmQualityReviewTicket';
+import { BreachIncidentCommandTicket } from '@/components/tickets/BreachIncidentCommandTicket';
 import { ItgcAccessRevocationTicket } from '@/components/tickets/ItgcAccessRevocationTicket';
 import { KbWriteupTicket } from '@/components/tickets/KbWriteupTicket';
 import { KpiReportTicket } from '@/components/tickets/KpiReportTicket';
+import { ProgramMetricsBriefTicket } from '@/components/tickets/ProgramMetricsBriefTicket';
+import { ProgramRiskSummaryTicket } from '@/components/tickets/ProgramRiskSummaryTicket';
 import { ConfigFaultDiagnosisTicket } from '@/components/tickets/ConfigFaultDiagnosisTicket';
 import { FlySandboxTicket } from '@/components/tickets/FlySandboxTicket';
 import { FsPermissionsLabTicket } from '@/components/tickets/FsPermissionsLabTicket';
@@ -37,10 +42,14 @@ import { OutageCapstoneTicket } from '@/components/tickets/OutageCapstoneTicket'
 import { P1StatusUpdatesTicket } from '@/components/tickets/P1StatusUpdatesTicket';
 import { PoamStatusUpdateTicket } from '@/components/tickets/PoamStatusUpdateTicket';
 import { PoamTicketWork } from '@/components/tickets/PoamTicketWork';
+import { PolicySectionDraftTicket } from '@/components/tickets/PolicySectionDraftTicket';
 import { ProcessControlTestTicket } from '@/components/tickets/ProcessControlTestTicket';
+import { RaciMatrixTicket } from '@/components/tickets/RaciMatrixTicket';
 import { RiskBasedAuditPlanTicket } from '@/components/tickets/RiskBasedAuditPlanTicket';
+import { SecurityStrategyCapstoneTicket } from '@/components/tickets/SecurityStrategyCapstoneTicket';
 import { SamplingMethodologyTicket } from '@/components/tickets/SamplingMethodologyTicket';
 import { SecMaterialityTicket } from '@/components/tickets/SecMaterialityTicket';
+import { SecurityBudgetAllocationTicket } from '@/components/tickets/SecurityBudgetAllocationTicket';
 import { TransactionAnomalyTicket } from '@/components/tickets/TransactionAnomalyTicket';
 import { SlaEscalationTicket } from '@/components/tickets/SlaEscalationTicket';
 import { SlaQueueSimTicket } from '@/components/tickets/SlaQueueSimTicket';
@@ -48,6 +57,7 @@ import { Soc2ChangeManagementTestTicket } from '@/components/tickets/Soc2ChangeM
 import { SspGapReviewTicket } from '@/components/tickets/SspGapReviewTicket';
 import { ToolWalkthroughTicket } from '@/components/tickets/ToolWalkthroughTicket';
 import { TriageTicket } from '@/components/tickets/TriageTicket';
+import { VendorRiskRatingTicket } from '@/components/tickets/VendorRiskRatingTicket';
 import { VulnPrioritizationTicket } from '@/components/tickets/VulnPrioritizationTicket';
 import {
   isAoReviewTicketType,
@@ -63,6 +73,11 @@ import { isAuditPlanningMemoTicketType } from '@/lib/scoring/auditPlanningMemo';
 import { isFindingsSummaryTicketType } from '@/lib/scoring/findingsSummary';
 import { isIncidentNotificationTicketType } from '@/lib/scoring/incidentNotification';
 import { isItgcAccessRevocationTicketType } from '@/lib/scoring/itgcAccessRevocation';
+import { isIssmQualityReviewTicketType } from '@/lib/scoring/issmQualityReview';
+import { isBreachIncidentCommandTicketType } from '@/lib/scoring/breachIncidentCommand';
+import { isProgramRiskSummaryTicketType } from '@/lib/scoring/programRiskSummary';
+import { isRaciMatrixTicketType } from '@/lib/scoring/raciMatrix';
+import { isSecurityStrategyCapstoneTicketType } from '@/lib/issm/ticketCodes';
 import { isPoamStatusUpdateTicketType } from '@/lib/scoring/poamStatusUpdate';
 import { isProcessControlTestTicketType } from '@/lib/scoring/processControlTest';
 import { isRiskBasedAuditPlanTicketType } from '@/lib/scoring/riskBasedAuditPlanShared';
@@ -73,19 +88,24 @@ import { isTransactionAnomalyTicketType } from '@/lib/scoring/transactionAnomaly
 import { isVulnPrioritizationTicketType } from '@/lib/scoring/vulnPrioritization';
 import {
   initialStateToFiles,
+  isBoardFindingsSummaryTicketType,
   isCisHardeningTicketType,
   isConfigFaultDiagnosisTicketType,
   isControlImplementationAdequacyTicketType,
   isFsPermissionsLabTicketType,
   isKpiReportTicketType,
+  isProgramMetricsBriefTicketType,
   isMonitoringConfigTicketType,
   isNetworkDiagnosticsTicketType,
   isFips199ImpactCategorizationTicketType,
+  isVendorRiskRatingTicketType,
   isIssmEscalationTicketType,
   isNetworkTopologyFaultTicketType,
   isOutageCapstoneTicketType,
   isP1StatusUpdatesTicketType,
   isPoamTicketType,
+  isPolicySectionDraftTicketType,
+  isSecurityBudgetAllocationTicketType,
   isScriptRemediationTicketType,
   isScriptingTicketType,
   isSlaEscalationTicketType,
@@ -277,10 +297,13 @@ export function isCoachingFeedbackTicketType(ticketType: string): boolean {
  * mock_directory tickets mount the simulated directory unlock/reset console.
  * sla_escalation tickets mount the escalate-or-resolve policy decision form.
  * issm_escalation tickets mount the ISSO→ISSM cross-system escalation memo form.
+ * breach_incident_command tickets mount the multi-stage major-breach ISSM decision form.
  * kb_writeup tickets mount the post-resolution KB article form (HD-03).
  * helpdesk_capstone tickets mount the mini KB + onboarding process doc (HD-07 / PI-07).
  * infra_design_capstone tickets mount the backup-topology ADR + tradeoff Q&A (SA-07 / PI-07).
  * kpi_report tickets mount CSV KPI analysis (manual form or script sandbox) (HD-05).
+ * program_metrics_brief tickets mount leadership program-metrics selection + calc form (ISSO/ISSM).
+ * program_risk_summary tickets mount multi-system risk rollup + top-3 / themes form (ISSM).
  * customer_reply tickets mount the angry-email de-escalation reply form.
  * coaching_feedback tickets mount the junior-notes peer coaching form.
  * network_diagnostics tickets mount static command output + multi-step diagnosis (PI-04).
@@ -293,8 +316,11 @@ export function isCoachingFeedbackTicketType(ticketType: string): boolean {
  * p1_status_updates tickets mount simulated-clock stakeholder status cadence (distinct from PI-09).
  * monitoring_config tickets mount the alert type / threshold / routing form.
  * itgc_access_revocation tickets mount the timely access revocation pass/fail + exceptions form.
+ * raci_matrix / raci / responsibility_matrix tickets mount the org-chart RACI assignment grid.
  * soc2_change_management_test tickets mount CC8.1 procedure + change evidence exception testing.
  * risk_based_audit_plan tickets mount the risk-register annual plan capstone form.
+ * policy_section_draft tickets mount org profile + requirement + policy draft form.
+ * vendor_risk_rating tickets mount questionnaire + access-criticality rating form (SP 800-161).
  */
 export function TicketWorkSlot({
   ticket,
@@ -584,9 +610,59 @@ export function TicketWorkSlot({
     );
   }
 
+  if (isPolicySectionDraftTicketType(ticket.ticket_type)) {
+    return (
+      <PolicySectionDraftTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
   if (isIssmEscalationTicketType(ticket.ticket_type)) {
     return (
       <IssmEscalationTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isSecurityBudgetAllocationTicketType(ticket.ticket_type)) {
+    return (
+      <SecurityBudgetAllocationTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isIssmQualityReviewTicketType(ticket.ticket_type)) {
+    return (
+      <IssmQualityReviewTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isBreachIncidentCommandTicketType(ticket.ticket_type)) {
+    return (
+      <BreachIncidentCommandTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isProgramRiskSummaryTicketType(ticket.ticket_type)) {
+    return (
+      <ProgramRiskSummaryTicket
         ticket={ticket}
         readOnly={readOnly}
         className={className}
@@ -607,6 +683,16 @@ export function TicketWorkSlot({
   if (isKpiReportTicketType(ticket.ticket_type)) {
     return (
       <KpiReportTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isProgramMetricsBriefTicketType(ticket.ticket_type)) {
+    return (
+      <ProgramMetricsBriefTicket
         ticket={ticket}
         readOnly={readOnly}
         className={className}
@@ -734,6 +820,36 @@ export function TicketWorkSlot({
     );
   }
 
+  if (isRaciMatrixTicketType(ticket.ticket_type)) {
+    return (
+      <RaciMatrixTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isSecurityStrategyCapstoneTicketType(ticket.ticket_type)) {
+    return (
+      <SecurityStrategyCapstoneTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isVendorRiskRatingTicketType(ticket.ticket_type)) {
+    return (
+      <VendorRiskRatingTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
   if (isIncidentNotificationTicketType(ticket.ticket_type)) {
     return (
       <IncidentNotificationTicket
@@ -797,6 +913,16 @@ export function TicketWorkSlot({
   if (isAuditCommitteeBriefTicketType(ticket.ticket_type)) {
     return (
       <AuditCommitteeBriefTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isBoardFindingsSummaryTicketType(ticket.ticket_type)) {
+    return (
+      <BoardFindingsSummaryTicket
         ticket={ticket}
         readOnly={readOnly}
         className={className}

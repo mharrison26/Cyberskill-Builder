@@ -198,6 +198,17 @@ export type CmmcPracticeScoreValue =
 export const CONMON_STRATEGY_MIN_FIELD_LENGTH = 40;
 export const CONMON_STRATEGY_MIN_ESCALATION_LENGTH = 80;
 
+/** ISSM-07 one-year security strategy capstone (flagship) field gates. */
+export const SECURITY_STRATEGY_CAPSTONE_MIN_SECTION_LENGTH = 120;
+export const SECURITY_STRATEGY_CAPSTONE_DEFAULT_MIN_MEMO_LENGTH = 600;
+export const SECURITY_STRATEGY_CAPSTONE_DEFAULT_MIN_PRIORITIES = 3;
+export const SECURITY_STRATEGY_CAPSTONE_DEFAULT_MIN_OUTCOMES = 3;
+export const SECURITY_STRATEGY_CAPSTONE_REQUIRED_SECTION_KEYS = [
+  'priorities',
+  'resourcing',
+  'expected_outcomes',
+] as const;
+
 /** Continuous auditing design (single control area) field minimums. */
 export const CONTINUOUS_AUDITING_MIN_FIELD_LENGTH = 40;
 export const CONTINUOUS_AUDITING_MIN_EXCEPTION_LENGTH = 80;
@@ -214,6 +225,42 @@ export const CONTINUOUS_AUDITING_FREQUENCIES = [
 
 export type ContinuousAuditingFrequency =
   (typeof CONTINUOUS_AUDITING_FREQUENCIES)[number];
+
+/** Policy section draft (acceptable use / access control) minimum length. */
+export const POLICY_SECTION_DRAFT_MIN_LENGTH = 400;
+
+/**
+ * Board findings summary — one-page translation of technical GRC/ISSO findings.
+ */
+export const BOARD_FINDINGS_SUMMARY_MIN_LENGTH = 350;
+export const BOARD_FINDINGS_SUMMARY_MAX_LENGTH = 900;
+export const BOARD_FINDINGS_MIN_ASK_STATEMENT_LENGTH = 20;
+export const BOARD_FINDINGS_ASK_TYPES = [
+  'budget',
+  'decision',
+  'awareness',
+] as const;
+export type BoardFindingsAskType = (typeof BOARD_FINDINGS_ASK_TYPES)[number];
+
+export function isBoardFindingsSummaryTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'board_findings_summary' ||
+    base === 'board_level_summary' ||
+    base === 'technical_to_board_brief'
+  );
+}
+
+export function isPolicySectionDraftTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'policy_section_draft' ||
+    base === 'policy_draft' ||
+    base === 'draft_policy_section'
+  );
+}
 
 export const DEFAULT_CONMON_CONTROL_FAMILIES = [
   'AC',
@@ -381,6 +428,44 @@ export function isFips199ImpactCategorizationTicketType(
   );
 }
 
+/** Vendor / third-party risk ratings (SP 800-161 C-SCRM oriented). */
+export const VENDOR_RISK_RATING_LEVELS = [
+  'low',
+  'moderate',
+  'high',
+  'critical',
+] as const;
+
+export type VendorRiskRatingLevel = (typeof VENDOR_RISK_RATING_LEVELS)[number];
+
+export const VENDOR_RISK_RATING_LEVEL_LABELS: Record<
+  VendorRiskRatingLevel,
+  string
+> = {
+  low: 'Low',
+  moderate: 'Moderate',
+  high: 'High',
+  critical: 'Critical',
+};
+
+export const VENDOR_RISK_MIN_JUSTIFICATION_LENGTH = 200;
+
+export function isVendorRiskRatingLevel(
+  value: string
+): value is VendorRiskRatingLevel {
+  return (VENDOR_RISK_RATING_LEVELS as readonly string[]).includes(value);
+}
+
+export function isVendorRiskRatingTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'vendor_risk_rating' ||
+    base === 'third_party_risk_rating' ||
+    base === 'scrm_vendor_assessment'
+  );
+}
+
 /** ISSO→ISSM cross-system escalation decisions. */
 export const ISSM_ESCALATION_DECISIONS = [
   'escalate',
@@ -412,6 +497,56 @@ export function isIssmEscalationTicketType(ticketType: string): boolean {
     base === 'issm_escalation' ||
     base === 'cross_system_escalation' ||
     base === 'isso_to_issm_escalation'
+  );
+}
+
+/** ISSM / program FY security budget allocation under a fixed ceiling. */
+export const SECURITY_BUDGET_ALLOCATION_TICKET_TYPES = [
+  'security_budget_allocation',
+  'budget_allocation',
+  'risk_based_budget',
+] as const;
+
+export type SecurityBudgetAllocationTicketTypeUi =
+  (typeof SECURITY_BUDGET_ALLOCATION_TICKET_TYPES)[number];
+
+export const SECURITY_BUDGET_ALLOCATION_DEFAULT_BUDGET = 250_000;
+export const SECURITY_BUDGET_ALLOCATION_MIN_JUSTIFICATION_LENGTH = 250;
+
+export function isSecurityBudgetAllocationTicketType(
+  ticketType: string
+): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (
+    base === 'security_budget_allocation' ||
+    base === 'budget_allocation' ||
+    base === 'risk_based_budget'
+  );
+}
+
+/**
+ * Leadership program-metrics brief (ISSO/ISSM program oversight).
+ * Distinct from helpdesk kpi_report (ticket-resolution CSV KPIs).
+ */
+export const PROGRAM_METRICS_BRIEF_TICKET_TYPES = [
+  'program_metrics_brief',
+  'leadership_metrics',
+  'isso_program_metrics',
+] as const;
+
+export type ProgramMetricsBriefTicketType =
+  (typeof PROGRAM_METRICS_BRIEF_TICKET_TYPES)[number];
+
+export const PROGRAM_METRICS_BRIEF_DEFAULT_MIN_SELECTED = 2;
+export const PROGRAM_METRICS_BRIEF_DEFAULT_MAX_SELECTED = 3;
+export const PROGRAM_METRICS_BRIEF_DEFAULT_MIN_RATIONALE_LENGTH = 120;
+
+export function isProgramMetricsBriefTicketType(ticketType: string): boolean {
+  const t = ticketType.trim().toLowerCase();
+  const base = t.includes('.') ? t.slice(t.lastIndexOf('.') + 1) : t;
+  return (PROGRAM_METRICS_BRIEF_TICKET_TYPES as readonly string[]).includes(
+    base
   );
 }
 
