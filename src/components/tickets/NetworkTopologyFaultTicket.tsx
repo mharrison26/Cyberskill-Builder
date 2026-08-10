@@ -299,7 +299,7 @@ export function NetworkTopologyFaultTicket({
           Network diagram
         </p>
         <pre
-          className="max-h-[22rem] overflow-auto bg-slate-950 px-3 py-3 font-mono text-xs leading-relaxed text-slate-100"
+          className="max-h-[22rem] overflow-auto bg-terminal px-3 py-3 font-mono text-xs leading-relaxed text-terminal-foreground"
           aria-label="Network topology diagram"
         >
           <code>{diagram}</code>
@@ -311,7 +311,7 @@ export function NetworkTopologyFaultTicket({
           Terminal (read-only capture)
         </p>
         <pre
-          className="max-h-[28rem] overflow-auto bg-slate-900 px-3 py-3 font-mono text-xs leading-relaxed text-slate-100"
+          className="max-h-[28rem] overflow-auto bg-terminal px-3 py-3 font-mono text-xs leading-relaxed text-terminal-foreground"
           aria-label="Static command output"
         >
           <code>{transcript}</code>

@@ -71,6 +71,12 @@ const config: Config = {
           'not-started': 'var(--status-not-started)',
           'not-started-foreground': 'var(--status-not-started-foreground)',
         },
+        terminal: {
+          DEFAULT: 'var(--terminal)',
+          foreground: 'var(--terminal-foreground)',
+          muted: 'var(--terminal-muted)',
+          accent: 'var(--terminal-accent)',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

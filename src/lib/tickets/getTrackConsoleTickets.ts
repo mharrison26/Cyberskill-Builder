@@ -96,7 +96,7 @@ export async function getTrackConsoleTickets(
     };
   }
 
-  const tickets = ticketRows as Ticket[];
+  const tickets = dedupeStandaloneTickets(ticketRows as Ticket[]);
   const ticketIds = tickets.map((t) => t.id);
 
   const progressByTicketId = new Map<
@@ -136,4 +136,25 @@ export async function getTrackConsoleTickets(
     trackName: track.name,
     enrolled,
   };
+}
+
+/**
+ * Collapse same-scenario standalone duplicates that can still appear when
+ * tenant scoping is unavailable (e.g. missing profile) or before the unique
+ * index migration is applied. Engagement-stage rows keep their own identity.
+ * Keeps the first row in sort_order order.
+ */
+function dedupeStandaloneTickets(tickets: Ticket[]): Ticket[] {
+  const seenStandaloneTypes = new Set<string>();
+  const deduped: Ticket[] = [];
+
+  for (const ticket of tickets) {
+    if (ticket.engagement_id == null) {
+      if (seenStandaloneTypes.has(ticket.ticket_type)) continue;
+      seenStandaloneTypes.add(ticket.ticket_type);
+    }
+    deduped.push(ticket);
+  }
+
+  return deduped;
 }

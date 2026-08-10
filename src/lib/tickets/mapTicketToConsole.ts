@@ -98,10 +98,9 @@ export function mapTicketToConsoleTicket(args: {
     status,
     controlFamily,
     controlId,
-    severity:
-      asSeverity(state.severity) ??
-      asSeverity(meta.severity) ??
-      asSeverity(ticket.difficulty.toLowerCase()),
+    // Severity is finding risk only — never fall back to lesson difficulty
+    // (easy/medium/hard), which is a separate training axis.
+    severity: asSeverity(state.severity) ?? asSeverity(meta.severity),
     poamDueAt: asString(state.poam_due_at) ?? asString(state.poamDueAt) ?? null,
     requester,
     queueBucket:

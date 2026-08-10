@@ -1,9 +1,14 @@
 'use client';
 
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 import type { Components } from 'react-markdown';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import {
+  oneDark,
+  oneLight,
+} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
 
 import { cn } from '@/lib/utils';
@@ -77,28 +82,37 @@ type CodeBlockProps = {
 };
 
 /*
- * Syntax theme: oneLight (Prism) — background #fafafa, base text #383a42 (~12:1 on bg).
- * Token colors are tuned for light backgrounds and meet WCAG AA for normal text.
+ * Syntax themes follow the app theme class. Prism backgrounds are cleared so
+ * the surrounding surface token paints the chrome.
  */
 function CodeBlock({ language, code }: CodeBlockProps) {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && resolvedTheme === 'dark';
+
   return (
-    <div className="not-prose overflow-hidden rounded-lg border border-border bg-[#fafafa]">
-      <div className="flex items-center justify-between border-b border-border bg-muted/50 px-4 py-2">
+    <div className="not-prose overflow-hidden rounded-lg border border-border bg-muted">
+      <div className="flex items-center justify-between border-b border-border bg-surface/60 px-4 py-2">
         <span className="font-mono text-xs font-medium text-muted-foreground">
           Code
         </span>
-        <span className="rounded bg-muted px-2 py-0.5 font-mono text-xs uppercase text-muted-foreground">
+        <span className="rounded bg-background px-2 py-0.5 font-mono text-xs uppercase text-muted-foreground">
           {language}
         </span>
       </div>
       <SyntaxHighlighter
         language={language}
-        style={oneLight}
+        style={isDark ? oneDark : oneLight}
         PreTag="div"
         customStyle={{
           margin: 0,
           padding: '1rem',
-          background: '#fafafa',
+          background: 'transparent',
           fontSize: '0.875rem',
           lineHeight: '1.625',
         }}

@@ -24,6 +24,11 @@ type TicketRowProps = {
   /** Shared list clock; when omitted, SlaCountdown ticks on its own. */
   nowMs?: number;
   className?: string;
+  /**
+   * When false, omit the difficulty/priority badge (e.g. GRC console shows
+   * Difficulty in its own column, separate from finding Severity).
+   */
+  showPriority?: boolean;
   /** Extra trailing slot (status control, open chevron, etc.). */
   trailing?: React.ReactNode;
   onClick?: () => void;
@@ -38,6 +43,7 @@ export function TicketRow({
   ticket,
   nowMs,
   className,
+  showPriority = true,
   trailing,
   onClick,
   onKeyDown,
@@ -63,7 +69,9 @@ export function TicketRow({
           : undefined
       }
     >
-      <PriorityBadge difficulty={ticket.difficulty} className="shrink-0" />
+      {showPriority ? (
+        <PriorityBadge difficulty={ticket.difficulty} className="shrink-0" />
+      ) : null}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-foreground">
           {ticket.title}

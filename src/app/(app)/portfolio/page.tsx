@@ -119,6 +119,7 @@ export default async function MyPortfolioPage() {
                   relatedFindingId={item.relatedFindingId}
                   promptQuestions={item.promptQuestions}
                   trainingFeedback={item.trainingFeedback}
+                  slaMet={item.slaMet}
                 />
               ) : (
                 <FindingCard

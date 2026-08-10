@@ -12,6 +12,7 @@ describe('getSlaState', () => {
     const state = getSlaState(30, null, Date.now());
     expect(state.notStarted).toBe(true);
     expect(state.isOverdue).toBe(false);
+    expect(state.isFrozen).toBe(false);
     expect(state.remainingMs).toBe(30 * 60_000);
   });
 
@@ -20,6 +21,7 @@ describe('getSlaState', () => {
     const now = new Date('2026-01-01T00:10:00.000Z').getTime();
     const state = getSlaState(30, started, now);
     expect(state.notStarted).toBe(false);
+    expect(state.isFrozen).toBe(false);
     expect(state.remainingMs).toBe(20 * 60_000);
     expect(state.isOverdue).toBe(false);
   });
@@ -30,6 +32,20 @@ describe('getSlaState', () => {
     const state = getSlaState(30, started, now);
     expect(state.isOverdue).toBe(true);
     expect(state.remainingMs).toBe(-30 * 60_000);
+  });
+
+  it('freezes remaining time at resolved_at', () => {
+    const started = '2026-01-01T00:00:00.000Z';
+    const resolved = '2026-01-01T00:10:00.000Z';
+    const later = new Date('2026-01-01T01:00:00.000Z').getTime();
+    const state = getSlaState(30, started, later, {
+      resolvedAt: resolved,
+      slaMet: true,
+    });
+    expect(state.isFrozen).toBe(true);
+    expect(state.remainingMs).toBe(20 * 60_000);
+    expect(state.slaMet).toBe(true);
+    expect(state.isOverdue).toBe(false);
   });
 });
 

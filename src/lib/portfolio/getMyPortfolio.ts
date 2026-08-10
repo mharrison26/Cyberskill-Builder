@@ -44,8 +44,25 @@ export type MyPortfolioItem = {
   ticketType: string | null;
   /** Persisted rich training feedback for ticket resolutions (reopenable). */
   trainingFeedback: TrainingFeedback | null;
+  /** Server-computed SLA outcome for ticket resolutions (competency signal). */
+  slaMet: boolean | null;
   defense: MyPortfolioDefense | null;
 };
+
+function readSlaMet(
+  structured: Record<string, unknown>,
+  trainingFeedback: TrainingFeedback | null
+): boolean | null {
+  if (trainingFeedback?.sla?.withinSla === true) return true;
+  if (trainingFeedback?.sla?.withinSla === false) return false;
+  const sla = structured.sla;
+  if (sla && typeof sla === 'object' && !Array.isArray(sla)) {
+    const record = sla as Record<string, unknown>;
+    if (typeof record.met === 'boolean') return record.met;
+    if (typeof record.withinSla === 'boolean') return record.withinSla;
+  }
+  return null;
+}
 
 type WorkRoleCodeEmbed = {
   code: string;
@@ -241,6 +258,7 @@ export async function getMyPortfolioItems(
         scoreStatus: null,
         ticketType: null,
         trainingFeedback: null,
+        slaMet: null,
         defense,
       };
     }
@@ -249,6 +267,7 @@ export async function getMyPortfolioItems(
       row.score_status === 'resolved' || row.score_status === 'needs_revision'
         ? row.score_status
         : null;
+    const trainingFeedback = extractTrainingFeedback(structured);
 
     return {
       id: row.id as string,
@@ -273,7 +292,8 @@ export async function getMyPortfolioItems(
       observation: null,
       scoreStatus,
       ticketType: (row.ticket_type as string | null) ?? null,
-      trainingFeedback: extractTrainingFeedback(structured),
+      trainingFeedback,
+      slaMet: readSlaMet(structured, trainingFeedback),
       defense,
     };
   });

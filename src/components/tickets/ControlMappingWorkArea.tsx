@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import { TrainingFeedbackPanel } from '@/components/feedback/TrainingFeedbackPanel';
+import { useOptionalTicketWorkbench } from '@/components/tickets/TicketWorkbenchProvider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,11 +40,47 @@ type SubmitResponse = {
   error?: string;
 };
 
+function emptySelection(
+  targets: Array<{ framework: ControlFramework }> | undefined
+): Partial<Record<ControlFramework, Set<string>>> {
+  const initial: Partial<Record<ControlFramework, Set<string>>> = {};
+  for (const target of targets ?? []) {
+    initial[target.framework] = new Set();
+  }
+  return initial;
+}
+
+function selectionFromSubmission(
+  submission: Record<string, unknown> | null | undefined,
+  targets: Array<{ framework: ControlFramework }> | undefined
+): Partial<Record<ControlFramework, Set<string>>> {
+  const base = emptySelection(targets);
+  if (!submission) return base;
+
+  const answers = submission.answers;
+  if (!answers || typeof answers !== 'object' || Array.isArray(answers)) {
+    return base;
+  }
+
+  const record = answers as Record<string, unknown>;
+  for (const target of targets ?? []) {
+    const raw = record[target.framework];
+    if (!Array.isArray(raw)) continue;
+    base[target.framework] = new Set(
+      raw.filter(
+        (id): id is string => typeof id === 'string' && id.trim().length > 0
+      )
+    );
+  }
+  return base;
+}
+
 export function ControlMappingWorkArea({
   ticket,
   readOnly = false,
   className,
 }: ControlMappingWorkAreaProps) {
+  const workbench = useOptionalTicketWorkbench();
   const prompt = useMemo(
     () => parseControlMappingInitialState(ticket.initial_state),
     [ticket.initial_state]
@@ -72,21 +109,32 @@ export function ControlMappingWorkArea({
     return CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH;
   }, [ticket.expected_state]);
 
-  const [selected, setSelected] = useState<
-    Partial<Record<ControlFramework, Set<string>>>
-  >(() => {
-    const initial: Partial<Record<ControlFramework, Set<string>>> = {};
-    for (const target of prompt?.targets ?? []) {
-      initial[target.framework] = new Set();
-    }
-    return initial;
+  const restoredSubmission = workbench?.submission ?? null;
+  const formReadOnly = readOnly || Boolean(workbench?.answersReadOnly);
+
+  const [selected, setSelected] = useState(() =>
+    selectionFromSubmission(restoredSubmission, prompt?.targets)
+  );
+  const [overlapNarrative, setOverlapNarrative] = useState(() => {
+    const value = restoredSubmission?.overlapNarrative;
+    return typeof value === 'string' ? value : '';
   });
-  const [overlapNarrative, setOverlapNarrative] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(
+    () => workbench?.lastFeedback ?? null
+  );
+  const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(
+    () =>
+      workbench?.lastScoreStatus === 'resolved'
+        ? 'ok'
+        : workbench?.lastScoreStatus === 'needs_revision'
+          ? 'error'
+          : null
+  );
   const [trainingFeedback, setTrainingFeedback] =
-    useState<TrainingFeedback | null>(null);
+    useState<TrainingFeedback | null>(() =>
+      extractTrainingFeedback(workbench?.lastStructuredResult ?? null)
+    );
 
   if (!prompt) {
     return (
@@ -106,7 +154,7 @@ export function ControlMappingWorkArea({
   }
 
   function toggle(framework: ControlFramework, controlId: string) {
-    if (readOnly) return;
+    if (formReadOnly) return;
     setSelected((prev) => {
       const next = new Set(prev[framework] ?? []);
       if (next.has(controlId)) next.delete(controlId);
@@ -119,7 +167,7 @@ export function ControlMappingWorkArea({
   }
 
   async function handleSubmit() {
-    if (readOnly || isSubmitting) return;
+    if (formReadOnly || isSubmitting) return;
 
     if (
       gradeOverlapNarrative &&
@@ -174,6 +222,8 @@ export function ControlMappingWorkArea({
       setIsSubmitting(false);
     }
   }
+
+  const showSubmit = !formReadOnly && workbench?.status !== 'resolved';
 
   return (
     <section
@@ -238,7 +288,7 @@ export function ControlMappingWorkArea({
                             checked
                               ? 'border-primary/40 bg-primary/5'
                               : 'hover:bg-muted/50',
-                            readOnly && 'cursor-default opacity-80'
+                            formReadOnly && 'cursor-default opacity-80'
                           )}
                         >
                           <input
@@ -246,7 +296,7 @@ export function ControlMappingWorkArea({
                             type="checkbox"
                             className="size-4 accent-primary"
                             checked={checked}
-                            disabled={readOnly}
+                            disabled={formReadOnly}
                             onChange={() => toggle(target.framework, controlId)}
                           />
                           <span className="font-mono text-sm">
@@ -271,7 +321,7 @@ export function ControlMappingWorkArea({
           <Textarea
             id={`${ticket.id}-overlap-narrative`}
             value={overlapNarrative}
-            disabled={readOnly}
+            disabled={formReadOnly}
             rows={5}
             placeholder="Explain where the SOC 2 and ISO mappings are strong versus only partially overlapping relative to AC-2 (for example account review cadence)."
             onChange={(event) => {
@@ -289,15 +339,17 @@ export function ControlMappingWorkArea({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button
-          type="button"
-          size="sm"
-          disabled={readOnly || isSubmitting}
-          onClick={() => void handleSubmit()}
-        >
-          {isSubmitting ? 'Scoring…' : 'Submit mapping'}
-        </Button>
-        {readOnly ? (
+        {showSubmit ? (
+          <Button
+            type="button"
+            size="sm"
+            disabled={formReadOnly || isSubmitting}
+            onClick={() => void handleSubmit()}
+          >
+            {isSubmitting ? 'Scoring…' : 'Submit mapping'}
+          </Button>
+        ) : null}
+        {readOnly && !workbench ? (
           <p className="text-sm text-muted-foreground">Preview mode</p>
         ) : null}
       </div>

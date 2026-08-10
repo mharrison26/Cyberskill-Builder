@@ -21,6 +21,12 @@ import {
 import { useSharedSlaClock } from '@/hooks/useTicketSlaCountdown';
 import { useTrackTickets } from '@/hooks/useTrackTickets';
 import { MOCK_CONTROLS } from '@/lib/mock-data';
+import {
+  countOpenBySeverity,
+  FINDING_SEVERITY_ORDER,
+  isFindingSeverity,
+  type FindingSeverity,
+} from '@/lib/tickets/openBySeverity';
 import { isOpenTicketStatus } from '@/lib/tickets/status';
 import type { MockTrackTicket } from '@/types';
 import { cn } from '@/lib/utils';
@@ -32,11 +38,7 @@ type GrcComplianceConsoleProps = {
   initialSource?: 'live' | 'mock' | 'mixed';
 };
 
-type Severity = 'critical' | 'high' | 'medium' | 'low';
-
-const SEVERITY_ORDER: Severity[] = ['critical', 'high', 'medium', 'low'];
-
-function severityTone(severity: Severity): string {
+function severityTone(severity: FindingSeverity): string {
   switch (severity) {
     case 'critical':
     case 'high':
@@ -47,6 +49,43 @@ function severityTone(severity: Severity): string {
     default:
       return 'bg-status-not-started text-status-not-started-foreground border-status-not-started-foreground/20';
   }
+}
+
+function difficultyTone(difficulty: string): string {
+  switch (difficulty.trim().toLowerCase()) {
+    case 'hard':
+    case 'critical':
+    case 'high':
+      return 'bg-status-blocked text-status-blocked-foreground border-status-blocked-foreground/20';
+    case 'medium':
+    case 'moderate':
+      return 'bg-status-insufficient text-status-insufficient-foreground border-status-insufficient-foreground/20';
+    case 'easy':
+    case 'low':
+    default:
+      return 'bg-status-not-started text-status-not-started-foreground border-status-not-started-foreground/20';
+  }
+}
+
+function formatDifficultyLabel(difficulty: string): string {
+  const key = difficulty.trim().toLowerCase();
+  if (key === 'easy') return 'Easy';
+  if (key === 'medium' || key === 'moderate') return 'Medium';
+  if (key === 'hard') return 'Hard';
+  if (!key) return '—';
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+/** Dedupe by id so the header count matches the rows that render. */
+function dedupeFindings(tickets: MockTrackTicket[]): MockTrackTicket[] {
+  const seen = new Set<string>();
+  const rows: MockTrackTicket[] = [];
+  for (const ticket of tickets) {
+    if (seen.has(ticket.id)) continue;
+    seen.add(ticket.id);
+    rows.push(ticket);
+  }
+  return rows;
 }
 
 function groupByControlFamily(
@@ -96,28 +135,21 @@ export function GrcComplianceConsole({
   const needsTick = tickets.some((t) => t.startedAt);
   const nowMs = useSharedSlaClock(needsTick);
 
-  const selected =
-    tickets.find((t) => t.id === selectedId) ?? tickets[0] ?? null;
+  /** Single source of truth for table rows + header count (post-dedupe). */
+  const findings = useMemo(() => dedupeFindings(tickets), [tickets]);
 
-  const openBySeverity = useMemo(() => {
-    const counts: Record<Severity, number> = {
-      critical: 0,
-      high: 0,
-      medium: 0,
-      low: 0,
-    };
-    for (const ticket of tickets) {
-      if (!isOpenTicketStatus(ticket.status)) continue;
-      const sev = ticket.severity ?? 'medium';
-      counts[sev] += 1;
-    }
-    return counts;
-  }, [tickets]);
+  const selected =
+    findings.find((t) => t.id === selectedId) ?? findings[0] ?? null;
+
+  const { counts: openBySeverity, openTotal: openCount } = useMemo(
+    () => countOpenBySeverity(findings),
+    [findings]
+  );
 
   const poamDueCount = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return tickets.filter((t) => {
+    return findings.filter((t) => {
       if (!t.poamDueAt || !isOpenTicketStatus(t.status)) return false;
       const due = new Date(t.poamDueAt);
       return (
@@ -125,20 +157,25 @@ export function GrcComplianceConsole({
         due.getTime() <= today.getTime() + 14 * 86_400_000
       );
     }).length;
-  }, [tickets]);
+  }, [findings]);
 
   const conmonStatus = useMemo(() => {
-    const open = tickets.filter((t) => isOpenTicketStatus(t.status)).length;
-    const overduePoam = tickets.filter((t) => {
+    const overduePoam = findings.filter((t) => {
       if (!t.poamDueAt || !isOpenTicketStatus(t.status)) return false;
       return new Date(t.poamDueAt).getTime() < Date.now();
     }).length;
     if (overduePoam > 0) return { label: 'At risk', tone: 'blocked' as const };
-    if (open > 3) return { label: 'Monitoring', tone: 'insufficient' as const };
+    if (openCount > 3)
+      return { label: 'Monitoring', tone: 'insufficient' as const };
     return { label: 'Green', tone: 'satisfied' as const };
-  }, [tickets]);
+  }, [findings, openCount]);
 
-  const groups = useMemo(() => groupByControlFamily(tickets), [tickets]);
+  const groups = useMemo(() => groupByControlFamily(findings), [findings]);
+
+  const renderedRowCount = useMemo(
+    () => groups.reduce((sum, group) => sum + group.tickets.length, 0),
+    [groups]
+  );
 
   return (
     <div className="space-y-4">
@@ -177,12 +214,12 @@ export function GrcComplianceConsole({
         </div>
       </header>
 
-      {/* Stat strip */}
+      {/* Stat strip — each card counts only that finding severity (no difficulty fallback). */}
       <section
         aria-label="Compliance summary"
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
       >
-        {SEVERITY_ORDER.map((sev) => (
+        {FINDING_SEVERITY_ORDER.map((sev) => (
           <div key={sev} className="border border-border bg-card px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Open · {sev}
@@ -236,7 +273,7 @@ export function GrcComplianceConsole({
                 Findings / tickets by control family
               </h2>
               <span className="font-mono text-xs text-muted-foreground">
-                {tickets.length} records
+                {renderedRowCount} records
               </span>
             </div>
 
@@ -248,7 +285,10 @@ export function GrcComplianceConsole({
                       Control
                     </TableHead>
                     <TableHead scope="col">Finding / ticket</TableHead>
-                    <TableHead scope="col" className="w-[6rem]">
+                    <TableHead scope="col" className="w-[6.5rem]">
+                      Difficulty
+                    </TableHead>
+                    <TableHead scope="col" className="w-[7rem]">
                       Severity
                     </TableHead>
                     <TableHead scope="col" className="w-[7rem]">
@@ -261,7 +301,7 @@ export function GrcComplianceConsole({
                     <Fragment key={family}>
                       <TableRow className="bg-muted/40 hover:bg-muted/40">
                         <TableCell
-                          colSpan={4}
+                          colSpan={5}
                           className="py-1.5 font-mono text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                         >
                           {family}
@@ -294,10 +334,22 @@ export function GrcComplianceConsole({
                                 status: ticket.status,
                               }}
                               nowMs={nowMs}
+                              showPriority={false}
                             />
                           </TableCell>
                           <TableCell className="align-top">
-                            {ticket.severity ? (
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                'font-normal',
+                                difficultyTone(ticket.difficulty)
+                              )}
+                            >
+                              {formatDifficultyLabel(ticket.difficulty)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="align-top">
+                            {isFindingSeverity(ticket.severity) ? (
                               <Badge
                                 variant="outline"
                                 className={cn(
@@ -308,7 +360,12 @@ export function GrcComplianceConsole({
                                 {ticket.severity}
                               </Badge>
                             ) : (
-                              '—'
+                              <span
+                                className="text-xs text-muted-foreground"
+                                aria-label="Not rated"
+                              >
+                                —
+                              </span>
                             )}
                           </TableCell>
                           <TableCell className="align-top font-mono text-xs tabular-nums text-muted-foreground">

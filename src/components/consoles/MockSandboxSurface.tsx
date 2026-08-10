@@ -21,16 +21,16 @@ export function MockSandboxSurface({
   return (
     <div
       className={cn(
-        'flex min-h-[20rem] flex-col overflow-hidden rounded-md border border-border bg-[#0f1419] font-mono text-xs text-[#d6deeb]',
+        'flex min-h-[20rem] flex-col overflow-hidden rounded-md border border-border bg-terminal font-mono text-xs text-terminal-foreground',
         className
       )}
     >
-      <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2 text-[11px] text-white/60">
+      <div className="flex items-center gap-2 border-b border-terminal-foreground/10 px-3 py-2 text-[11px] text-terminal-muted">
         <span className="size-2 rounded-full bg-status-blocked-foreground/80" />
         <span className="size-2 rounded-full bg-status-insufficient-foreground/80" />
         <span className="size-2 rounded-full bg-status-satisfied-foreground/80" />
         <span className="ml-2 truncate">{hostname}</span>
-        <span className="ml-auto text-white/40">
+        <span className="ml-auto text-terminal-muted/70">
           {layout === 'editor'
             ? 'WebContainer (mock)'
             : 'Incident shell (mock)'}
@@ -39,16 +39,16 @@ export function MockSandboxSurface({
 
       {layout === 'editor' ? (
         <div className="grid min-h-0 flex-1 md:grid-cols-[9rem_minmax(0,1fr)]">
-          <aside className="border-r border-white/10 bg-black/30 p-2 text-white/50">
+          <aside className="border-r border-terminal-foreground/10 bg-black/30 p-2 text-terminal-muted">
             <p className="mb-2 text-[10px] uppercase tracking-wide">Files</p>
             <ul className="space-y-1">
-              <li className="text-sky-300">main.py</li>
+              <li className="text-primary">main.py</li>
               <li>tests/test_sla.py</li>
               <li>requirements.txt</li>
             </ul>
           </aside>
           <div className="flex min-h-0 flex-col">
-            <pre className="flex-1 overflow-auto p-3 leading-relaxed text-[#c3e88d]">
+            <pre className="flex-1 overflow-auto p-3 leading-relaxed text-terminal-accent">
               {`def remaining_ms(sla_minutes: int, started_at: float, now: float) -> int:
     deadline = started_at + sla_minutes * 60_000
     return int(deadline - now)
@@ -56,12 +56,12 @@ export function MockSandboxSurface({
 # TODO: handle timezone-aware started_at
 `}
             </pre>
-            <div className="border-t border-white/10 bg-black/40 p-3 text-white/70">
+            <div className="border-t border-terminal-foreground/10 bg-black/40 p-3 text-terminal-foreground/80">
               <p>$ pytest -q</p>
               <p className="text-status-satisfied-foreground">
                 ..... 5 passed in 0.12s
               </p>
-              <p className="mt-1 text-white/40">
+              <p className="mt-1 text-terminal-muted/70">
                 sparky@webcontainer:~$ <span className="animate-pulse">▌</span>
               </p>
             </div>

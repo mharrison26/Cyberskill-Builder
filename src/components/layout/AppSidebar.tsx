@@ -44,7 +44,7 @@ const ADMIN_ITEMS = [
 ];
 
 const navItemBase =
-  'relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-hover hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar';
+  'relative flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground transition-hover hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar [&_svg]:text-current';
 
 const navItemActive =
   'bg-sidebar-accent font-medium text-sidebar-accent-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-primary';
@@ -109,7 +109,7 @@ export function AppSidebar({
 
         {enrollments.length > 0 ? (
           <div>
-            <Eyebrow as="h2" className="mb-2 px-3">
+            <Eyebrow as="h2" className="mb-2 px-3 text-sidebar-foreground/65">
               Track consoles
             </Eyebrow>
             <ul className="space-y-1" role="list">
@@ -136,7 +136,7 @@ export function AppSidebar({
 
         {activeTrackSlug && trackLessons.length > 0 ? (
           <div>
-            <Eyebrow as="h2" className="mb-2 px-3">
+            <Eyebrow as="h2" className="mb-2 px-3 text-sidebar-foreground/65">
               {activeTrackName ?? 'Current Track'}
             </Eyebrow>
             <ul className="space-y-1" role="list">
@@ -164,7 +164,7 @@ export function AppSidebar({
           <>
             <Separator />
             <div>
-              <Eyebrow as="h2" className="mb-2 px-3">
+              <Eyebrow as="h2" className="mb-2 px-3 text-sidebar-foreground/65">
                 Admin
               </Eyebrow>
               <ul className="space-y-1" role="list">

@@ -423,9 +423,9 @@ export function FlySandboxTicket({
           </div>
         </aside>
 
-        <div className="relative flex min-h-[20rem] flex-col bg-slate-900">
+        <div className="relative flex min-h-[20rem] flex-col bg-terminal">
           {!session ? (
-            <p className="px-4 py-3 text-sm text-slate-400">
+            <p className="px-4 py-3 text-sm text-terminal-muted">
               Launch the sandbox to open the interactive terminal.
             </p>
           ) : null}

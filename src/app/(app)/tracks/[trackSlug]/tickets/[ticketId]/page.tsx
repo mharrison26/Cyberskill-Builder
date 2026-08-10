@@ -4,13 +4,16 @@ import { notFound } from 'next/navigation';
 
 import { EngagementStageNav } from '@/components/tickets/EngagementStageNav';
 import { PriorityBadge } from '@/components/tickets/PriorityBadge';
-import { SlaCountdown } from '@/components/tickets/SlaCountdown';
-import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
+import { TicketAttemptPanel } from '@/components/tickets/TicketAttemptPanel';
+import { TicketWorkbenchFormGate } from '@/components/tickets/TicketWorkbenchFormGate';
+import { TicketWorkbenchHeader } from '@/components/tickets/TicketWorkbenchHeader';
+import { TicketWorkbenchProvider } from '@/components/tickets/TicketWorkbenchProvider';
 import { TicketWorkSlot } from '@/components/tickets/TicketWorkSlot';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { requireAdmin } from '@/lib/auth/requireAdmin';
 import { requireEnrollment } from '@/lib/auth/requireEnrollment';
+import type { TicketAttemptRecord } from '@/lib/tickets/attempts';
 import {
   buildEngagementFlowView,
   isEngagementTicket,
@@ -54,6 +57,15 @@ export default async function TicketDetailPage({
   let userId: string | null = null;
   let status: TicketProgressStatus = 'new';
   let startedAt: string | null = null;
+  let resolvedAt: string | null = null;
+  let slaDueAt: string | null = null;
+  let slaMet: boolean | null = null;
+  let submission: Record<string, unknown> | null = null;
+  let lastScoreStatus: 'resolved' | 'needs_revision' | null = null;
+  let lastFeedback: string | null = null;
+  let lastStructuredResult: Record<string, unknown> | null = null;
+  let attemptCount = 0;
+  let attempts: TicketAttemptRecord[] = [];
 
   if (isPreview) {
     await requireAdmin(supabase);
@@ -77,7 +89,7 @@ export default async function TicketDetailPage({
   const { data: ticket, error: ticketError } = await supabase
     .from('tickets')
     .select(
-      'id, tenant_id, track_id, tier, ticket_type, difficulty, sla_minutes, scenario_brief, initial_state, expected_state, dcwf_code, sort_order, engagement_id, engagement_stage'
+      'id, tenant_id, track_id, tier, ticket_type, difficulty, sla_minutes, max_attempts, scenario_brief, initial_state, expected_state, dcwf_code, sort_order, engagement_id, engagement_stage'
     )
     .eq('id', ticketId)
     .maybeSingle<Ticket>();
@@ -89,13 +101,77 @@ export default async function TicketDetailPage({
   if (!isPreview && userId) {
     const { data: progress } = await supabase
       .from('ticket_progress')
-      .select('status, started_at, resolved_at')
+      .select(
+        'status, started_at, resolved_at, sla_due_at, sla_met, submission, last_score_status, last_feedback, last_structured_result, attempt_count'
+      )
       .eq('student_id', userId)
       .eq('ticket_id', ticketId)
       .maybeSingle();
 
     status = normalizeTicketStatus(progress?.status);
     startedAt = progress?.started_at ?? null;
+    resolvedAt = progress?.resolved_at ?? null;
+    slaDueAt = progress?.sla_due_at ?? null;
+    slaMet =
+      typeof progress?.sla_met === 'boolean' ? progress.sla_met : null;
+    submission =
+      progress?.submission &&
+      typeof progress.submission === 'object' &&
+      !Array.isArray(progress.submission)
+        ? (progress.submission as Record<string, unknown>)
+        : null;
+    lastScoreStatus =
+      progress?.last_score_status === 'resolved' ||
+      progress?.last_score_status === 'needs_revision'
+        ? progress.last_score_status
+        : null;
+    lastFeedback =
+      typeof progress?.last_feedback === 'string'
+        ? progress.last_feedback
+        : null;
+    lastStructuredResult =
+      progress?.last_structured_result &&
+      typeof progress.last_structured_result === 'object' &&
+      !Array.isArray(progress.last_structured_result)
+        ? (progress.last_structured_result as Record<string, unknown>)
+        : null;
+    attemptCount =
+      typeof progress?.attempt_count === 'number'
+        ? progress.attempt_count
+        : 0;
+
+    const { data: attemptRows } = await supabase
+      .from('ticket_attempts')
+      .select(
+        'id, attempt_number, submitted_at, score_status, feedback, submission, structured_result, sla_started_at, sla_due_at, sla_resolved_at, sla_met'
+      )
+      .eq('student_id', userId)
+      .eq('ticket_id', ticketId)
+      .order('attempt_number', { ascending: true });
+
+    attempts = (attemptRows ?? []).map((row) => ({
+      id: row.id as string,
+      attempt_number: row.attempt_number as number,
+      submitted_at: row.submitted_at as string,
+      score_status: row.score_status as 'resolved' | 'needs_revision',
+      feedback: (row.feedback as string | null) ?? null,
+      submission:
+        row.submission &&
+        typeof row.submission === 'object' &&
+        !Array.isArray(row.submission)
+          ? (row.submission as Record<string, unknown>)
+          : {},
+      structured_result:
+        row.structured_result &&
+        typeof row.structured_result === 'object' &&
+        !Array.isArray(row.structured_result)
+          ? (row.structured_result as Record<string, unknown>)
+          : {},
+      sla_started_at: (row.sla_started_at as string | null) ?? null,
+      sla_due_at: (row.sla_due_at as string | null) ?? null,
+      sla_resolved_at: (row.sla_resolved_at as string | null) ?? null,
+      sla_met: typeof row.sla_met === 'boolean' ? row.sla_met : null,
+    }));
   }
 
   let engagementFlow = null as ReturnType<
@@ -142,7 +218,6 @@ export default async function TicketDetailPage({
         }
       }
 
-      // Ensure current ticket status is reflected even before sibling query.
       progressMap.set(ticket.id, status);
 
       const engagement: EngagementSummary = {
@@ -238,16 +313,6 @@ export default async function TicketDetailPage({
           <h1 className="text-2xl font-semibold leading-snug">
             {ticket.scenario_brief}
           </h1>
-
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">SLA</span>
-              <SlaCountdown
-                slaMinutes={ticket.sla_minutes}
-                startedAt={startedAt}
-              />
-            </div>
-          </div>
         </header>
       </div>
 
@@ -264,13 +329,26 @@ export default async function TicketDetailPage({
           </p>
         </div>
       ) : (
-        <>
-          <TicketStatusControl
-            trackSlug={trackSlug}
-            ticketId={ticket.id}
-            status={status}
-            readOnly={isPreview}
-          />
+        <TicketWorkbenchProvider
+          initial={{
+            ticketId: ticket.id,
+            trackSlug,
+            status,
+            startedAt,
+            resolvedAt,
+            slaDueAt,
+            slaMet,
+            submission,
+            lastScoreStatus,
+            lastFeedback,
+            lastStructuredResult,
+            attemptCount,
+            maxAttempts: ticket.max_attempts,
+            attempts,
+            readOnlyPreview: isPreview,
+          }}
+        >
+          <TicketWorkbenchHeader slaMinutes={ticket.sla_minutes} />
 
           <section
             aria-labelledby="scenario-brief-heading"
@@ -284,8 +362,18 @@ export default async function TicketDetailPage({
             </p>
           </section>
 
-          <TicketWorkSlot ticket={ticket} readOnly={isPreview} />
-        </>
+          <TicketWorkbenchFormGate>
+            {({ readOnly, formKey }) => (
+              <TicketWorkSlot
+                key={formKey}
+                ticket={ticket}
+                readOnly={readOnly}
+              />
+            )}
+          </TicketWorkbenchFormGate>
+
+          <TicketAttemptPanel />
+        </TicketWorkbenchProvider>
       )}
     </div>
   );

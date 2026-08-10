@@ -15,18 +15,18 @@ const HEALTH_LABEL: Record<SystemStatusRow['health'], string> = {
 };
 
 const HEALTH_DOT: Record<SystemStatusRow['health'], string> = {
-  operational: 'bg-emerald-700',
-  degraded: 'bg-amber-700',
-  maintenance: 'bg-slate-500',
+  operational: 'bg-status-satisfied-foreground',
+  degraded: 'bg-status-insufficient-foreground',
+  maintenance: 'bg-status-not-started-foreground',
 };
 
 const HEALTH_BADGE: Record<SystemStatusRow['health'], string> = {
   operational:
-    'border-emerald-700/20 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400',
+    'border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground',
   degraded:
-    'border-amber-700/20 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400',
+    'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground',
   maintenance:
-    'border-slate-500/20 bg-slate-100 text-muted-foreground dark:bg-slate-900/40',
+    'border-status-not-started-foreground/20 bg-status-not-started text-status-not-started-foreground',
 };
 
 export function SystemsStatusPanel({

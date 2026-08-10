@@ -86,6 +86,11 @@ export interface Ticket {
   engagement_id?: string | null;
   /** 1-based stage within engagement; null when not in an engagement. */
   engagement_stage?: number | null;
+  /**
+   * Max graded attempts for this scenario (migration 20260811010000+).
+   * Null → app default (3).
+   */
+  max_attempts?: number | null;
 }
 
 export interface TicketProgress {
@@ -93,10 +98,20 @@ export interface TicketProgress {
   student_id: string;
   ticket_id: string;
   status: TicketProgressStatus;
+  /** SLA clock start (sla_started_at). */
   started_at: string | null;
+  /** SLA resolution timestamp (sla_resolved_at). */
   resolved_at: string | null;
   /** Latest submission payload when present (migration 0024+). */
   submission?: Record<string, unknown> | null;
+  /** Server-computed deadline (started_at + sla_minutes). */
+  sla_due_at?: string | null;
+  /** Whether latest resolution met SLA; null while open. */
+  sla_met?: boolean | null;
+  last_score_status?: 'resolved' | 'needs_revision' | null;
+  last_feedback?: string | null;
+  last_structured_result?: Record<string, unknown> | null;
+  attempt_count?: number;
 }
 
 /** Fly Machines sandbox session (migration 0025+; PI-12 cost tracking). */

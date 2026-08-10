@@ -53,6 +53,8 @@ type TicketResolutionCardProps = {
   promptQuestions?: DefensePromptQuestion[];
   /** Persisted training feedback reopened from the ledger. */
   trainingFeedback?: TrainingFeedback | null;
+  /** Explicit SLA competency signal when training feedback lacks SLA. */
+  slaMet?: boolean | null;
   className?: string;
 };
 
@@ -97,6 +99,7 @@ export function TicketResolutionCard({
   relatedFindingId = null,
   promptQuestions = [],
   trainingFeedback = null,
+  slaMet = null,
   className,
 }: TicketResolutionCardProps) {
   const [localPublic, setLocalPublic] = useState(isPublic);
@@ -110,6 +113,14 @@ export function TicketResolutionCard({
     normalized === 'resolved'
       ? getTicketStatusColorClass('resolved')
       : getTicketStatusColorClass('in_progress');
+  const slaWithin =
+    typeof slaMet === 'boolean'
+      ? slaMet
+      : trainingFeedback?.sla?.withinSla === true
+        ? true
+        : trainingFeedback?.sla?.withinSla === false
+          ? false
+          : null;
   const dcwfLabel = formatDcwfLabel(dcwfCode, dcwfTitle);
   const artifactId = id ?? title;
   const publicToggleId = `ticket-ledger-public-${artifactId}`;
@@ -176,6 +187,22 @@ export function TicketResolutionCard({
             {normalized ? (
               <Badge variant="outline" className={cn('font-normal', badgeTone)}>
                 {SCORE_STATUS_LABELS[normalized]}
+              </Badge>
+            ) : null}
+            {slaWithin === true ? (
+              <Badge
+                variant="secondary"
+                className="font-normal bg-status-satisfied/15 text-status-satisfied-foreground"
+              >
+                SLA met
+              </Badge>
+            ) : null}
+            {slaWithin === false ? (
+              <Badge
+                variant="secondary"
+                className="font-normal bg-status-blocked/15 text-status-blocked-foreground"
+              >
+                SLA breached
               </Badge>
             ) : null}
           </div>

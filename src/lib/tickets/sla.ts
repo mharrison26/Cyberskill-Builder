@@ -5,12 +5,37 @@ export type SlaState = {
   /** True when the ticket has not been started (no countdown yet). */
   notStarted: boolean;
   deadlineAt: Date | null;
+  /** True when the countdown is frozen at resolve time. */
+  isFrozen: boolean;
+  /** Server/client met flag when resolved; null while open or unknown. */
+  slaMet: boolean | null;
 };
+
+export type GetSlaStateOptions = {
+  /** Freeze the clock at this instant (typically resolved_at / sla_resolved_at). */
+  resolvedAt?: string | null;
+  /** Precomputed deadline; when omitted, startedAt + slaMinutes is used. */
+  slaDueAt?: string | null;
+  /** Server-computed met/breached for resolved tickets. */
+  slaMet?: boolean | null;
+};
+
+export function computeSlaDueAt(
+  startedAt: string | null | undefined,
+  slaMinutes: number
+): string | null {
+  if (!startedAt) return null;
+  if (!Number.isFinite(slaMinutes) || slaMinutes < 0) return null;
+  const startedMs = new Date(startedAt).getTime();
+  if (Number.isNaN(startedMs)) return null;
+  return new Date(startedMs + slaMinutes * 60_000).toISOString();
+}
 
 export function getSlaState(
   slaMinutes: number,
   startedAt: string | null | undefined,
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
+  options: GetSlaStateOptions = {}
 ): SlaState {
   if (!startedAt) {
     return {
@@ -18,6 +43,8 @@ export function getSlaState(
       isOverdue: false,
       notStarted: true,
       deadlineAt: null,
+      isFrozen: false,
+      slaMet: null,
     };
   }
 
@@ -28,17 +55,46 @@ export function getSlaState(
       isOverdue: false,
       notStarted: true,
       deadlineAt: null,
+      isFrozen: false,
+      slaMet: null,
     };
   }
 
-  const deadlineAt = new Date(startedMs + slaMinutes * 60_000);
-  const remainingMs = deadlineAt.getTime() - nowMs;
+  const dueMs = options.slaDueAt
+    ? new Date(options.slaDueAt).getTime()
+    : startedMs + slaMinutes * 60_000;
+  if (Number.isNaN(dueMs)) {
+    return {
+      remainingMs: slaMinutes * 60_000,
+      isOverdue: false,
+      notStarted: true,
+      deadlineAt: null,
+      isFrozen: false,
+      slaMet: null,
+    };
+  }
+
+  const deadlineAt = new Date(dueMs);
+  const resolvedMs = options.resolvedAt
+    ? new Date(options.resolvedAt).getTime()
+    : Number.NaN;
+  const isFrozen = Boolean(options.resolvedAt) && !Number.isNaN(resolvedMs);
+  const clockMs = isFrozen ? resolvedMs : nowMs;
+  const remainingMs = dueMs - clockMs;
+  const slaMet =
+    typeof options.slaMet === 'boolean'
+      ? options.slaMet
+      : isFrozen
+        ? remainingMs >= 0
+        : null;
 
   return {
     remainingMs,
     isOverdue: remainingMs < 0,
     notStarted: false,
     deadlineAt,
+    isFrozen,
+    slaMet,
   };
 }
 

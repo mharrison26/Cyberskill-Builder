@@ -103,6 +103,11 @@
     --sidebar-accent-foreground: #1f2937;
     --sidebar-border: #d1d9e3;
     --sidebar-ring: #1f4e78;
+    /* Intentional always-dark terminal chrome (sandboxes / mock shells) */
+    --terminal: #0f1419;
+    --terminal-foreground: #d6deeb;
+    --terminal-muted: #94a3b8;
+    --terminal-accent: #c3e88d;
     --status-satisfied: #dcfce7;
     --status-satisfied-foreground: #14532d;
     --status-insufficient: #fef3c7;
@@ -150,6 +155,10 @@
     --sidebar-accent-foreground: #e5e7eb;
     --sidebar-border: #2d3748;
     --sidebar-ring: #6b9fd4;
+    --terminal: #0f1419;
+    --terminal-foreground: #d6deeb;
+    --terminal-muted: #94a3b8;
+    --terminal-accent: #c3e88d;
     --status-satisfied: #14532d;
     --status-satisfied-foreground: #bbf7d0;
     --status-insufficient: #78350f;
@@ -163,6 +172,60 @@
       0 1px 3px 0 rgb(0 0 0 / 0.32), 0 1px 2px -1px rgb(0 0 0 / 0.28);
     --shadow-md:
       0 4px 12px -2px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.28);
+  }
+
+  /*
+   * next-themes adds `class="light"` on <html>. Declared after `.dark` so an
+   * explicit light choice wins even if both theme classes are briefly present.
+   */
+  .light {
+    color-scheme: light;
+    --background: #f8f9fb;
+    --foreground: #1f2937;
+    --surface: #ffffff;
+    --surface-foreground: #1f2937;
+    --card: var(--surface);
+    --card-foreground: var(--surface-foreground);
+    --popover: var(--surface);
+    --popover-foreground: var(--surface-foreground);
+    --primary: #1f4e78;
+    --primary-foreground: #ffffff;
+    --secondary: #eef1f5;
+    --secondary-foreground: #1f2937;
+    --muted: #eef1f5;
+    --muted-foreground: #4b5563;
+    --accent: #4a6278;
+    --accent-foreground: #ffffff;
+    --destructive: #991b1b;
+    --destructive-foreground: #ffffff;
+    --border: #d1d9e3;
+    --input: #d1d9e3;
+    --ring: #1f4e78;
+    --sidebar: #ffffff;
+    --sidebar-foreground: #1f2937;
+    --sidebar-primary: #1f4e78;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #eef1f5;
+    --sidebar-accent-foreground: #1f2937;
+    --sidebar-border: #d1d9e3;
+    --sidebar-ring: #1f4e78;
+    --terminal: #0f1419;
+    --terminal-foreground: #d6deeb;
+    --terminal-muted: #94a3b8;
+    --terminal-accent: #c3e88d;
+    --status-satisfied: #dcfce7;
+    --status-satisfied-foreground: #14532d;
+    --status-insufficient: #fef3c7;
+    --status-insufficient-foreground: #78350f;
+    --status-blocked: #fee2e2;
+    --status-blocked-foreground: #7f1d1d;
+    --status-not-started: #f3f4f6;
+    --status-not-started-foreground: #374151;
+    --shadow-xs: 0 1px 2px 0 rgb(15 20 25 / 0.04);
+    --shadow-sm:
+      0 1px 3px 0 rgb(15 20 25 / 0.06), 0 1px 2px -1px rgb(15 20 25 / 0.05);
+    --shadow-md:
+      0 4px 10px -2px rgb(15 20 25 / 0.08), 0 2px 4px -2px rgb(15 20 25 / 0.05);
   }
 
   * {

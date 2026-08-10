@@ -26,7 +26,12 @@ import {
 import { isConMonStrategyTicketType } from '@/lib/scoring/conmonStrategy';
 import { isPoamTicketType } from '@/lib/scoring/poam';
 import { createClient } from '@/lib/supabase/server';
-import { wasResolvedWithinSla } from '@/lib/tickets/sla';
+import {
+  canStartNewAttempt,
+  nextAttemptNumber,
+  resolveMaxAttempts,
+} from '@/lib/tickets/attempts';
+import { computeSlaDueAt, wasResolvedWithinSla } from '@/lib/tickets/sla';
 import {
   loadTicketProgress,
   resolveSubmitTicketContext,
@@ -174,6 +179,44 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   const existingProgress = await loadTicketProgress(context, ticketId);
 
+  // Require an explicit Open ticket (SLA start) before graded submit.
+  if (!existingProgress?.started_at || existingProgress.status === 'new') {
+    return NextResponse.json(
+      {
+        error:
+          'Open the ticket before submitting. The SLA timer starts when you open the ticket.',
+      },
+      { status: 409 }
+    );
+  }
+
+  if (
+    existingProgress.status === 'resolved' ||
+    existingProgress.status === 'reviewed'
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'This scenario is resolved. Use Retry scenario to start a new graded attempt.',
+      },
+      { status: 409 }
+    );
+  }
+
+  const maxAttempts = resolveMaxAttempts(context.ticket.max_attempts);
+  const priorAttemptCount = existingProgress.attempt_count ?? 0;
+  if (
+    !canStartNewAttempt({
+      attemptCount: priorAttemptCount,
+      maxAttempts,
+    })
+  ) {
+    return NextResponse.json(
+      { error: `Maximum attempts reached (${maxAttempts}).` },
+      { status: 409 }
+    );
+  }
+
   const existingSubmission =
     (existingProgress?.submission as Record<string, unknown> | null) ?? null;
 
@@ -278,8 +321,20 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   const now = new Date().toISOString();
   const progressStatus = scoreStatusToProgressStatus(scoreResult.status);
-  const startedAt = existingProgress?.started_at ?? now;
+  const startedAt = existingProgress.started_at;
+  const slaDueAt =
+    existingProgress.sla_due_at ??
+    computeSlaDueAt(startedAt, context.ticket.sla_minutes);
   const resolvedAt = progressStatus === 'resolved' ? now : null;
+  const slaMet =
+    progressStatus === 'resolved'
+      ? wasResolvedWithinSla(
+          startedAt,
+          resolvedAt,
+          context.ticket.sla_minutes
+        )
+      : null;
+  const attemptNumber = nextAttemptNumber(priorAttemptCount);
 
   const { data: peerRows } = await context.supabase
     .from('portfolio_items')
@@ -300,7 +355,17 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   scoreResult = {
     ...scoreResult,
-    structuredResult: enriched.structuredResult,
+    structuredResult: {
+      ...enriched.structuredResult,
+      sla: {
+        startedAt,
+        dueAt: slaDueAt,
+        resolvedAt,
+        met: slaMet,
+        withinSla: slaMet,
+        minutesAllowed: context.ticket.sla_minutes,
+      },
+    },
   };
 
   const { data: progress, error: progressError } = await context.supabase
@@ -311,12 +376,20 @@ export async function POST(request: Request, { params }: RouteContext) {
         ticket_id: ticketId,
         status: progressStatus,
         started_at: startedAt,
+        sla_due_at: slaDueAt,
         resolved_at: resolvedAt,
+        sla_met: slaMet,
         submission,
+        last_score_status: scoreResult.status,
+        last_feedback: scoreResult.feedback,
+        last_structured_result: scoreResult.structuredResult,
+        attempt_count: attemptNumber,
       },
       { onConflict: 'student_id,ticket_id' }
     )
-    .select('id, status, started_at, resolved_at')
+    .select(
+      'id, status, started_at, resolved_at, sla_due_at, sla_met, attempt_count, submission, last_score_status, last_feedback, last_structured_result'
+    )
     .single();
 
   if (progressError || !progress) {
@@ -334,6 +407,39 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
     return NextResponse.json(
       { error: 'Failed to update ticket progress' },
+      { status: 500 }
+    );
+  }
+
+  const { error: attemptError } = await context.supabase
+    .from('ticket_attempts')
+    .insert({
+      student_id: context.appUser.id,
+      ticket_id: ticketId,
+      attempt_number: attemptNumber,
+      submitted_at: now,
+      score_status: scoreResult.status,
+      feedback: scoreResult.feedback,
+      submission,
+      structured_result: scoreResult.structuredResult,
+      sla_started_at: startedAt,
+      sla_due_at: slaDueAt,
+      sla_resolved_at: resolvedAt ?? now,
+      sla_met: slaMet,
+    });
+
+  if (attemptError) {
+    console.error('ticket_attempts insert failed:', attemptError);
+    captureFeatureException(attemptError, {
+      feature: 'scoring',
+      pi: 'PI-03',
+      operation: 'insert_ticket_attempt',
+      ticketId,
+      ticketType: context.ticket.ticket_type,
+      extras: { attemptNumber },
+    });
+    return NextResponse.json(
+      { error: 'Scored successfully but failed to record attempt history' },
       { status: 500 }
     );
   }
@@ -475,14 +581,16 @@ export async function POST(request: Request, { params }: RouteContext) {
   }
 
   // Reported only — overdue never blocks submission.
-  const withinSla =
-    progressStatus === 'resolved'
-      ? wasResolvedWithinSla(
-          progress.started_at,
-          progress.resolved_at,
-          context.ticket.sla_minutes
-        )
-      : null;
+  const withinSla = slaMet;
+
+  const { data: attemptRows } = await context.supabase
+    .from('ticket_attempts')
+    .select(
+      'id, attempt_number, submitted_at, score_status, feedback, submission, structured_result, sla_started_at, sla_due_at, sla_resolved_at, sla_met'
+    )
+    .eq('student_id', context.appUser.id)
+    .eq('ticket_id', ticketId)
+    .order('attempt_number', { ascending: true });
 
   return NextResponse.json(
     {
@@ -491,8 +599,19 @@ export async function POST(request: Request, { params }: RouteContext) {
       feedback: scoreResult.feedback,
       structuredResult: scoreResult.structuredResult,
       trainingFeedback: enriched.trainingFeedback,
+      submission,
       progressId: progress.id,
       progressStatus: progress.status,
+      startedAt: progress.started_at,
+      slaStartedAt: progress.started_at,
+      resolvedAt: progress.resolved_at,
+      slaResolvedAt: progress.resolved_at,
+      slaDueAt: progress.sla_due_at ?? slaDueAt,
+      slaMet: progress.sla_met ?? slaMet,
+      lastScoreStatus: progress.last_score_status ?? scoreResult.status,
+      attemptCount: progress.attempt_count ?? attemptNumber,
+      maxAttempts,
+      attempts: attemptRows ?? [],
       portfolioItemId: portfolioItem.id,
       isFlagship,
       poamItemsUpserted,

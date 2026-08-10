@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useTicketWorkbenchForm } from '@/hooks/useTicketWorkbenchForm';
 import {
   FIPS_199_IMPACT_LEVELS,
   FIPS_199_IMPACT_LEVEL_LABELS,
@@ -104,14 +105,21 @@ function parseInfoTypes(source: Record<string, unknown>): InfoTypeRow[] {
     .filter((row): row is InfoTypeRow => row !== null);
 }
 
+function isImpactLevel(value: unknown): value is Fips199ImpactLevel {
+  return value === 'low' || value === 'moderate' || value === 'high';
+}
+
 export function Fips199ImpactCategorizationTicket({
   ticket,
   readOnly = false,
   className,
 }: Fips199ImpactCategorizationTicketProps) {
+  const { submission, formReadOnly, hideSubmit, lastFeedback, lastScoreStatus } =
+    useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minJustificationLength = resolveMinJustificationLength(expectedState);
+  const restored = asRecord(submission);
 
   const system = useMemo(() => {
     const nested = asRecord(initialState.systemProfile ?? initialState.system);
@@ -146,17 +154,27 @@ export function Fips199ImpactCategorizationTicket({
 
   const [levels, setLevels] = useState<
     Record<LevelField, Fips199ImpactLevel | ''>
-  >({
-    confidentiality: '',
-    integrity: '',
-    availability: '',
-    overall: '',
-  });
-  const [justification, setJustification] = useState('');
+  >(() => ({
+    confidentiality: isImpactLevel(restored.confidentiality)
+      ? restored.confidentiality
+      : '',
+    integrity: isImpactLevel(restored.integrity) ? restored.integrity : '',
+    availability: isImpactLevel(restored.availability)
+      ? restored.availability
+      : '',
+    overall: isImpactLevel(restored.overall) ? restored.overall : '',
+  }));
+  const [justification, setJustification] = useState(() =>
+    typeof restored.justification === 'string' ? restored.justification : ''
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(
+    () => lastFeedback
+  );
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -197,7 +215,7 @@ export function Fips199ImpactCategorizationTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -277,7 +295,7 @@ export function Fips199ImpactCategorizationTicket({
                 name={`fips199-${field}`}
                 value={option}
                 checked={levels[field] === option}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={() => setLevel(field, option)}
               />
               {FIPS_199_IMPACT_LEVEL_LABELS[option]}
@@ -412,7 +430,7 @@ export function Fips199ImpactCategorizationTicket({
               <Textarea
                 id="fips199-justification"
                 value={justification}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={(event) => {
                   clearOutcome();
                   setJustification(event.target.value);
@@ -433,9 +451,9 @@ export function Fips199ImpactCategorizationTicket({
           </CardContent>
         </Card>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={formReadOnly || isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Submit categorization'}
             </Button>
             {scoreStatus ? (

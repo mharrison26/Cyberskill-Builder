@@ -229,6 +229,14 @@ describe('getTrackConsoleTickets', () => {
               track_id: trackId,
               sort_order: 3,
             }),
+            // Same-tenant duplicate scenario (pre-unique-index residue)
+            ticketRow({
+              id: 'a-dup',
+              ticket_type: 'control_mapping',
+              tenant_id: tenantA,
+              track_id: trackId,
+              sort_order: 4,
+            }),
           ],
           error: null,
         },
@@ -243,5 +251,6 @@ describe('getTrackConsoleTickets', () => {
 
     expect(result.tickets).toHaveLength(3);
     expect(new Set(types).size).toBe(types.length);
+    expect(result.tickets.map((t) => t.id)).toEqual(['a', 'b', 'c']);
   });
 });

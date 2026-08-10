@@ -52,7 +52,7 @@ export async function resolveSubmitTicketContext(
   const { data: ticket, error: ticketError } = await supabase
     .from('tickets')
     .select(
-      'id, tenant_id, track_id, tier, ticket_type, difficulty, sla_minutes, scenario_brief, initial_state, expected_state, dcwf_code, sort_order'
+      'id, tenant_id, track_id, tier, ticket_type, difficulty, sla_minutes, max_attempts, scenario_brief, initial_state, expected_state, dcwf_code, sort_order'
     )
     .eq('id', ticketId)
     .maybeSingle();
@@ -119,7 +119,7 @@ export async function loadTicketProgress(
   const { data, error } = await context.supabase
     .from('ticket_progress')
     .select(
-      'id, student_id, ticket_id, status, started_at, resolved_at, submission'
+      'id, student_id, ticket_id, status, started_at, resolved_at, submission, sla_due_at, sla_met, last_score_status, last_feedback, last_structured_result, attempt_count'
     )
     .eq('student_id', context.appUser.id)
     .eq('ticket_id', ticketId)

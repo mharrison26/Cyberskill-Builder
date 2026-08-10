@@ -80,7 +80,10 @@ export function AppTopBar({
           >
             <Menu className="size-5" />
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
+          <SheetContent
+            side="left"
+            className="w-72 border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
+          >
             <SheetHeader className="sr-only">
               <SheetTitle>Navigation</SheetTitle>
             </SheetHeader>

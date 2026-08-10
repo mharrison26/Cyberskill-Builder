@@ -796,7 +796,7 @@ export function CodeSandbox({
         <div
           ref={terminalHostRef}
           className={cn(
-            'w-full bg-slate-900 px-1 py-1 [&_.xterm]:h-full [&_.xterm-viewport]:overflow-auto',
+            'w-full bg-terminal px-1 py-1 [&_.xterm]:h-full [&_.xterm-viewport]:overflow-auto',
             showFileBrowser ? 'h-52' : 'h-[28rem]'
           )}
           aria-label="Interactive lab terminal"

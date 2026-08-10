@@ -16,7 +16,7 @@ export default async function AppLayout({
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <SkipLink />
-      <div className="hidden w-64 shrink-0 border-r border-border md:block">
+      <div className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar md:block">
         <AppSidebar
           isAdmin={user?.isAdmin ?? false}
           activeTrackSlug={activeTrack?.slug}

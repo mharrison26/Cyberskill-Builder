@@ -10,6 +10,10 @@ import { cn } from '@/lib/utils';
 type SlaCountdownProps = {
   slaMinutes: number;
   startedAt: string | null;
+  /** When set, freeze the clock at resolve time. */
+  resolvedAt?: string | null;
+  slaDueAt?: string | null;
+  slaMet?: boolean | null;
   /** Optional controlled clock (e.g. shared queue tick). */
   nowMs?: number;
   className?: string;
@@ -24,20 +28,28 @@ function formatSlaWindow(slaMinutes: number): string {
 export function SlaCountdown({
   slaMinutes,
   startedAt,
+  resolvedAt = null,
+  slaDueAt = null,
+  slaMet = null,
   nowMs: controlledNowMs,
   className,
 }: SlaCountdownProps) {
   const [localNowMs, setLocalNowMs] = useState(() => Date.now());
   const isControlled = controlledNowMs !== undefined;
   const nowMs = isControlled ? controlledNowMs : localNowMs;
+  const isFrozen = Boolean(resolvedAt);
 
   useEffect(() => {
-    if (isControlled || !startedAt) return;
+    if (isControlled || !startedAt || isFrozen) return;
     const id = window.setInterval(() => setLocalNowMs(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [isControlled, startedAt]);
+  }, [isControlled, startedAt, isFrozen]);
 
-  const state = getSlaState(slaMinutes, startedAt, nowMs);
+  const state = getSlaState(slaMinutes, startedAt, nowMs, {
+    resolvedAt,
+    slaDueAt,
+    slaMet,
+  });
 
   if (state.notStarted) {
     return (
@@ -49,6 +61,38 @@ export function SlaCountdown({
       >
         <StatusDot className="bg-muted-foreground/45" />
         <span>Not started · {formatSlaWindow(slaMinutes)}</span>
+      </span>
+    );
+  }
+
+  if (state.isFrozen) {
+    const met =
+      typeof state.slaMet === 'boolean' ? state.slaMet : !state.isOverdue;
+    return (
+      <span
+        className={cn(
+          'inline-flex flex-wrap items-center gap-1.5 font-mono text-sm tabular-nums',
+          met
+            ? 'text-[color:var(--status-satisfied-foreground)]'
+            : 'text-status-blocked-foreground',
+          className
+        )}
+        title={
+          state.deadlineAt
+            ? `Deadline ${state.deadlineAt.toLocaleString()}`
+            : undefined
+        }
+      >
+        <StatusDot
+          className={
+            met ? 'bg-emerald-700' : 'bg-status-blocked-foreground'
+          }
+        />
+        <span>
+          {met ? 'SLA met' : 'SLA breached'} ·{' '}
+          {formatSlaCountdown(state.remainingMs)}
+          {state.remainingMs >= 0 ? ' remaining' : ' over'} at close
+        </span>
       </span>
     );
   }

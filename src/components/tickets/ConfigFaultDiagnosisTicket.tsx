@@ -237,7 +237,7 @@ export function ConfigFaultDiagnosisTicket({
           {configFileName} (read-only)
         </p>
         <pre
-          className="max-h-[28rem] overflow-auto bg-slate-900 px-3 py-3 font-mono text-xs leading-relaxed text-slate-100"
+          className="max-h-[28rem] overflow-auto bg-terminal px-3 py-3 font-mono text-xs leading-relaxed text-terminal-foreground"
           aria-label={`${configFileName} with line numbers`}
         >
           <code>{displayBlock}</code>

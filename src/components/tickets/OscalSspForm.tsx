@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useTicketWorkbenchForm } from '@/hooks/useTicketWorkbenchForm';
 import {
   IMPLEMENTATION_STATUSES,
+  isImplementationStatus,
   NIST_800_171_REV3_SUBSET,
   OSCAL_SSP_MIN_NARRATIVE_LENGTH,
   SSP_RESPONSIBLE_ROLES,
@@ -81,6 +83,8 @@ export function OscalSspForm({
   readOnly = false,
   className,
 }: OscalSspFormProps) {
+  const { submission, formReadOnly, hideSubmit, lastFeedback, lastScoreStatus } =
+    useTicketWorkbenchForm(readOnly);
   const requirements = useMemo(
     () => parseRequirements(asRecord(ticket.initial_state)),
     [ticket.initial_state]
@@ -102,18 +106,56 @@ export function OscalSspForm({
 
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>(() => {
     const initial: Record<string, AnswerDraft> = {};
+    const answers = Array.isArray(submission?.answers)
+      ? submission!.answers
+      : [];
+    const byId = new Map<string, Record<string, unknown>>();
+    for (const entry of answers) {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+      const record = entry as Record<string, unknown>;
+      const id =
+        typeof record.requirementId === 'string'
+          ? record.requirementId
+          : typeof record.id === 'string'
+            ? record.id
+            : '';
+      if (id) byId.set(id, record);
+    }
     for (const req of requirements) {
-      initial[req.id] = emptyDraft();
+      const restored = byId.get(req.id);
+      if (!restored) {
+        initial[req.id] = emptyDraft();
+        continue;
+      }
+      initial[req.id] = {
+        implementationStatus: isImplementationStatus(
+          restored.implementationStatus
+        )
+          ? restored.implementationStatus
+          : '',
+        responsibleRoleId:
+          typeof restored.responsibleRoleId === 'string'
+            ? restored.responsibleRoleId
+            : '',
+        implementationNarrative:
+          typeof restored.implementationNarrative === 'string'
+            ? restored.implementationNarrative
+            : '',
+      };
     }
     return initial;
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(
+    () => lastFeedback
+  );
   const [schemaErrors, setSchemaErrors] = useState<
     Array<{ instancePath: string; message: string }>
   >([]);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateDraft(requirementId: string, patch: Partial<AnswerDraft>) {
@@ -152,7 +194,7 @@ export function OscalSspForm({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setSubmitError(null);
     setFeedback(null);
@@ -286,7 +328,7 @@ export function OscalSspForm({
                     id={statusId}
                     name={`${req.id}-status`}
                     value={draft.implementationStatus}
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                     aria-invalid={statusError ? true : undefined}
                     aria-describedby={
                       statusError ? `${statusId}-error` : undefined
@@ -333,7 +375,7 @@ export function OscalSspForm({
                     id={roleId}
                     name={`${req.id}-role`}
                     value={draft.responsibleRoleId}
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                     aria-invalid={roleError ? true : undefined}
                     aria-describedby={roleError ? `${roleId}-error` : undefined}
                     className={cn(
@@ -379,7 +421,7 @@ export function OscalSspForm({
                   name={`${req.id}-narrative`}
                   value={draft.implementationNarrative}
                   rows={4}
-                  disabled={readOnly || isSubmitting}
+                  disabled={formReadOnly || isSubmitting}
                   aria-invalid={narrativeError ? true : undefined}
                   aria-describedby={
                     narrativeError
@@ -477,9 +519,11 @@ export function OscalSspForm({
           </div>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Validating SSP…' : 'Submit OSCAL SSP'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Validating SSP…' : 'Submit OSCAL SSP'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );
