@@ -1,0 +1,181 @@
+{
+  "document": "Security Budget Risk Allocation Rubric",
+  "title": "Educational rubric for risk-based security budget allocation (tooling, staffing, training)",
+  "source_url": "internal://security-budget-risk-rubric",
+  "notes": "Pinned educational summary for RAG-style grading of student FY security budget allocations. Inspired by commonly taught risk-based investment / portfolio prioritization practices without reproducing copyrighted frameworks. Graders must use only retrieved section text, not parametric knowledge of NIST RMF budgeting, FAIR, or vendor ROI models.",
+  "disclaimer": "Educational guidance only. Not a substitute for organizational budget policy, fiscal law, or agency-specific investment boards.",
+  "sections": [
+    {
+      "id": "risk-based-budgeting",
+      "title": "Allocate by risk reduction, not equal share or politics",
+      "topics": [
+        "risk-based budgeting",
+        "risk reduction",
+        "security investment prioritization",
+        "budget allocation"
+      ],
+      "keywords": [
+        "risk-based",
+        "risk reduction",
+        "budget",
+        "allocation",
+        "prioritize",
+        "investment",
+        "residual risk",
+        "portfolio",
+        "competing requests"
+      ],
+      "text": "A defensible security budget allocation funds the mix of tooling, staffing, and training that most reduces residual risk within a fixed FY ceiling. Students should compare competing requests by the risk they address (likelihood × impact of the threat or control gap), not by equal splitting, loudest requester, or cosmetic appeal. Strong work states which risks are reduced by each funded dollar and why unfunded or partially funded items are lower priority. Merely listing dollar amounts next to request titles is not enough."
+    },
+    {
+      "id": "justify-with-risk-linkage",
+      "title": "Justification must link dollars to risk outcomes",
+      "topics": [
+        "justification",
+        "risk reduction",
+        "rationale",
+        "evidence"
+      ],
+      "keywords": [
+        "justification",
+        "rationale",
+        "why",
+        "risk reduction",
+        "residual risk",
+        "control gap",
+        "threat",
+        "link",
+        "because"
+      ],
+      "text": "The narrative justification must connect each material funding choice to a concrete risk-reduction outcome (for example: EDR expansion closes undetected ransomware dwell time on unmanaged endpoints; ISSO FTE capacity clears POA&M / ConMon backlog that currently leaves High systems under-monitored). Weak justifications only restate the shopping list (\"funded EDR at $80k, training at $25k\") without explaining risk impact, tradeoffs, or why cuts were made. Prefer brief causal language: what fails today, what the spend changes, and what residual risk remains."
+    },
+    {
+      "id": "avoid-vanity-spend",
+      "title": "Avoid vanity or low-impact spend without risk rationale",
+      "topics": [
+        "vanity",
+        "cosmetic",
+        "low impact",
+        "awareness swag"
+      ],
+      "keywords": [
+        "vanity",
+        "cosmetic",
+        "dashboard redesign",
+        "swag",
+        "low impact",
+        "low risk reduction",
+        "optics",
+        "executive dashboard",
+        "awareness campaign"
+      ],
+      "text": "Requests that mainly improve optics, branding, or cosmetic UX (executive dashboard redesigns, awareness swag) usually deliver weak risk reduction relative to detection, assessment, or security workforce capacity. Heavy funding of vanity items should fail grading unless the student makes a credible, specific risk argument (rarely available for swag or purely cosmetic dashboards). Prefer zero or minimal funding for vanity items when higher-value detection, staffing, or assessment requests remain underfunded. If the student funds vanity spend, they must explicitly defend residual-risk impact—not aesthetics alone."
+    },
+    {
+      "id": "staffing-vs-tooling",
+      "title": "Staffing versus tooling tradeoffs",
+      "topics": [
+        "staffing",
+        "tooling",
+        "tradeoffs",
+        "capacity"
+      ],
+      "keywords": [
+        "staffing",
+        "FTE",
+        "ISSO",
+        "tooling",
+        "EDR",
+        "capacity",
+        "tradeoff",
+        "operate",
+        "backlog"
+      ],
+      "text": "Tooling without people to operate, tune, and act on findings often fails to reduce risk; staffing without enabling tools can leave capacity wasted on manual toil. Strong allocations explain the balance: for example, funding EDR when coverage gaps drive undetected endpoint compromise, and/or ISSO FTE when authorization package and continuous monitoring backlog is the binding constraint. Partial funding can be defensible when the student shows how a smaller amount still delivers measurable risk reduction (pilot coverage, contractor bridge) versus all-or-nothing."
+    },
+    {
+      "id": "training-roi",
+      "title": "Training ROI versus awareness theater",
+      "topics": [
+        "training",
+        "role-based",
+        "awareness",
+        "ROI"
+      ],
+      "keywords": [
+        "training",
+        "role-based",
+        "awareness",
+        "phishing",
+        "skills",
+        "ROI",
+        "human risk",
+        "swag"
+      ],
+      "text": "Role-based security training that targets privileged users, developers, or ISSO/ISSM duties can reduce human-enabled risk when tied to known gaps (phishing-prone admins, insecure coding, weak assessment skills). Generic awareness campaigns and promotional swag are usually lower ROI. Strong justifications cite the audience, the behavior or skill change expected, and the risk reduced. Do not treat all \"training\" line items as equal—distinguish skill-building from giveaways."
+    },
+    {
+      "id": "justify-cuts-and-zeros",
+      "title": "Justify cuts, zeros, and partial funding",
+      "topics": [
+        "cuts",
+        "zero funding",
+        "partial",
+        "tradeoffs"
+      ],
+      "keywords": [
+        "cut",
+        "zero",
+        "unfunded",
+        "partial",
+        "defer",
+        "tradeoff",
+        "underfund",
+        "not funded",
+        "priority"
+      ],
+      "text": "Under a fixed ceiling, some requests must be deferred, zeroed, or partially funded. Strong work names what was cut and why those items reduce less residual risk than funded peers this FY (for example: defer swag and cosmetic dashboard work; fund pentest because independent validation of internet-facing apps is overdue). Partial funding should note what risk reduction remains achievable at the funded level. Silence about zeros/cuts when vanity items were skipped is weaker than explicit risk-based deferral language."
+    },
+    {
+      "id": "assessment-and-assurance-value",
+      "title": "Independent assessment and assurance investments",
+      "topics": [
+        "penetration test",
+        "assessment",
+        "assurance",
+        "validation"
+      ],
+      "keywords": [
+        "penetration test",
+        "pentest",
+        "assessment",
+        "independent",
+        "validation",
+        "findings",
+        "assurance",
+        "external"
+      ],
+      "text": "Periodic independent assessment (for example an annual penetration test of internet-facing applications) can be high value when it surfaces exploitable weaknesses that internal monitoring misses, especially before major releases or after architecture change. Justify such spend by the assurance gap closed and how findings will be remediated—not by checkbox compliance alone. Pairing assessment with capacity (staffing/tooling) to fix findings strengthens the risk case."
+    },
+    {
+      "id": "allocation-completeness",
+      "title": "Budget discipline and completeness",
+      "topics": [
+        "budget discipline",
+        "completeness",
+        "ceiling"
+      ],
+      "keywords": [
+        "budget",
+        "ceiling",
+        "over budget",
+        "total",
+        "fiscal year",
+        "FY",
+        "underutilized",
+        "discipline"
+      ],
+      "text": "Allocations must respect the FY ceiling (sum ≤ total budget) and should put a meaningful share of the budget to work against the highest risks rather than leaving most funds idle without explanation. Completeness means covering the material decisions: what was funded, what was cut, and how the mix addresses the organization's stated mission risks. Exact dollar matching to a single \"answer key\" is not required; a reasonable risk-based mix with clear justification can satisfy this rubric even if another mix would also be defensible."
+    }
+  ]
+}

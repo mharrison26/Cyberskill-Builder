@@ -1,6 +1,7 @@
 import { isAoReviewTicketType } from '@/lib/capstone/ticketCodes';
 import { isAuditCommitteeBriefTicketType } from '@/lib/grc/ticketCodes';
 import { isInfraDesignCapstoneTicketType } from '@/lib/infra/ticketCodes';
+import { isSecurityStrategyCapstoneTicketType } from '@/lib/issm/ticketCodes';
 
 /**
  * Helpdesk track ticket codes for curriculum + PI-07 flagship capstone.
@@ -84,7 +85,8 @@ export function isKbSourceTicketType(ticketType: string): boolean {
 /**
  * Ticket types that become the track flagship portfolio item on resolve (PI-07).
  * GRC uses ao_review and audit_committee_brief (AUD-07); helpdesk uses
- * helpdesk_capstone; sysadmin uses infra_design_capstone.
+ * helpdesk_capstone; sysadmin uses infra_design_capstone; ISSM uses
+ * security_strategy_capstone (ISSM-07).
  * Unique index enforces at most one flagship per student/track.
  */
 export function isFlagshipEligibleTicketType(ticketType: string): boolean {
@@ -92,6 +94,7 @@ export function isFlagshipEligibleTicketType(ticketType: string): boolean {
     isAoReviewTicketType(ticketType) ||
     isAuditCommitteeBriefTicketType(ticketType) ||
     isHelpdeskCapstoneTicketType(ticketType) ||
-    isInfraDesignCapstoneTicketType(ticketType)
+    isInfraDesignCapstoneTicketType(ticketType) ||
+    isSecurityStrategyCapstoneTicketType(ticketType)
   );
 }

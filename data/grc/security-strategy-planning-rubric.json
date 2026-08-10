@@ -1,0 +1,158 @@
+{
+  "document": "Security Strategy Planning Rubric",
+  "title": "Educational rubric for one-year security program strategy memos (ISSM / CISO)",
+  "source_url": "internal://security-strategy-planning-rubric",
+  "notes": "Pinned educational summary for RAG-style grading of student one-year security strategy memos. Inspired by commonly taught risk-based program planning and investment practices without reproducing copyrighted frameworks. Graders must use only retrieved section text plus the ticket scenario (risk profile, budget, prior findings) and the student's memo sections.",
+  "disclaimer": "Educational guidance only. Not a substitute for agency strategic planning directives, fiscal law, NIST RMF, or organization-specific investment boards.",
+  "sections": [
+    {
+      "id": "risk-aligned-priorities",
+      "title": "Priorities must be risk-aligned and ranked",
+      "topics": [
+        "strategic planning",
+        "risk-based prioritization",
+        "security program strategy",
+        "priorities"
+      ],
+      "keywords": [
+        "priority",
+        "priorities",
+        "ranked",
+        "risk-based",
+        "residual risk",
+        "threat",
+        "mission",
+        "strategic",
+        "top risks"
+      ],
+      "text": "A one-year security strategy memo ranks a small set of top priorities that clearly reduce the organization's most material residual risks within the year. Strong work ties each priority to a named risk, threat theme, mission-critical system, or recurring finding—not a generic wishlist (\"improve security posture,\" \"raise awareness\"). Ranking matters: the first priorities should address the highest residual risk under current threat context. Vague or unranked bullet lists without risk linkage fail this criterion."
+    },
+    {
+      "id": "budget-realistic-resourcing",
+      "title": "Resourcing must be budget-realistic and mapped to priorities",
+      "topics": [
+        "resourcing",
+        "budget",
+        "staffing",
+        "security program strategy"
+      ],
+      "keywords": [
+        "budget",
+        "resourcing",
+        "staffing",
+        "FTE",
+        "must-fund",
+        "discretionary",
+        "envelope",
+        "FY",
+        "allocation",
+        "people"
+      ],
+      "text": "Resourcing explains how the FY budget envelope and available people map to the ranked priorities. Strong memos honor hard constraints and must-fund items, show tradeoffs (what is funded, deferred, or done with existing capacity), and avoid plans that silently exceed the envelope. Dollar or capacity language should be concrete enough for leadership to see feasibility. A strategy that ignores the budget, treats every priority as fully funded, or proposes large new programs without acknowledging constraints is not realistic."
+    },
+    {
+      "id": "measurable-outcomes",
+      "title": "Expected outcomes must be measurable within the year",
+      "topics": [
+        "outcomes",
+        "metrics",
+        "expected outcomes",
+        "strategic planning"
+      ],
+      "keywords": [
+        "outcome",
+        "outcomes",
+        "measurable",
+        "metric",
+        "KPI",
+        "within the year",
+        "target",
+        "reduce",
+        "close",
+        "percent"
+      ],
+      "text": "Expected outcomes state what success looks like within the one-year horizon in measurable or clearly verifiable terms (for example: reduce open High POA&Ms older than 90 days by X%, achieve MFA coverage on privileged finance roles, complete annual assessment of named High systems on schedule). Outcomes should connect to the priorities and resourcing above. Platitudes such as \"improve maturity,\" \"strengthen culture,\" or \"better visibility\" without a verifiable signal fail this criterion."
+    },
+    {
+      "id": "ties-to-prior-findings",
+      "title": "Strategy should address prior findings and open POA&Ms",
+      "topics": [
+        "prior findings",
+        "POA&M",
+        "audit findings",
+        "recurring themes"
+      ],
+      "keywords": [
+        "finding",
+        "findings",
+        "POA&M",
+        "open",
+        "audit",
+        "assessment",
+        "recurring",
+        "theme",
+        "remediation"
+      ],
+      "text": "Leadership expects the strategy to acknowledge prior audit/assessment findings, open POA&Ms, and recurring themes from the ticket context—and to show how top priorities will close or materially reduce those gaps. Strong work names specific finding themes (or IDs) and explains sequencing (quick wins versus multi-quarter remediation). Ignoring the provided findings list or treating remediation as unrelated to the year's plan is a material gap."
+    },
+    {
+      "id": "avoid-generic-platitudes",
+      "title": "Avoid generic platitudes and tool shopping lists",
+      "topics": [
+        "platitudes",
+        "specificity",
+        "security program strategy"
+      ],
+      "keywords": [
+        "platitude",
+        "generic",
+        "best practices",
+        "world-class",
+        "shopping list",
+        "vendor",
+        "buzzword",
+        "maturity"
+      ],
+      "text": "Strategy memos fail when they substitute buzzwords, maturity slogans, or unprioritized vendor shopping lists for decisions. Phrases like \"implement industry best practices,\" \"achieve world-class security,\" or \"deploy next-gen X\" without risk, budget, and outcome linkage should not satisfy grading. Prefer organization-specific decisions: which risks this year, with what money and people, producing which measurable results."
+    },
+    {
+      "id": "coherent-narrative",
+      "title": "Priorities, resourcing, and outcomes form one coherent plan",
+      "topics": [
+        "strategic planning",
+        "coherence",
+        "executive memo"
+      ],
+      "keywords": [
+        "coherent",
+        "narrative",
+        "aligned",
+        "consistent",
+        "memo",
+        "leadership",
+        "plan"
+      ],
+      "text": "The three required sections must read as one plan: priorities drive resourcing choices; resourcing makes outcomes achievable; outcomes validate the priorities. Contradictions (e.g., ambitious outcomes with zero budget for the enabling work, or priorities that never appear in resourcing) should lower the grade. Executive tone is appropriate: concise, decision-oriented, and usable by leadership without jargon dumps."
+    },
+    {
+      "id": "threat-and-mission-context",
+      "title": "Reflect mission and threat context, not generic IT",
+      "topics": [
+        "mission",
+        "threat context",
+        "risk profile"
+      ],
+      "keywords": [
+        "mission",
+        "threat",
+        "ransomware",
+        "insider",
+        "system",
+        "organization",
+        "context",
+        "risk profile"
+      ],
+      "text": "Priorities should reflect the organization's mission, key systems, and stated threat context from the scenario. A strategy that could apply unchanged to any company (generic patching and awareness only) is weak when the ticket supplies specific residual risks and threat drivers. Cite those drivers when ranking work for the year."
+    }
+  ]
+}

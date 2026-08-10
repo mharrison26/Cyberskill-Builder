@@ -1,0 +1,106 @@
+{
+  "document": "NIST SP 800-161 Rev. 1",
+  "title": "Cybersecurity Supply Chain Risk Management Practices for Systems and Organizations",
+  "source_url": "https://csrc.nist.gov/pubs/sp/800/161/r1/final",
+  "notes": "Pinned educational excerpts for RAG-style grading of vendor / third-party risk rating tickets. Graders must use only retrieved section text, not parametric knowledge of SP 800-161.",
+  "disclaimer": "Educational paraphrase for training. Not a substitute for the official NIST SP 800-161 publication.",
+  "sections": [
+    {
+      "id": "c-scrm-overview",
+      "title": "What C-SCRM is and why vendor ratings matter",
+      "topics": ["SP 800-161", "SCRM", "C-SCRM", "supply chain", "vendor risk"],
+      "keywords": [
+        "SP 800-161",
+        "SCRM",
+        "C-SCRM",
+        "cybersecurity supply chain",
+        "supply chain risk",
+        "vendor",
+        "supplier",
+        "third party",
+        "third-party"
+      ],
+      "text": "NIST SP 800-161 describes Cybersecurity Supply Chain Risk Management (C-SCRM) as the process of identifying, assessing, and mitigating risks associated with the distributed and interconnected nature of information and communications technology (ICT) and operational technology (OT) product and service supply chains. Supplier and vendor relationships introduce risks that cannot be managed solely by reviewing a completed security questionnaire. A sound vendor risk rating situates the supplier in the organization's mission context: what products or services they provide, what systems and data they can reach, how replaceable they are, and how a compromise or disruption would affect operations. Students should treat questionnaire evidence as one input among several C-SCRM factors, not as a standalone score that automatically yields a Low rating."
+    },
+    {
+      "id": "inherent-vs-residual",
+      "title": "Inherent risk versus control maturity / residual risk",
+      "topics": ["inherent risk", "residual risk", "control maturity", "questionnaire"],
+      "keywords": [
+        "inherent risk",
+        "residual risk",
+        "control maturity",
+        "assurance",
+        "SOC 2",
+        "questionnaire",
+        "controls"
+      ],
+      "text": "Inherent risk is the risk present before considering the effectiveness of supplier controls — driven by the sensitivity of data involved, privilege of access, business criticality, geographic and subprocessor exposure, and difficulty of switching providers. Residual risk is what remains after evaluating control design and operating effectiveness (for example SOC 2 Type II reports, MFA, encryption, and incident history). A vendor with a clean questionnaire can still present High or Critical inherent risk when they process production PII, hold read-write API access to core systems, or sit on a hard-to-replace pipeline. Students who rate a vendor Low or Moderate solely because SOC 2 is available or breach history is limited — without elevating for high inherent / access criticality — are applying questionnaire hygiene as if it were residual risk in isolation, which is incorrect under C-SCRM-oriented rating practice."
+    },
+    {
+      "id": "access-criticality",
+      "title": "Vendor access criticality and supplier privilege",
+      "topics": ["vendor criticality", "access criticality", "privilege", "production access"],
+      "keywords": [
+        "access criticality",
+        "vendor criticality",
+        "privilege",
+        "production",
+        "API access",
+        "admin",
+        "data warehouse",
+        "PII",
+        "replaceability",
+        "business impact"
+      ],
+      "text": "Access criticality (sometimes called supplier or vendor criticality) asks how much harm a compromised, malicious, or unavailable supplier could cause. Elevate criticality when the vendor touches production systems; processes or transforms sensitive data classes such as PII or financial records; holds privileged, admin, or broad API credentials; can disrupt primary business functions if unavailable; or has low replaceability (long switching costs). Even strong SOC 2 language does not reduce the need for heightened monitoring, contractual controls, and an elevated risk rating when privilege and mission dependency are high. A production data processor with read-write warehouse access and low replaceability typically lands in High or Critical bands for third-party risk, not Low or Moderate."
+    },
+    {
+      "id": "subprocessors-supply-chain",
+      "title": "Subprocessors and extended supply chain exposure",
+      "topics": ["subprocessors", "supply chain", "jurisdiction", "fourth party"],
+      "keywords": [
+        "subprocessor",
+        "subprocessors",
+        "fourth party",
+        "jurisdiction",
+        "data residency",
+        "supply chain",
+        "downstream"
+      ],
+      "text": "C-SCRM extends beyond the prime vendor to subprocessors and other downstream suppliers that may process, store, or transmit organizational data. Broad subprocessor lists — especially those with access to customer or production data, hosting in higher-risk jurisdictions, or opaque assurance — increase inherent supply chain exposure. A vendor that looks strong on its own SOC 2 may still transfer significant risk through subprocessors with wide data access. Justifications should acknowledge subprocessor and jurisdiction risk when the questionnaire packet discloses them, rather than stopping at the prime vendor's control summary."
+    },
+    {
+      "id": "questionnaire-limits",
+      "title": "Limits of security questionnaires and assurance reports",
+      "topics": ["questionnaire", "SOC 2", "assurance", "breach history"],
+      "keywords": [
+        "questionnaire",
+        "SOC 2",
+        "Type II",
+        "exceptions",
+        "breach history",
+        "assurance report",
+        "self attestation"
+      ],
+      "text": "Security questionnaires, SOC 2 Type II reports, encryption/MFA attestations, and breach-history answers are useful assurance artifacts, but they measure control claims and historical incidents — not inherent access criticality. A Type II report with limited exceptions and no recent breach can coexist with High inherent risk. Older minor incidents should not dominate the rating if access criticality is high; likewise, a clean history should not drag a production-privileged vendor into Low. Students must not treat questionnaire scorecards as a substitute for SCRM criticality analysis. Prefer ratings that explicitly weigh both assurance quality and the vendor's privilege, data classes, business impact, and replaceability."
+    },
+    {
+      "id": "rating-justification-quality",
+      "title": "What a sound SP 800-161-oriented vendor risk justification includes",
+      "topics": ["justification", "rationale", "rating", "High", "Critical"],
+      "keywords": [
+        "justification",
+        "rationale",
+        "risk rating",
+        "High",
+        "Critical",
+        "Moderate",
+        "Low",
+        "inherent",
+        "criticality"
+      ],
+      "text": "A sound justification names the chosen rating (Low, Moderate, High, or Critical) and explains it with C-SCRM factors: (1) access criticality — systems touched, privilege level, data classes, business impact of compromise or outage, and replaceability; (2) inherent versus residual risk — why questionnaire strengths do not fully offset high inherent exposure; (3) supply chain / subprocessor considerations when relevant; and (4) how assurance evidence (SOC 2, controls, breach history) was weighed without allowing it alone to set a Low/Moderate rating for a high-privilege production vendor. Weak justifications cite only SOC 2 Type II availability, MFA, encryption, or lack of recent breaches and ignore production API access, PII/financial processing, or switching costs."
+    }
+  ]
+}

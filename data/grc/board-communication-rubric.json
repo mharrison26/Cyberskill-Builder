@@ -1,0 +1,136 @@
+{
+  "document": "Board Communication Rubric",
+  "title": "Translating technical cyber findings into a one-page board summary (educational)",
+  "source_url": "internal://board-communication-rubric",
+  "notes": "Pinned educational rubric for RAG-style grading of student board-level summaries that translate ISSO/GRC technical findings. Graders must use only retrieved section text plus the student's summary, ask type, and the ticket's technical findings. Distinct from AUD-07 audit-committee brief (which also generates AC questions).",
+  "disclaimer": "Educational guidance only. Not a substitute for board governance policies, SEC disclosure rules, FISMA reporting instructions, or organization-specific cyber risk reporting standards.",
+  "sections": [
+    {
+      "id": "board-summary-purpose",
+      "title": "Purpose of a one-page board cyber summary",
+      "topics": [
+        "board communication",
+        "executive summary",
+        "one page",
+        "cyber risk reporting"
+      ],
+      "keywords": [
+        "board",
+        "one page",
+        "summary",
+        "directors",
+        "audit committee",
+        "executive",
+        "concise",
+        "oversight"
+      ],
+      "text": "A board-level cyber findings summary is a one-page narrative for directors and the audit committee who will not read control catalogs, POA&M registers, or assessment procedures. It should open with why the board is being briefed, translate 3–4 technical findings into plain outcomes, state business impact, and close with a clear ask (budget, decision, or awareness). Target roughly 400–700 words. It is not a dump of NIST control IDs, CVE lists, assessment procedure refs, or ISSO jargon without translation."
+    },
+    {
+      "id": "plain-language",
+      "title": "Plain-language framing",
+      "topics": ["plain language", "jargon", "translation", "board communication"],
+      "keywords": [
+        "plain language",
+        "jargon",
+        "translate",
+        "explain",
+        "non-technical",
+        "control ID",
+        "AC-2",
+        "POA&M",
+        "CVE"
+      ],
+      "text": "Plain language means a director without a security background can understand what happened, why it matters, and what is being asked. Technical labels (AC-2, AC-6, AU-2, POA&M IDs, CVEs, assessment procedure references, SCRM residual-risk ratings) may appear only if immediately translated into everyday terms. Fail drafts that paste control IDs, CVE numbers, or POA&M codes without explaining the underlying access, patching, logging, or vendor problem. Prefer phrases such as \"privileged accounts were not reviewed on time\" over unexplained \"AC-2 / AC-6 SLA exceeded.\""
+    },
+    {
+      "id": "business-impact",
+      "title": "Business impact statements",
+      "topics": ["business impact", "risk", "operations", "financial", "reputation"],
+      "keywords": [
+        "business impact",
+        "revenue",
+        "customer",
+        "operations",
+        "financial",
+        "reputation",
+        "regulatory",
+        "unauthorized access",
+        "outage",
+        "fraud"
+      ],
+      "text": "Each finding—or a tightly bundled set—needs an explicit business impact statement: what could go wrong for HarborForge (or the named organization) in operational, financial, customer, regulatory, or reputational terms. Examples: unauthorized access to finance systems, prolonged exposure of internet-facing hosts, inability to investigate payment fraud, concentration risk from a high-access vendor. Technical severity alone (\"High residual\") is insufficient without the business consequence. Strong summaries also note residual risk until remediation completes."
+    },
+    {
+      "id": "clear-ask",
+      "title": "Clear ask: budget, decision, or awareness",
+      "topics": [
+        "executive ask",
+        "budget",
+        "decision",
+        "awareness",
+        "board communication"
+      ],
+      "keywords": [
+        "ask",
+        "budget",
+        "funding",
+        "decision",
+        "approve",
+        "awareness",
+        "inform",
+        "request",
+        "resource"
+      ],
+      "text": "Board packs end with a clear ask. Acceptable ask types: (1) budget — request funding or resources with a rough scope; (2) decision — request a specific approval, risk acceptance, or policy/governance choice; (3) awareness — explicitly inform the board with no immediate decision, stating what will be monitored and when they will hear again. Vague closings such as \"management should improve security\" without naming the ask type and the concrete request fail. The ask should follow from the translated findings and impacts."
+    },
+    {
+      "id": "avoid-control-dump",
+      "title": "Avoid dumping control IDs and technical inventories",
+      "topics": ["control IDs", "jargon", "plain language", "cyber risk reporting"],
+      "keywords": [
+        "control dump",
+        "inventory",
+        "NIST",
+        "800-53",
+        "procedure",
+        "CVE list",
+        "assessment",
+        "technical detail"
+      ],
+      "text": "Do not structure the one-pager as a control inventory, CVE list, or assessment-procedure checklist. Boards need outcomes and asks, not a catalog of SP 800-53 families. If technical evidence is useful, paraphrase it (for example \"privileged reviews overdue by more than 30 days across finance admins\") rather than listing procedure IDs. Excessive unexplained jargon without translation is a primary failure mode for this ticket."
+    },
+    {
+      "id": "finding-coverage",
+      "title": "Cover the provided technical findings",
+      "topics": ["findings coverage", "fidelity", "board communication"],
+      "keywords": [
+        "findings",
+        "coverage",
+        "translate",
+        "all findings",
+        "privileged",
+        "patch",
+        "logging",
+        "vendor"
+      ],
+      "text": "The summary must address the technical findings supplied in the ticket (typically privileged access review failures, overdue patching / POA&M items, incomplete logging on critical systems, and high-criticality vendor SCRM residual risk). Students may bundle related points for brevity but must not invent unrelated incidents or omit an entire finding theme. Fidelity to the given findings matters as much as tone."
+    },
+    {
+      "id": "one-page-discipline",
+      "title": "One-page length and structure discipline",
+      "topics": ["one page", "length", "structure", "executive summary"],
+      "keywords": [
+        "one page",
+        "length",
+        "concise",
+        "structure",
+        "opening",
+        "closing",
+        "400",
+        "700"
+      ],
+      "text": "Stay within a one-page envelope (about 400–700 words; hard gates may allow roughly 350–900 characters-or-words per ticket config—follow the ticket length rules). Structure: short opening context → translated findings with impact → clear ask. Avoid appendix-style detail, tool names without purpose, and multi-page remediation plans. Directors should finish the page knowing the risk story and the decision or awareness request."
+    }
+  ]
+}

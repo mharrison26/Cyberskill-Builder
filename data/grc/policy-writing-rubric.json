@@ -1,0 +1,145 @@
+{
+  "document": "Policy Section Writing Rubric",
+  "title": "Educational rubric for drafting enforceable policy sections (scope, language, exceptions)",
+  "source_url": "internal://policy-writing-rubric",
+  "notes": "Pinned educational summary for RAG-style grading of student policy section drafts. Inspired by commonly taught policy-writing practices (clear scope, enforceable language, exceptions process) without reproducing copyrighted policy templates. Graders must use only retrieved section text, not parametric knowledge of NIST, ISO, or vendor policy packs.",
+  "disclaimer": "Educational guidance only. Not a substitute for organizational policy templates, legal review, or framework-specific control language.",
+  "sections": [
+    {
+      "id": "policy-writing-overview",
+      "title": "What a policy section must accomplish",
+      "topics": ["policy writing", "policy section", "governance", "requirements"],
+      "keywords": [
+        "policy",
+        "policy section",
+        "governance",
+        "requirements",
+        "expectations",
+        "workforce",
+        "enforceable"
+      ],
+      "text": "A policy section translates organizational requirements into clear expectations for people and systems. A complete draft states who and what is covered, what is required or prohibited in enforceable terms, and how exceptions are requested and approved. The section should be specific enough that an auditor or manager can judge compliance without inventing unstated rules. Vague aspirations (\"use systems responsibly\") are not enough; the draft must create testable obligations aligned to the given requirement and organization profile."
+    },
+    {
+      "id": "clear-scope",
+      "title": "Clear scope: who, what systems, and boundaries",
+      "topics": ["scope", "applicability", "coverage", "boundaries"],
+      "keywords": [
+        "scope",
+        "applies to",
+        "applicability",
+        "workforce",
+        "contractors",
+        "systems",
+        "covered",
+        "in scope",
+        "out of scope",
+        "boundaries"
+      ],
+      "text": "Scope must explicitly identify the people, roles, and systems the section covers (for example all employees and contractors using corporate email, SaaS apps, and endpoint devices). Strong drafts also note key boundaries: personal devices if BYOD is in play, third-party or vendor access, and any environments intentionally out of scope. Saying \"all users\" without naming systems or contexts is weak. Scope should match the organization profile (industry, size, systems, constraints) so the policy is realistic for that org rather than a generic template."
+    },
+    {
+      "id": "enforceable-language",
+      "title": "Enforceable language: must / shall / prohibited",
+      "topics": ["enforceable language", "must", "shall", "prohibited", "requirements"],
+      "keywords": [
+        "enforceable",
+        "must",
+        "shall",
+        "required",
+        "prohibited",
+        "may not",
+        "forbidden",
+        "obligation",
+        "compliance",
+        "violation"
+      ],
+      "text": "Policy obligations must use enforceable language: \"must\", \"shall\", \"is required\", \"is prohibited\", or \"may not\". Avoid unenforceable soft language as the primary rule set (\"should try\", \"encouraged to\", \"where possible\") unless clearly labeled as recommendation. Each major requirement should be specific enough to observe or test (for example: users must not share credentials; users must lock unattended workstations; users must report suspected phishing within one business day). Tie obligations to the one-paragraph requirement and the org's systems so the section is actionable, not boilerplate."
+    },
+    {
+      "id": "exceptions-process",
+      "title": "Defined exceptions process",
+      "topics": ["exceptions", "waiver", "approval", "exceptions process"],
+      "keywords": [
+        "exception",
+        "exceptions",
+        "waiver",
+        "approval",
+        "request",
+        "approve",
+        "temporary",
+        "time-bound",
+        "compensating",
+        "risk acceptance"
+      ],
+      "text": "A complete policy section defines how exceptions are requested, reviewed, approved, time-bounded, and recorded. Name who approves (role or function), what information the request must include (business need, duration, compensating controls, systems affected), and that exceptions are temporary with an expiration or review date unless re-approved. Drafts that only say \"exceptions may be granted\" without an approval path, documentation expectation, or time bound do not meet this rubric. The exceptions process should fit the organization's size and constraints (for example security lead plus manager for a mid-size firm)."
+    },
+    {
+      "id": "acceptable-use-themes",
+      "title": "Acceptable use section themes",
+      "topics": ["acceptable use", "AUP", "authorized use", "misuse"],
+      "keywords": [
+        "acceptable use",
+        "authorized use",
+        "unauthorized",
+        "personal use",
+        "credentials",
+        "phishing",
+        "data handling",
+        "monitoring",
+        "misuse",
+        "internet"
+      ],
+      "text": "For an Acceptable Use section, strong drafts typically address: authorized business use of org systems; limits on personal use if any; prohibited activities (credential sharing, unauthorized software, data exfiltration, harassment, illegal content); expectations for protecting credentials and reporting incidents; and awareness that activity on corporate systems may be monitored per applicable law and notice. Content should reflect the org's systems (email, SaaS, endpoints, remote access) and constraints rather than generic internet etiquette."
+    },
+    {
+      "id": "access-control-themes",
+      "title": "Access control section themes",
+      "topics": ["access control", "least privilege", "authentication", "authorization"],
+      "keywords": [
+        "access control",
+        "least privilege",
+        "authentication",
+        "authorization",
+        "MFA",
+        "role-based",
+        "provisioning",
+        "deprovisioning",
+        "privileged",
+        "review"
+      ],
+      "text": "For an Access Control section, strong drafts typically address: least privilege and role-based access; authentication expectations (including MFA where required); approval for access grants; timely removal on transfer/termination; privileged access controls; and periodic access reviews. Language should be enforceable and scoped to the named systems. Exceptions (shared accounts, temporary elevated access) must route through the defined exceptions process with compensating controls."
+    },
+    {
+      "id": "organization-fit",
+      "title": "Fit the organization profile and requirement",
+      "topics": ["organization", "requirement", "constraints", "systems"],
+      "keywords": [
+        "organization",
+        "industry",
+        "constraints",
+        "systems",
+        "requirement",
+        "scenario",
+        "realistic",
+        "profile"
+      ],
+      "text": "The draft must respond to the given one-paragraph requirement and organization profile. Cite or clearly reflect the org's systems, size, industry constraints, and the specific obligation in the requirement. Generic policy text that could apply to any company without adaptation is insufficient. Graders should check that scope, rules, and exceptions process are plausible for that organization (for example a 180-person healthcare SaaS firm with HIPAA-adjacent constraints differs from a five-person startup)."
+    },
+    {
+      "id": "draft-completeness",
+      "title": "Minimum complete policy section elements",
+      "topics": ["completeness", "rubric", "minimum"],
+      "keywords": [
+        "complete",
+        "minimum",
+        "scope",
+        "enforceable language",
+        "exceptions process",
+        "rubric",
+        "required"
+      ],
+      "text": "At minimum, a policy section draft must include: (1) clear scope (people and systems); (2) enforceable requirements/prohibitions using must/shall/prohibited language tied to the requirement; and (3) a defined exceptions process with approver, request content, and time bound or review. Optional but valuable elements include monitoring notice, violation consequences, related procedures references, and definitions. Graders should treat missing scope, soft-only language, or undefined exceptions as incomplete relative to this rubric."
+    }
+  ]
+}

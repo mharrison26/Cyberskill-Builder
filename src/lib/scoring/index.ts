@@ -3,6 +3,7 @@ import { aoReviewTicketScorer } from '@/lib/scoring/aoReview';
 import { assessmentProceduresTicketScorer } from '@/lib/scoring/assessmentProcedures';
 import { auditPlanningMemoTicketScorer } from '@/lib/scoring/auditPlanningMemo';
 import { auditCommitteeBriefTicketScorer } from '@/lib/scoring/auditCommitteeBrief';
+import { boardFindingsSummaryTicketScorer } from '@/lib/scoring/boardFindingsSummary';
 import { auditWorkpaperTicketScorer } from '@/lib/scoring/auditWorkpaper';
 import { authorizationPackageTicketScorer } from '@/lib/scoring/authorizationPackage';
 import { securityAssessmentReportTicketScorer } from '@/lib/scoring/securityAssessmentReport';
@@ -25,6 +26,7 @@ import { incidentNotificationTicketScorer } from '@/lib/scoring/incidentNotifica
 import { itgcAccessRevocationTicketScorer } from '@/lib/scoring/itgcAccessRevocation';
 import { kbWriteupTicketScorer } from '@/lib/scoring/kbWriteup';
 import { kpiReportTicketScorer } from '@/lib/scoring/kpiReport';
+import { programMetricsBriefTicketScorer } from '@/lib/scoring/programMetricsBrief';
 import { mockDirectoryTicketScorer } from '@/lib/scoring/mockDirectory';
 import { monitoringConfigTicketScorer } from '@/lib/scoring/monitoringConfig';
 import { fsPermissionsLabTicketScorer } from '@/lib/scoring/fsPermissionsLab';
@@ -35,14 +37,21 @@ import { oscalSspTicketScorer } from '@/lib/scoring/oscalSsp';
 import { p1StatusUpdatesTicketScorer } from '@/lib/scoring/p1StatusUpdates';
 import { poamTicketScorer } from '@/lib/scoring/poam';
 import { poamStatusUpdateTicketScorer } from '@/lib/scoring/poamStatusUpdate';
+import { policySectionDraftTicketScorer } from '@/lib/scoring/policySectionDraft';
 import { processControlTestTicketScorer } from '@/lib/scoring/processControlTest';
 import { riskBasedAuditPlanTicketScorer } from '@/lib/scoring/riskBasedAuditPlan';
+import { raciMatrixTicketScorer } from '@/lib/scoring/raciMatrix';
+import { securityStrategyCapstoneTicketScorer } from '@/lib/scoring/securityStrategyCapstone';
 import { samplingMethodologyTicketScorer } from '@/lib/scoring/samplingMethodology';
 import { secMaterialityTicketScorer } from '@/lib/scoring/secMateriality';
 import { iacLabTicketScorer } from '@/lib/scoring/iacLab';
 import { outageCapstoneTicketScorer } from '@/lib/scoring/outageCapstone';
 import { scriptRemediationTicketScorer } from '@/lib/scoring/scriptRemediation';
+import { securityBudgetAllocationTicketScorer } from '@/lib/scoring/securityBudgetAllocation';
 import { issmEscalationTicketScorer } from '@/lib/scoring/issmEscalation';
+import { issmQualityReviewTicketScorer } from '@/lib/scoring/issmQualityReview';
+import { breachIncidentCommandTicketScorer } from '@/lib/scoring/breachIncidentCommand';
+import { programRiskSummaryTicketScorer } from '@/lib/scoring/programRiskSummary';
 import { slaEscalationTicketScorer } from '@/lib/scoring/slaEscalation';
 import { slaQueueSimTicketScorer } from '@/lib/scoring/slaQueueSim';
 import { soc2ChangeManagementTestTicketScorer } from '@/lib/scoring/soc2ChangeManagementTest';
@@ -51,6 +60,7 @@ import { toolWalkthroughTicketScorer } from '@/lib/scoring/toolWalkthrough';
 import { transactionAnomalyTicketScorer } from '@/lib/scoring/transactionAnomaly';
 import { triageTicketScorer } from '@/lib/scoring/triage';
 import { crossSystemPoamPriorityTicketScorer } from '@/lib/scoring/crossSystemPoamPriority';
+import { vendorRiskRatingTicketScorer } from '@/lib/scoring/vendorRiskRating';
 import { vulnPrioritizationTicketScorer } from '@/lib/scoring/vulnPrioritization';
 
 /**
@@ -74,13 +84,22 @@ import { vulnPrioritizationTicketScorer } from '@/lib/scoring/vulnPrioritization
  * network_topology_fault, config_fault_diagnosis, monitoring_config,
  * sla_escalation, script_remediation, scripting_lab, script_fixtures,
  * ansible_playbook / iac_lab, sla_queue_sim, coaching_feedback,
- * p1_status_updates, kpi_report, helpdesk_capstone, infra_design_capstone,
+ * p1_status_updates, kpi_report, program_metrics_brief / leadership_metrics,
+ * helpdesk_capstone, infra_design_capstone,
  * itgc_access_revocation / timely_access_revocation,
+ * issm_quality_review / isso_artifact_review / issm_ssp_poam_feedback,
+ * breach_incident_command / major_breach_simulation / issm_incident_decisions,
+ * program_risk_summary / aggregated_risk_summary / issm_program_risk_rollups,
  * transaction_anomaly / csv_anomaly_detection,
  * audit_committee_brief / executive_summary_ac,
  * risk_based_audit_plan / annual_audit_plan_capstone,
  * fips_199_impact_categorization / impact_categorization,
- * incident_notification / incident_reporting / isso_incident_notify)
+ * incident_notification / incident_reporting / isso_incident_notify,
+ * policy_section_draft / policy_draft / draft_policy_section,
+ * raci_matrix / raci / responsibility_matrix,
+ * security_strategy_capstone / one_year_security_strategy / issm_strategy_memo_capstone,
+ * security_budget_allocation / budget_allocation / risk_based_budget,
+ * vendor_risk_rating / third_party_risk_rating / scrm_vendor_assessment)
  * register at module load. Unregistered types fall back to `defaultTicketScorer`.
  */
 
@@ -344,6 +363,16 @@ export type {
   KpiReportSubmission,
 } from '@/lib/scoring/kpiReport';
 export {
+  evaluateProgramMetricsBriefDeterministic,
+  isProgramMetricsBriefTicketType,
+  programMetricsBriefTicketScorer,
+} from '@/lib/scoring/programMetricsBrief';
+export type {
+  ProgramMetricsBriefExpectedState,
+  ProgramMetricsBriefStructuredResult,
+  ProgramMetricsBriefSubmission,
+} from '@/lib/scoring/programMetricsBrief';
+export {
   coachingFeedbackTicketScorer,
   evaluateCoachingFeedbackDeterministic,
 } from '@/lib/scoring/coachingFeedback';
@@ -409,6 +438,47 @@ export type {
   IssmEscalationSubmission,
 } from '@/lib/scoring/issmEscalation';
 export {
+  evaluateIssmQualityReviewDeterministic,
+  isIssmQualityReviewTicketType,
+  issmQualityReviewTicketScorer,
+  parseIssmQualityArtifact,
+  parseIssmQualityCandidateIssues,
+} from '@/lib/scoring/issmQualityReview';
+export type {
+  IssmQualityReviewExpectedState,
+  IssmQualityReviewStructuredResult,
+  IssmQualityReviewSubmission,
+} from '@/lib/scoring/issmQualityReview';
+export {
+  breachIncidentCommandTicketScorer,
+  evaluateBreachIncidentCommandDeterministic,
+  isBreachIncidentCommandTicketType,
+  listBreachDecisionPoints,
+  parseBreachIncidentCommandExpectedState,
+  parseBreachIncidentFacts,
+  parseBreachIncidentStages,
+} from '@/lib/scoring/breachIncidentCommand';
+export type {
+  BreachDecisionPointResult,
+  BreachIncidentCommandExpectedState,
+  BreachIncidentCommandStructuredResult,
+  BreachIncidentCommandSubmission,
+  BreachIncidentStage,
+} from '@/lib/scoring/breachIncidentCommand';
+export {
+  evaluateProgramRiskSummaryDeterministic,
+  isProgramRiskSummaryTicketType,
+  parseProgramCandidateRisks,
+  parseProgramCandidateThemes,
+  parseProgramRiskSystems,
+  programRiskSummaryTicketScorer,
+} from '@/lib/scoring/programRiskSummary';
+export type {
+  ProgramRiskSummaryExpectedState,
+  ProgramRiskSummaryStructuredResult,
+  ProgramRiskSummarySubmission,
+} from '@/lib/scoring/programRiskSummary';
+export {
   evaluateControlImplementationAdequacyDeterministic,
   controlImplementationAdequacyTicketScorer,
 } from '@/lib/scoring/controlImplementationAdequacy';
@@ -427,6 +497,29 @@ export type {
   Fips199StructuredResult,
   Fips199Submission,
 } from '@/lib/scoring/fips199ImpactCategorization';
+export {
+  evaluatePolicySectionDraftDeterministic,
+  isPolicySectionDraftTicketType,
+  policySectionDraftTicketScorer,
+} from '@/lib/scoring/policySectionDraft';
+export {
+  evaluateSecurityBudgetAllocationDeterministic,
+  extractSecurityBudgetAllocationSubmission,
+  isSecurityBudgetAllocationTicketType,
+  parseBudgetRequests,
+  securityBudgetAllocationTicketScorer,
+} from '@/lib/scoring/securityBudgetAllocation';
+export type {
+  SecurityBudgetAllocationExpectedState,
+  SecurityBudgetAllocationStructuredResult,
+  SecurityBudgetAllocationSubmission,
+  SecurityBudgetRequest,
+} from '@/lib/scoring/securityBudgetAllocation';
+export type {
+  PolicySectionDraftExpectedState,
+  PolicySectionDraftStructuredResult,
+  PolicySectionDraftSubmission,
+} from '@/lib/scoring/policySectionDraft';
 export {
   evaluateNetworkDiagnostics,
   networkDiagnosticsTicketScorer,
@@ -513,6 +606,45 @@ export type {
   ItgcControlOutcome,
 } from '@/lib/scoring/itgcAccessRevocation';
 export {
+  evaluateRaciMatrixDeterministic,
+  isRaciMatrixTicketType,
+  parseRaciActivities,
+  parseRaciMatrixExpectedState,
+  parseRaciOrgUnits,
+  parseRaciRoles,
+  raciMatrixTicketScorer,
+} from '@/lib/scoring/raciMatrix';
+export type {
+  RaciActivity,
+  RaciAssignments,
+  RaciCellValue,
+  RaciCode,
+  RaciMatrixExpectedState,
+  RaciMatrixStructuredResult,
+  RaciMatrixSubmission,
+  RaciOrgUnit,
+  RaciRole,
+} from '@/lib/scoring/raciMatrix';
+export {
+  evaluateSecurityStrategyCapstoneDeterministic,
+  isSecurityStrategyCapstoneTicketType,
+  securityStrategyCapstoneTicketScorer,
+} from '@/lib/scoring/securityStrategyCapstone';
+export type {
+  SecurityStrategyCapstoneExpectedState,
+  SecurityStrategyCapstoneStructuredResult,
+  SecurityStrategyCapstoneSubmission,
+} from '@/lib/scoring/securityStrategyCapstone';
+export {
+  evaluateVendorRiskRatingDeterministic,
+  vendorRiskRatingTicketScorer,
+} from '@/lib/scoring/vendorRiskRating';
+export type {
+  VendorRiskRatingExpectedState,
+  VendorRiskRatingStructuredResult,
+  VendorRiskRatingSubmission,
+} from '@/lib/scoring/vendorRiskRating';
+export {
   evaluateIncidentNotificationDeterministic,
   incidentNotificationTicketScorer,
   isIncidentNotificationTicketType,
@@ -586,6 +718,18 @@ export type {
   AuditCommitteeBriefStructuredResult,
   AuditCommitteeBriefSubmission,
 } from '@/lib/scoring/auditCommitteeBrief';
+export {
+  boardFindingsSummaryTicketScorer,
+  createBoardFindingsSummaryTicketScorer,
+  evaluateBoardFindingsSummaryDeterministic,
+  isBoardFindingsSummaryTicketType,
+} from '@/lib/scoring/boardFindingsSummary';
+export type {
+  BoardFindingsAskType,
+  BoardFindingsSummaryExpectedState,
+  BoardFindingsSummaryStructuredResult,
+  BoardFindingsSummarySubmission,
+} from '@/lib/scoring/boardFindingsSummary';
 
 /** Outcome of scoring — maps onto ticket_progress in the submit route. */
 export type TicketScoreStatus = 'resolved' | 'needs_revision';
@@ -949,6 +1093,15 @@ registerTicketScorer(
 );
 registerTicketScorer('audit_committee_brief', auditCommitteeBriefTicketScorer);
 registerTicketScorer('executive_summary_ac', auditCommitteeBriefTicketScorer);
+registerTicketScorer(
+  'board_findings_summary',
+  boardFindingsSummaryTicketScorer
+);
+registerTicketScorer('board_level_summary', boardFindingsSummaryTicketScorer);
+registerTicketScorer(
+  'technical_to_board_brief',
+  boardFindingsSummaryTicketScorer
+);
 registerTicketScorer('transaction_anomaly', transactionAnomalyTicketScorer);
 registerTicketScorer('csv_anomaly_detection', transactionAnomalyTicketScorer);
 registerTicketScorer('anomaly_detection', transactionAnomalyTicketScorer);
@@ -976,3 +1129,54 @@ registerTicketScorer(
 registerTicketScorer('issm_escalation', issmEscalationTicketScorer);
 registerTicketScorer('cross_system_escalation', issmEscalationTicketScorer);
 registerTicketScorer('isso_to_issm_escalation', issmEscalationTicketScorer);
+registerTicketScorer('policy_section_draft', policySectionDraftTicketScorer);
+registerTicketScorer('policy_draft', policySectionDraftTicketScorer);
+registerTicketScorer('draft_policy_section', policySectionDraftTicketScorer);
+registerTicketScorer('issm_quality_review', issmQualityReviewTicketScorer);
+registerTicketScorer('isso_artifact_review', issmQualityReviewTicketScorer);
+registerTicketScorer('issm_ssp_poam_feedback', issmQualityReviewTicketScorer);
+registerTicketScorer(
+  'breach_incident_command',
+  breachIncidentCommandTicketScorer
+);
+registerTicketScorer(
+  'major_breach_simulation',
+  breachIncidentCommandTicketScorer
+);
+registerTicketScorer(
+  'issm_incident_decisions',
+  breachIncidentCommandTicketScorer
+);
+registerTicketScorer('program_risk_summary', programRiskSummaryTicketScorer);
+registerTicketScorer('aggregated_risk_summary', programRiskSummaryTicketScorer);
+registerTicketScorer(
+  'issm_program_risk_rollups',
+  programRiskSummaryTicketScorer
+);
+registerTicketScorer('raci_matrix', raciMatrixTicketScorer);
+registerTicketScorer('raci', raciMatrixTicketScorer);
+registerTicketScorer('responsibility_matrix', raciMatrixTicketScorer);
+registerTicketScorer(
+  'security_strategy_capstone',
+  securityStrategyCapstoneTicketScorer
+);
+registerTicketScorer(
+  'one_year_security_strategy',
+  securityStrategyCapstoneTicketScorer
+);
+registerTicketScorer(
+  'issm_strategy_memo_capstone',
+  securityStrategyCapstoneTicketScorer
+);
+registerTicketScorer('program_metrics_brief', programMetricsBriefTicketScorer);
+registerTicketScorer('leadership_metrics', programMetricsBriefTicketScorer);
+registerTicketScorer('isso_program_metrics', programMetricsBriefTicketScorer);
+registerTicketScorer(
+  'security_budget_allocation',
+  securityBudgetAllocationTicketScorer
+);
+registerTicketScorer('budget_allocation', securityBudgetAllocationTicketScorer);
+registerTicketScorer('risk_based_budget', securityBudgetAllocationTicketScorer);
+registerTicketScorer('vendor_risk_rating', vendorRiskRatingTicketScorer);
+registerTicketScorer('third_party_risk_rating', vendorRiskRatingTicketScorer);
+registerTicketScorer('scrm_vendor_assessment', vendorRiskRatingTicketScorer);
