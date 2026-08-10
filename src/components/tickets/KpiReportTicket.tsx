@@ -418,8 +418,7 @@ export function KpiReportTicket({
         <div className="space-y-3">
           <p className="max-w-prose text-sm text-muted-foreground">
             Use the lab sandbox to analyze the CSV. In this browser environment
-            run <code className="text-foreground">node analyze.mjs</code>.
-            Write{' '}
+            run <code className="text-foreground">node analyze.mjs</code>. Write{' '}
             <code className="text-foreground">output/kpis.json</code> and{' '}
             <code className="text-foreground">report.md</code>, then submit from
             the sandbox — or paste results into the form below.
