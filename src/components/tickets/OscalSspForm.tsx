@@ -83,8 +83,13 @@ export function OscalSspForm({
   readOnly = false,
   className,
 }: OscalSspFormProps) {
-  const { submission, formReadOnly, hideSubmit, lastFeedback, lastScoreStatus } =
-    useTicketWorkbenchForm(readOnly);
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const requirements = useMemo(
     () => parseRequirements(asRecord(ticket.initial_state)),
     [ticket.initial_state]
@@ -147,9 +152,7 @@ export function OscalSspForm({
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(
-    () => lastFeedback
-  );
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [schemaErrors, setSchemaErrors] = useState<
     Array<{ instancePath: string; message: string }>
   >([]);

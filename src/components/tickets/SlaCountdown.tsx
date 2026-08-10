@@ -84,9 +84,7 @@ export function SlaCountdown({
         }
       >
         <StatusDot
-          className={
-            met ? 'bg-emerald-700' : 'bg-status-blocked-foreground'
-          }
+          className={met ? 'bg-emerald-700' : 'bg-status-blocked-foreground'}
         />
         <span>
           {met ? 'SLA met' : 'SLA breached'} ·{' '}

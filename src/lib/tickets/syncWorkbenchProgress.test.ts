@@ -16,12 +16,15 @@ const base = {
 
 describe('optimisticProgressOnSubmitStart', () => {
   it('promotes new → in_progress', () => {
-    const next = optimisticProgressOnSubmitStart({
-      ...base,
-      status: 'new',
-      startedAt: null,
-      slaDueAt: null,
-    }, '2026-01-01T00:05:00.000Z');
+    const next = optimisticProgressOnSubmitStart(
+      {
+        ...base,
+        status: 'new',
+        startedAt: null,
+        slaDueAt: null,
+      },
+      '2026-01-01T00:05:00.000Z'
+    );
     expect(next.status).toBe('in_progress');
     expect(next.startedAt).toBe('2026-01-01T00:05:00.000Z');
   });

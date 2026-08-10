@@ -75,8 +75,7 @@ export function TicketWorkbenchHeader({
           status: 'in_progress',
           startedAt: result.startedAt,
           slaDueAt:
-            result.slaDueAt ??
-            computeSlaDueAt(result.startedAt, slaMinutes),
+            result.slaDueAt ?? computeSlaDueAt(result.startedAt, slaMinutes),
           resolvedAt: null,
           slaMet: null,
         });

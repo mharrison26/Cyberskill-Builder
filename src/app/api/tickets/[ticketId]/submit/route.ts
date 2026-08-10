@@ -328,11 +328,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const resolvedAt = progressStatus === 'resolved' ? now : null;
   const slaMet =
     progressStatus === 'resolved'
-      ? wasResolvedWithinSla(
-          startedAt,
-          resolvedAt,
-          context.ticket.sla_minutes
-        )
+      ? wasResolvedWithinSla(startedAt, resolvedAt, context.ticket.sla_minutes)
       : null;
   const attemptNumber = nextAttemptNumber(priorAttemptCount);
 

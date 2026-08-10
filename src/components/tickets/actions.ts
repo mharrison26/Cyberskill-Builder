@@ -8,10 +8,7 @@ import {
   type AppUser,
   type Track,
 } from '@/lib/auth/requireEnrollment';
-import {
-  canStartNewAttempt,
-  resolveMaxAttempts,
-} from '@/lib/tickets/attempts';
+import { canStartNewAttempt, resolveMaxAttempts } from '@/lib/tickets/attempts';
 import { computeSlaDueAt, wasResolvedWithinSla } from '@/lib/tickets/sla';
 import { createClient } from '@/lib/supabase/server';
 import type { TicketProgressStatus } from '@/types';
@@ -174,11 +171,7 @@ export async function resolveTicket(
   }
 
   const now = new Date().toISOString();
-  const slaMet = wasResolvedWithinSla(
-    existing.started_at,
-    now,
-    slaMinutes
-  );
+  const slaMet = wasResolvedWithinSla(existing.started_at, now, slaMinutes);
   const slaDueAt =
     existing.sla_due_at ?? computeSlaDueAt(existing.started_at, slaMinutes);
 

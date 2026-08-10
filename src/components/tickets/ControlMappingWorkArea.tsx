@@ -123,13 +123,12 @@ export function ControlMappingWorkArea({
   const [feedback, setFeedback] = useState<string | null>(
     () => workbench?.lastFeedback ?? null
   );
-  const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(
-    () =>
-      workbench?.lastScoreStatus === 'resolved'
-        ? 'ok'
-        : workbench?.lastScoreStatus === 'needs_revision'
-          ? 'error'
-          : null
+  const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(() =>
+    workbench?.lastScoreStatus === 'resolved'
+      ? 'ok'
+      : workbench?.lastScoreStatus === 'needs_revision'
+        ? 'error'
+        : null
   );
   const [trainingFeedback, setTrainingFeedback] =
     useState<TrainingFeedback | null>(() =>

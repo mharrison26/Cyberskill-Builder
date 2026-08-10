@@ -112,8 +112,7 @@ export default async function TicketDetailPage({
     startedAt = progress?.started_at ?? null;
     resolvedAt = progress?.resolved_at ?? null;
     slaDueAt = progress?.sla_due_at ?? null;
-    slaMet =
-      typeof progress?.sla_met === 'boolean' ? progress.sla_met : null;
+    slaMet = typeof progress?.sla_met === 'boolean' ? progress.sla_met : null;
     submission =
       progress?.submission &&
       typeof progress.submission === 'object' &&
@@ -136,9 +135,7 @@ export default async function TicketDetailPage({
         ? (progress.last_structured_result as Record<string, unknown>)
         : null;
     attemptCount =
-      typeof progress?.attempt_count === 'number'
-        ? progress.attempt_count
-        : 0;
+      typeof progress?.attempt_count === 'number' ? progress.attempt_count : 0;
 
     const { data: attemptRows } = await supabase
       .from('ticket_attempts')

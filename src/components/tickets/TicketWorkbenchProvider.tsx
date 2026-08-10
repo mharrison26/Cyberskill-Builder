@@ -277,9 +277,10 @@ export function TicketWorkbenchProvider({
       if (isSubmit) {
         if (response.ok) {
           try {
-            const payload = (await response
-              .clone()
-              .json()) as Record<string, unknown>;
+            const payload = (await response.clone().json()) as Record<
+              string,
+              unknown
+            >;
             applySubmitSuccess(payload);
           } catch {
             // keep optimistic status; refresh will reconcile

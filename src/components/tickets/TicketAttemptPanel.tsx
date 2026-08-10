@@ -89,10 +89,7 @@ export function TicketAttemptPanel({ className }: { className?: string }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2
-            id="ticket-attempts-heading"
-            className="text-base font-semibold"
-          >
+          <h2 id="ticket-attempts-heading" className="text-base font-semibold">
             Attempts
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">

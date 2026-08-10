@@ -114,8 +114,13 @@ export function Fips199ImpactCategorizationTicket({
   readOnly = false,
   className,
 }: Fips199ImpactCategorizationTicketProps) {
-  const { submission, formReadOnly, hideSubmit, lastFeedback, lastScoreStatus } =
-    useTicketWorkbenchForm(readOnly);
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minJustificationLength = resolveMinJustificationLength(expectedState);
@@ -169,9 +174,7 @@ export function Fips199ImpactCategorizationTicket({
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(
-    () => lastFeedback
-  );
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [scoreStatus, setScoreStatus] = useState<string | null>(
     () => lastScoreStatus
   );
