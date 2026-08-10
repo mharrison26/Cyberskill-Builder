@@ -49,6 +49,8 @@ export type SecMaterialityExpectedState = {
   requiredFactors?: string[];
   guidanceTopics?: string[];
   topKGuidanceSections?: number;
+  gradingFocus?: string;
+  judgmentCall?: boolean;
 };
 
 export type SecMaterialitySubmission = {
@@ -296,6 +298,40 @@ function buildMemoQuery(parsed: SecMaterialitySubmission): string {
   ].join('\n');
 }
 
+function formatBreachScenarioText(
+  initialState: Record<string, unknown> | null | undefined
+): string | undefined {
+  if (!isPlainObject(initialState)) return undefined;
+
+  const lines: string[] = [];
+  const keyArtifact = initialState.keyArtifact;
+  if (typeof keyArtifact === 'string' && keyArtifact.trim()) {
+    lines.push(keyArtifact.trim());
+  }
+
+  const breach = isPlainObject(initialState.breach) ? initialState.breach : null;
+  if (breach) {
+    const fields: Array<[string, string]> = [
+      ['Company', 'company'],
+      ['Discovered', 'discoveredAt'],
+      ['Systems affected', 'systemsAffected'],
+      ['Data exposed', 'dataExposed'],
+      ['Customers impacted', 'customersImpacted'],
+      ['Vendor remediation', 'remediationStatus'],
+      ['Business impact', 'businessImpact'],
+      ['Scope', 'scopeNote'],
+    ];
+    for (const [label, key] of fields) {
+      const value = breach[key];
+      if (typeof value === 'string' && value.trim()) {
+        lines.push(`${label}: ${value.trim()}`);
+      }
+    }
+  }
+
+  return lines.length > 0 ? lines.join('\n') : undefined;
+}
+
 async function gradeMemoWithSecGuidance(
   parsed: SecMaterialitySubmission,
   ticket: ScorableTicket,
@@ -319,6 +355,11 @@ async function gradeMemoWithSecGuidance(
     determinationRationale: parsed.determinationRationale,
     factorSections: parsed.factors,
     scenarioBrief: ticket.scenario_brief,
+    breachScenarioText: formatBreachScenarioText(ticket.initial_state),
+    gradingFocus:
+      typeof expected.gradingFocus === 'string'
+        ? expected.gradingFocus
+        : undefined,
   });
 
   const grading = await callClaudeGrading(prompt);

@@ -30,6 +30,30 @@ describe('getSp80030Guidance', () => {
     expect(
       sections.some((section) => section.id === 'risk-determination')
     ).toBe(true);
+    expect(sections.some((section) => section.id === 'threat-sources')).toBe(
+      true
+    );
+  });
+
+  it('pins threat-sources when required for GRC-02-style retrieval', () => {
+    const retrieved = retrieveSp80030Guidance(
+      'identify threat sources for SaaS vendor API access to customer PII',
+      {
+        topK: 5,
+        requiredSectionIds: [
+          'threat-sources',
+          'likelihood',
+          'impact',
+          'risk-determination',
+        ],
+      }
+    );
+    const ids = retrieved.sections.map((section) => section.id);
+    expect(ids).toContain('threat-sources');
+    expect(ids).toContain('likelihood');
+    expect(retrieved.catalogPath).toContain(
+      'sp800-30-risk-assessment-guidance.json'
+    );
   });
 
   it('retrieves core likelihood/impact sections plus query-relevant text', () => {

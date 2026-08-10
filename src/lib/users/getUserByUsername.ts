@@ -1,9 +1,11 @@
 import { createPublicClient } from '@/lib/supabase/public';
+import { getUserDisplayName } from '@/lib/users/displayName';
 
 export type PublicUser = {
   id: string;
   email: string;
   username: string | null;
+  displayName: string | null;
 };
 
 /**
@@ -36,16 +38,9 @@ export async function getUserByUsername(
     id: row.id,
     email: row.email,
     username: row.username ?? null,
+    displayName: getUserDisplayName({
+      display_name:
+        typeof row.display_name === 'string' ? row.display_name : null,
+    }),
   };
-}
-
-/** Display name derived from email local part until display_name exists. */
-export function displayNameFromEmail(email: string): string {
-  const localPart = email.split('@')[0] ?? email;
-  return localPart
-    .split('.')
-    .map((segment) =>
-      segment ? segment.charAt(0).toUpperCase() + segment.slice(1) : segment
-    )
-    .join(' ');
 }

@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 
 import { scanStoredLessonSubmission } from '@/lib/compliance/scanStoredLessonSubmission';
 import { triggerGrading } from '@/lib/grading/triggerGrading';
+import { validateCatalogLabSubmission } from '@/lib/lessons/catalogLabValidation';
 import { validateCCCER } from '@/lib/lessons/cccerValidation';
+import { validateConceptualSubmission } from '@/lib/lessons/conceptualValidation';
 import {
   resolveSubmitLessonContext,
   upsertLessonSubmission,
@@ -21,6 +23,26 @@ function isToolWalkthroughBody(
     typeof body === 'object' &&
     body !== null &&
     (body as Record<string, unknown>).type === 'tool_walkthrough'
+  );
+}
+
+function isCatalogLabBody(
+  body: unknown
+): body is Record<string, unknown> & { type: 'catalog_lab' } {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    (body as Record<string, unknown>).type === 'catalog_lab'
+  );
+}
+
+function isConceptualBody(
+  body: unknown
+): body is Record<string, unknown> & { type: 'conceptual' } {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    (body as Record<string, unknown>).type === 'conceptual'
   );
 }
 
@@ -72,6 +94,85 @@ export async function POST(request: Request, { params }: RouteContext) {
         { status: 500 }
       );
     }
+
+    await triggerGrading({
+      supabase: context.supabase,
+      progressId: progress.id,
+      studentId: context.appUser.id,
+      tenantId: context.appUser.tenant_id,
+      lessonId: context.lesson.id,
+      trackId: context.lesson.track_id,
+      dcwfCode: context.lesson.dcwf_code,
+      submission: validation.data,
+    });
+
+    return NextResponse.json(
+      { success: true, progressId: progress.id },
+      { status: 201 }
+    );
+  }
+
+  if (isCatalogLabBody(body)) {
+    const validation = validateCatalogLabSubmission(body);
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { data: progress, error: progressError } =
+      await upsertLessonSubmission(context, lessonId, validation.data);
+
+    if (progressError || !progress) {
+      console.error('lesson_progress upsert failed:', progressError);
+      return NextResponse.json(
+        { error: 'Failed to save submission' },
+        { status: 500 }
+      );
+    }
+
+    await triggerGrading({
+      supabase: context.supabase,
+      progressId: progress.id,
+      studentId: context.appUser.id,
+      tenantId: context.appUser.tenant_id,
+      lessonId: context.lesson.id,
+      trackId: context.lesson.track_id,
+      dcwfCode: context.lesson.dcwf_code,
+      submission: validation.data,
+    });
+
+    return NextResponse.json(
+      { success: true, progressId: progress.id },
+      { status: 201 }
+    );
+  }
+
+  if (isConceptualBody(body)) {
+    const validation = validateConceptualSubmission(body);
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { data: progress, error: progressError } =
+      await upsertLessonSubmission(context, lessonId, validation.data);
+
+    if (progressError || !progress) {
+      console.error('lesson_progress upsert failed:', progressError);
+      return NextResponse.json(
+        { error: 'Failed to save submission' },
+        { status: 500 }
+      );
+    }
+
+    await triggerGrading({
+      supabase: context.supabase,
+      progressId: progress.id,
+      studentId: context.appUser.id,
+      tenantId: context.appUser.tenant_id,
+      lessonId: context.lesson.id,
+      trackId: context.lesson.track_id,
+      dcwfCode: context.lesson.dcwf_code,
+      submission: validation.data,
+    });
 
     return NextResponse.json(
       { success: true, progressId: progress.id },

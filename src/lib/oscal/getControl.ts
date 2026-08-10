@@ -2,25 +2,39 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import {
+  normalizeControlId,
   parseOscalCatalog,
   type AssessmentMethodsText,
   type OscalCatalogDocument,
 } from '@/lib/oscal/parseCatalog';
 
+/**
+ * Pinned NIST SP 800-53 Rev 5 OSCAL catalog (usnistgov/oscal-content).
+ * Rev 5 embeds the SP 800-53A assessment layer as separate OSCAL parts
+ * (`assessment-objective`, `assessment-method`) alongside control statements —
+ * NIST does not publish a separate 53A JSON catalog for rev5.
+ */
 export const OSCAL_CATALOG_PATH = 'data/oscal/NIST_SP-800-53_rev5_catalog.json';
 
 export type ControlText = {
   controlId: string;
   title: string;
   family: string;
+  /** SP 800-53 control statement prose (catalog statement parts). */
   statement: string;
-  /** Live SP 800-53A assessment objective text from the OSCAL catalog. */
+  /**
+   * SP 800-53A assessment-objective prose from the OSCAL assessment layer
+   * (distinct from the control statement).
+   */
   assessmentObjective: string;
-  /** Live SP 800-53A Examine / Interview / Test method object lists. */
+  /** SP 800-53A Examine / Interview / Test assessment-method object lists. */
   assessmentMethods: AssessmentMethodsText;
 };
 
-/** Focused SP 800-53A retrieval payload for assessment-procedure grading (F25/F26). */
+/**
+ * Focused SP 800-53A retrieval payload for assessment-procedure grading (F25/F26).
+ * Contains assessment-objective + method text only — not the 53 control statement.
+ */
 export type AssessmentObjectiveText = {
   controlId: string;
   title: string;
@@ -87,7 +101,8 @@ function lookupControlEntry(controlId: string): ControlIndexEntry {
 
 /**
  * F25-style control text retrieval from the pinned OSCAL catalog.
- * Includes SP 800-53 control statement plus SP 800-53A assessment parts.
+ * Returns the SP 800-53 control statement and the SP 800-53A assessment
+ * layer (`assessmentObjective` / `assessmentMethods`) for the same control id.
  */
 export function getControlText(controlId: string): ControlText {
   const entry = lookupControlEntry(controlId);
@@ -107,8 +122,38 @@ export function getControlText(controlId: string): ControlText {
 }
 
 /**
- * Retrieve live SP 800-53A assessment objective + method text for a control ID.
- * Graders must use this retrieved text only — not model memory of 800-53A.
+ * List control IDs from the pinned OSCAL catalog whose OSCAL id starts with
+ * `{familyPrefix}-` (e.g. "ia" → ia-1, ia-2, ia-5.1, …).
+ */
+export function listControlIdsByFamilyPrefix(
+  familyPrefix: string,
+  options?: { baseOnly?: boolean }
+): string[] {
+  const prefix = familyPrefix.trim().toLowerCase().replace(/-+$/, '');
+  if (!prefix) return [];
+
+  const needle = `${prefix}-`;
+  const ids = new Set<string>();
+
+  for (const entry of loadControlIndex().values()) {
+    // Prefer OSCAL id (dot enhancements) then normalize label forms like IA-5(1).
+    const id = normalizeControlId(entry.oscalId || entry.controlId);
+    if (!id.startsWith(needle)) continue;
+    if (options?.baseOnly && !new RegExp(`^${prefix}-\\d+$`).test(id)) {
+      continue;
+    }
+    ids.add(id);
+  }
+
+  return [...ids].sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true })
+  );
+}
+
+/**
+ * Retrieve live SP 800-53A assessment-objective + method text for a control ID.
+ * Assessment-procedure graders must use this payload (not `statement`) so
+ * scoring is against 53A objectives specifically, not the 53 control statement.
  */
 export function getAssessmentObjectiveText(
   controlId: string

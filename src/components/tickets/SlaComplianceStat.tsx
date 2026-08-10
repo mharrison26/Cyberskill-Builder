@@ -30,9 +30,9 @@ export function SlaComplianceStat({
     >
       <span className="text-muted-foreground">Resolved within SLA</span>
       {percent === null ? (
-        <span className="font-mono text-xl font-semibold tabular-nums leading-none text-muted-foreground">
-          —
-        </span>
+        <p className="max-w-[14rem] text-[11px] leading-snug text-muted-foreground">
+          Complete your first ticket to see SLA compliance
+        </p>
       ) : (
         <span className="font-mono text-xl font-semibold tabular-nums leading-none tracking-tight text-foreground">
           {percent}%

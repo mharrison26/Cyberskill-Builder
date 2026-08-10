@@ -128,7 +128,10 @@ export async function POST(request: Request, { params }: RouteContext) {
 
     if (
       message.includes('Control not found') ||
-      message.includes('No control_id associated')
+      message.includes('No control_id associated') ||
+      message.includes('depends_on_lesson_id') ||
+      message.includes('Screenshot evidence upload is required') ||
+      message.includes('No oscal_findings row found for the prerequisite')
     ) {
       return NextResponse.json({ error: message }, { status: 400 });
     }

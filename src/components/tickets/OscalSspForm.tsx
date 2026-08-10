@@ -85,6 +85,20 @@ export function OscalSspForm({
     () => parseRequirements(asRecord(ticket.initial_state)),
     [ticket.initial_state]
   );
+  const systemMeta = useMemo(() => {
+    const initial = asRecord(ticket.initial_state);
+    const systemName =
+      typeof initial.systemName === 'string' && initial.systemName.trim()
+        ? initial.systemName.trim()
+        : null;
+    const systemDescription =
+      typeof initial.systemDescription === 'string' &&
+      initial.systemDescription.trim()
+        ? initial.systemDescription.trim()
+        : null;
+    return { systemName, systemDescription };
+  }, [ticket.initial_state]);
+  const { systemName, systemDescription } = systemMeta;
 
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>(() => {
     const initial: Record<string, AnswerDraft> = {};
@@ -220,6 +234,22 @@ export function OscalSspForm({
           into a minimal OSCAL System Security Plan JSON fragment and validated
           against the NIST OSCAL SSP schema before acceptance.
         </p>
+        {systemName || systemDescription ? (
+          <div className="max-w-prose space-y-1 rounded-md border border-border bg-muted/30 px-4 py-3 text-sm">
+            {systemName ? (
+              <p className="font-medium text-foreground">{systemName}</p>
+            ) : null}
+            {systemDescription ? (
+              <p className="leading-relaxed text-muted-foreground">
+                {systemDescription}
+              </p>
+            ) : null}
+            <p className="text-xs text-muted-foreground">
+              Complete implementation statements for:{' '}
+              {requirements.map((req) => req.id).join(', ')}.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-8">

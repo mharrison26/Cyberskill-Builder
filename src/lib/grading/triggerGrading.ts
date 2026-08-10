@@ -4,6 +4,9 @@ import {
   gradeSubmission,
   MissingAnthropicApiKeyError,
 } from '@/lib/grading/gradeSubmission';
+import type { CatalogLabSubmission } from '@/lib/lessons/catalogLabValidation';
+import type { ConceptualSubmission } from '@/lib/lessons/conceptualValidation';
+import type { ToolWalkthroughSubmission } from '@/lib/lessons/toolWalkthroughValidation';
 import type { CCCERValues } from '@/types';
 
 /**
@@ -20,7 +23,11 @@ export type TriggerGradingInput = {
   lessonId: string;
   trackId: string;
   dcwfCode: string | null;
-  submission: CCCERValues;
+  submission:
+    | CCCERValues
+    | ToolWalkthroughSubmission
+    | CatalogLabSubmission
+    | ConceptualSubmission;
 };
 
 export type TriggerGradingResult = {

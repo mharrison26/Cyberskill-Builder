@@ -113,6 +113,7 @@ export function extractStatement(control: OscalControl): string {
 
 /**
  * Flatten SP 800-53A assessment-objective parts into labeled prose lines.
+ * This is the OSCAL assessment layer (SP 800-53A), not the control statement.
  * Uses the same label+prose walk as control statements.
  */
 export function extractAssessmentObjective(control: OscalControl): string {

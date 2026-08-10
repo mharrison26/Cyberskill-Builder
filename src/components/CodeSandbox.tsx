@@ -16,6 +16,20 @@ import { cn } from '@/lib/utils';
 
 import '@xterm/xterm/css/xterm.css';
 
+/**
+ * Optional pre-submit hook: rewrite a canonical sample input file, run the
+ * student script in the WebContainer (PI-04), and include stdout in the
+ * submission payload. Used by GRC-09 oscal_generator.
+ */
+export type CodeSandboxRunOnSubmit = {
+  inputPath: string;
+  inputContents: string;
+  scriptPath: string;
+  /** Override argv; default is `node <script>` or `python3 <script>`. */
+  command?: string[];
+  timeoutMs?: number;
+};
+
 export type CodeSandboxProps = {
   ticketId: string;
   /** Flat path → file contents map used to seed the WebContainer FS. */
@@ -26,6 +40,11 @@ export type CodeSandboxProps = {
   showFileBrowser?: boolean;
   /** Show the "Submit lab" button that posts filesystem snapshots. */
   showSubmit?: boolean;
+  /**
+   * When set, Submit rewrites the sample input and runs the student script
+   * inside WebContainer before posting the filesystem snapshot.
+   */
+  runOnSubmit?: CodeSandboxRunOnSubmit;
   readOnly?: boolean;
   className?: string;
   onSubmitComplete?: (result: {
@@ -208,12 +227,75 @@ function mergeSeedFiles(
   return files;
 }
 
+function defaultRunCommand(scriptPath: string): string[] {
+  const lower = scriptPath.toLowerCase();
+  if (lower.endsWith('.py')) return ['python3', scriptPath];
+  return ['node', scriptPath];
+}
+
+async function runScriptInContainer(
+  container: WebContainer,
+  run: CodeSandboxRunOnSubmit,
+  terminal: Terminal | null
+): Promise<{ stdout: string; exitCode: number }> {
+  const inputPath = normalizePath(run.inputPath);
+  const scriptPath = normalizePath(run.scriptPath);
+  const dir = inputPath.includes('/')
+    ? inputPath.slice(0, inputPath.lastIndexOf('/'))
+    : '';
+  if (dir) {
+    await container.fs.mkdir(dir, { recursive: true });
+  }
+  await container.fs.writeFile(inputPath, run.inputContents);
+
+  const argv = run.command?.length
+    ? run.command
+    : defaultRunCommand(scriptPath);
+  const [bin, ...args] = argv;
+  if (!bin) {
+    return { stdout: '', exitCode: 1 };
+  }
+
+  terminal?.writeln(`\r\n$ ${argv.join(' ')}\r\n`);
+
+  const process = await container.spawn(bin, args);
+  let stdout = '';
+  process.output.pipeTo(
+    new WritableStream({
+      write(chunk) {
+        stdout += chunk;
+        terminal?.write(chunk);
+      },
+    })
+  ).catch(() => {
+    // Ignore late pipe errors after process exit.
+  });
+
+  const timeoutMs = run.timeoutMs ?? 20_000;
+  const exitCode = await Promise.race([
+    process.exit,
+    new Promise<number>((resolve) => {
+      window.setTimeout(() => {
+        try {
+          process.kill();
+        } catch {
+          // Process may already have exited.
+        }
+        resolve(124);
+      }, timeoutMs);
+    }),
+  ]);
+
+  return { stdout, exitCode };
+}
+
 export function CodeSandbox({
   ticketId,
   initialState,
   fileModes,
   showFileBrowser = true,
   showSubmit = true,
+  runOnSubmit,
   readOnly = false,
   className,
   onSubmitComplete,
@@ -447,6 +529,29 @@ export function CodeSandbox({
     try {
       await persistActiveFile();
 
+      let stdout: string | undefined;
+      let sandboxRunFailed = false;
+      if (runOnSubmit) {
+        try {
+          const runResult = await runScriptInContainer(
+            container,
+            runOnSubmit,
+            terminalRef.current
+          );
+          stdout = runResult.stdout;
+          sandboxRunFailed = runResult.exitCode !== 0;
+        } catch (error) {
+          sandboxRunFailed = true;
+          stdout =
+            error instanceof Error
+              ? error.message
+              : 'Failed to run script in sandbox';
+          terminalRef.current?.writeln(
+            `\r\n[sandbox] run-on-submit failed: ${stdout}\r\n`
+          );
+        }
+      }
+
       let files: Record<string, string>;
       try {
         const exported = await container.export('.', { format: 'json' });
@@ -461,7 +566,12 @@ export function CodeSandbox({
       const response = await fetch(`/api/tickets/${ticketId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files, fileModes }),
+        body: JSON.stringify({
+          files,
+          fileModes,
+          ...(stdout !== undefined ? { stdout } : {}),
+          ...(runOnSubmit ? { sandboxRunFailed } : {}),
+        }),
       });
 
       let body: unknown;

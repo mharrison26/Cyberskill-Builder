@@ -18,9 +18,10 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
     ticket_type: 'assessment_procedures',
     difficulty: 'medium',
     sla_minutes: 45,
-    scenario_brief: 'Draft SP 800-53A procedures for AC-2.',
-    initial_state: { control_id: 'ac-2' },
-    expected_state: { control_id: 'ac-2', minFieldLength: 40 },
+    scenario_brief:
+      "Before the SOC 2 auditor's fieldwork begins, draft the assessment procedures your team will use to test control IA-5(1) yourselves, structured as Examine / Interview / Test, so you're not walking into the audit blind.",
+    initial_state: { control_id: 'ia-5.1', sheetId: 'GRC-05' },
+    expected_state: { control_id: 'ia-5.1', minFieldLength: 40 },
     dcwf_code: '612',
     sort_order: 1,
     ...overrides,
@@ -28,7 +29,7 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
 }
 
 const longEnough =
-  'Examine access control policy, account management procedures, and system configuration settings related to account provisioning and deprovisioning.';
+  'Examine password policy, authenticator management procedures, and system configuration settings related to password-based authentication controls.';
 
 describe('assessmentProcedures scorer shape', () => {
   it('registers assessment_procedures and sp800_53a aliases', () => {
@@ -47,19 +48,23 @@ describe('assessmentProcedures scorer shape', () => {
       resolveAssessmentProceduresControlId(
         ticket({
           initial_state: { control_id: 'ac-3' },
-          expected_state: { control_id: 'ac-2' },
+          expected_state: { control_id: 'ia-5.1' },
         })
       )
-    ).toBe('ac-2');
+    ).toBe('ia-5.1');
 
     expect(
       resolveAssessmentProceduresControlId(
         ticket({
-          initial_state: { controlId: 'ia-5' },
+          initial_state: { controlId: 'ia-5.1' },
           expected_state: {},
         })
       )
-    ).toBe('ia-5');
+    ).toBe('ia-5.1');
+  });
+
+  it('pins deterministic control_id to ia-5.1 for GRC-05', () => {
+    expect(resolveAssessmentProceduresControlId(ticket())).toBe('ia-5.1');
   });
 
   it('extracts examine / interview / test fields', () => {
@@ -68,12 +73,12 @@ describe('assessmentProcedures scorer shape', () => {
       examine: ' e ',
       interview: ' i ',
       test: ' t ',
-      controlId: 'ac-2',
+      controlId: 'ia-5.1',
     });
 
     expect(parsed).toEqual({
       type: 'assessment_procedures',
-      controlId: 'ac-2',
+      controlId: 'ia-5.1',
       examine: 'e',
       interview: 'i',
       test: 't',
@@ -111,10 +116,10 @@ describe('assessmentProcedures scorer shape', () => {
     );
 
     expect(result.ok).toBe(true);
-    expect(result.controlId).toBe('ac-2');
+    expect(result.controlId).toBe('ia-5.1');
     expect(result.structured).toMatchObject({
       style: 'assessment_procedures',
-      controlId: 'ac-2',
+      controlId: 'ia-5.1',
       fieldsOk: true,
       minFieldLength: ASSESSMENT_PROCEDURES_MIN_FIELD_LENGTH,
       catalogPath: null,

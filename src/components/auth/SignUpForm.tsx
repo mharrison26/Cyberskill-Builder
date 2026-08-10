@@ -18,6 +18,7 @@ type SignUpFormProps = {
 };
 
 export function SignUpForm({ initialCohortCode = '' }: SignUpFormProps) {
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -62,6 +63,9 @@ export function SignUpForm({ initialCohortCode = '' }: SignUpFormProps) {
     const formData = new FormData();
     formData.set('email', email.trim());
     formData.set('password', password);
+    if (displayName.trim()) {
+      formData.set('displayName', displayName.trim());
+    }
     if (cohortCode.trim()) {
       formData.set('cohortCode', cohortCode.trim());
     }
@@ -89,6 +93,18 @@ export function SignUpForm({ initialCohortCode = '' }: SignUpFormProps) {
           <AlertDescription>{successMessage}</AlertDescription>
         </Alert>
       ) : null}
+
+      <AuthField
+        id="sign-up-display-name"
+        label="Preferred name (optional)"
+        type="text"
+        name="displayName"
+        value={displayName}
+        onChange={setDisplayName}
+        autoComplete="nickname"
+        disabled={isPending}
+        placeholder="What should we call you?"
+      />
 
       <AuthField
         id="sign-up-email"

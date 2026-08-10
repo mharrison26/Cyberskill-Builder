@@ -4,7 +4,9 @@ import { useState } from 'react';
 
 import { CCCERForm } from '@/components/CCCERForm';
 import { EvidenceCodeBlock } from '@/components/EvidenceCodeBlock';
+import { LessonContent } from '@/components/LessonContent';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -67,10 +69,21 @@ export function ArtifactLabLesson({
   className,
 }: ArtifactLabLessonProps) {
   const objectives = parseObjectives(lesson.learning_objectives);
+  const scenarioBrief =
+    typeof lesson.content?.scenarioBrief === 'string' &&
+    lesson.content.scenarioBrief.trim()
+      ? lesson.content.scenarioBrief.trim()
+      : null;
   const evidenceCode = resolveEvidenceArtifact(evidenceArtifact);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  function scrollToExercise() {
+    document
+      .getElementById('lesson-exercise')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   async function handleSubmit(values: CCCERValues) {
     setIsSubmitting(true);
@@ -125,6 +138,14 @@ export function ArtifactLabLesson({
             </span>
           </p>
         ) : null}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="button" onClick={scrollToExercise}>
+            Start scenario
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            Review the evidence, then document your CCCER finding below.
+          </p>
+        </div>
       </header>
 
       {objectives.length > 0 ? (
@@ -142,7 +163,20 @@ export function ArtifactLabLesson({
         </Card>
       ) : null}
 
-      <div id="lesson-content" tabIndex={-1} className="space-y-6 outline-none">
+      {scenarioBrief ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Scenario</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div id="lesson-content" tabIndex={-1} className="outline-none">
+              <LessonContent content={scenarioBrief} />
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <div id="lesson-exercise" tabIndex={-1} className="space-y-6 outline-none">
         <EvidenceCodeBlock
           code={evidenceCode}
           language="json"

@@ -223,19 +223,26 @@ export const oscalSspTicketScorer: TicketScorer = {
       return answer;
     });
 
+    const initial = asRecord(ticket.initial_state);
     let ssp: OscalSspDocument;
     try {
       ssp = buildSspFragment({
         answers: orderedAnswers,
         requirements,
         systemName:
-          typeof asRecord(ticket.initial_state).systemName === 'string'
-            ? String(asRecord(ticket.initial_state).systemName)
+          typeof initial.systemName === 'string'
+            ? initial.systemName
+            : undefined,
+        systemDescription:
+          typeof initial.systemDescription === 'string'
+            ? initial.systemDescription
+            : undefined,
+        authorizationBoundary:
+          typeof initial.authorizationBoundary === 'string'
+            ? initial.authorizationBoundary
             : undefined,
         title:
-          typeof asRecord(ticket.initial_state).sspTitle === 'string'
-            ? String(asRecord(ticket.initial_state).sspTitle)
-            : undefined,
+          typeof initial.sspTitle === 'string' ? initial.sspTitle : undefined,
       });
     } catch (error) {
       const message =

@@ -12,6 +12,7 @@ type AuthFieldProps = {
   error?: string;
   autoComplete?: string;
   disabled?: boolean;
+  placeholder?: string;
 };
 
 export function AuthField({
@@ -24,6 +25,7 @@ export function AuthField({
   error,
   autoComplete,
   disabled,
+  placeholder,
 }: AuthFieldProps) {
   const errorId = error ? `${id}-error` : undefined;
 
@@ -38,6 +40,7 @@ export function AuthField({
         onChange={(event) => onChange(event.target.value)}
         autoComplete={autoComplete}
         disabled={disabled}
+        placeholder={placeholder}
         aria-invalid={error ? true : undefined}
         aria-describedby={errorId}
         className={cn(error && 'border-destructive')}

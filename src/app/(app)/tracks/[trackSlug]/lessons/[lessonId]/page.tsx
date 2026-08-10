@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 
 import { GradingResult } from '@/components/GradingResult';
 import { ArtifactLabLesson } from '@/components/lessons/ArtifactLabLesson';
+import { CatalogLabLesson } from '@/components/lessons/CatalogLabLesson';
 import { ConceptualLesson } from '@/components/lessons/ConceptualLesson';
 import { ToolWalkthroughLesson } from '@/components/lessons/ToolWalkthroughLesson';
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
@@ -51,7 +52,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
   const { data: lesson, error: lessonError } = await supabase
     .from('lessons')
     .select(
-      'id, track_id, tier, lesson_type, sort_order, title, learning_objectives, dcwf_code'
+      'id, track_id, tier, lesson_type, sort_order, title, learning_objectives, dcwf_code, content, depends_on_lesson_id'
     )
     .eq('id', lessonId)
     .maybeSingle<Lesson>();
@@ -163,8 +164,35 @@ export default async function LessonPage({ params }: LessonPageProps) {
         </section>
       ) : null}
 
-      {lessonType === 'conceptual' || lessonType === 'catalog_lab' ? (
-        <ConceptualLesson lesson={lesson} />
+      {lessonType === 'conceptual' ? (
+        <ConceptualLesson
+          lesson={lesson}
+          content={
+            typeof lesson.content?.body === 'string' &&
+            lesson.content.body.trim()
+              ? lesson.content.body
+              : typeof lesson.content?.scenarioBrief === 'string' &&
+                  lesson.content.scenarioBrief.trim()
+                ? `## Scenario\n\n${lesson.content.scenarioBrief}`
+                : null
+          }
+        />
+      ) : null}
+
+      {lessonType === 'catalog_lab' ? (
+        <CatalogLabLesson
+          lesson={lesson}
+          content={
+            typeof lesson.content?.body === 'string' &&
+            lesson.content.body.trim()
+              ? lesson.content.body
+              : typeof lesson.content?.scenarioBrief === 'string' &&
+                  lesson.content.scenarioBrief.trim()
+                ? `## Scenario\n\n${lesson.content.scenarioBrief}`
+                : null
+          }
+          catalogHref={`/tracks/${trackSlug}/catalog`}
+        />
       ) : null}
 
       {lessonType === 'artifact_lab' ? (
@@ -173,6 +201,19 @@ export default async function LessonPage({ params }: LessonPageProps) {
 
       {lessonType === 'tool_walkthrough' ? (
         <ToolWalkthroughLesson lesson={lesson} />
+      ) : null}
+
+      {lessonType !== 'conceptual' &&
+      lessonType !== 'catalog_lab' &&
+      lessonType !== 'artifact_lab' &&
+      lessonType !== 'tool_walkthrough' ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
+        >
+          This lesson type ({String(lesson.lesson_type)}) has no interactive
+          work area yet. Please contact support.
+        </div>
       ) : null}
     </div>
   );

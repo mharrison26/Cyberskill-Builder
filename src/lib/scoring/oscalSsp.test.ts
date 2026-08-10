@@ -179,4 +179,72 @@ describe('oscalSspTicketScorer', () => {
         .missingRequirementIds
     ).toContain('03.05.01');
   });
+
+  it('accepts the GRC-03 Northwind two-requirement SSP after schema validation', async () => {
+    const acRequirements = NIST_800_171_REV3_SUBSET.filter((req) =>
+      ['03.01.01', '03.01.02'].includes(req.id)
+    );
+    const systemDescription =
+      'Northwind CUI enclave for the DoD subcontract. Enclave boundary: isolated VPC. User population: 12 engineers, 3 admins. Existing controls: SSO with MFA; quarterly access review.';
+
+    const result = await oscalSspTicketScorer.score(
+      {
+        answers: acRequirements.map((req) => ({
+          requirementId: req.id,
+          implementationStatus: 'implemented' as const,
+          responsibleRoleId: 'system-admin',
+          implementationNarrative:
+            `For the Northwind CUI enclave, ${req.title} is implemented via SSO with MFA, ` +
+            'documented account types, and quarterly access reviews for the 12 engineers and 3 admins.',
+        })),
+      },
+      ticket({
+        scenario_brief:
+          'OSCAL SSP: Northwind CUI enclave — complete 03.01.01 and 03.01.02',
+        initial_state: {
+          ticketCode: 'GRC-03',
+          systemName: 'Northwind CUI Enclave',
+          systemDescription,
+          authorizationBoundary:
+            'Isolated VPC enclave that processes, stores, and transmits CUI for Northwind\'s DoD subcontract.',
+          sspTitle:
+            'Northwind CUI Enclave — NIST SP 800-171 Rev 3 SSP fragment (03.01.01, 03.01.02)',
+          requirements: acRequirements.map((req) => ({ ...req })),
+        },
+      })
+    );
+
+    expect(result.status).toBe('resolved');
+    expect(result.structuredResult).toMatchObject({
+      style: 'oscal_ssp',
+      valid: true,
+      answeredCount: 2,
+      requiredCount: 2,
+    });
+
+    const ssp = (result.structuredResult as { ssp?: OscalSspShape }).ssp;
+    expect(ssp).toBeTruthy();
+    expect(validateOscalSsp(ssp).valid).toBe(true);
+    expect(
+      ssp?.['system-security-plan']?.['system-characteristics']?.description
+    ).toBe(systemDescription);
+    const implemented =
+      ssp?.['system-security-plan']?.['control-implementation']?.[
+        'implemented-requirements'
+      ] ?? [];
+    expect(implemented).toHaveLength(2);
+    expect(implemented.map((row) => row['control-id'])).toEqual([
+      'r03.01.01',
+      'r03.01.02',
+    ]);
+  });
 });
+
+type OscalSspShape = {
+  'system-security-plan': {
+    'system-characteristics'?: { description?: string };
+    'control-implementation'?: {
+      'implemented-requirements'?: Array<{ 'control-id': string }>;
+    };
+  };
+};

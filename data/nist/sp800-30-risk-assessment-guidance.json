@@ -22,6 +22,26 @@
       "text": "NIST SP 800-30 Rev. 1 frames risk assessment as a process that prepares for the assessment, conducts the assessment, and maintains the assessment. Conducting the assessment includes identifying threat sources and events, identifying vulnerabilities and predisposing conditions, determining likelihood of occurrence, determining magnitude of impact, and determining risk. Results support organizational risk responses and should be documented so decision makers can understand how likelihood and impact were derived."
     },
     {
+      "id": "threat-sources",
+      "title": "Identifying threat sources and events",
+      "topics": ["threat", "threat source", "threat event", "adversarial"],
+      "keywords": [
+        "threat source",
+        "threat sources",
+        "threat event",
+        "adversarial",
+        "non-adversarial",
+        "insider",
+        "outsider",
+        "capability",
+        "intent",
+        "targeting",
+        "accident",
+        "structural"
+      ],
+      "text": "Threat sources are entities or circumstances that can initiate threat events. Adversarial sources (for example, external attackers, malicious insiders, or organized groups) are characterized by capability, intent, and targeting. Non-adversarial sources include accidental human actions, structural failures, and environmental events. A defensible risk assessment identifies relevant threat sources for the scenario and pairs them with plausible threat events that could exploit vulnerabilities or predisposing conditions. Naming at least two distinct threat sources (or source classes) and linking each to a credible threat event strengthens the assessment relative to unsupported risk labels."
+    },
+    {
       "id": "likelihood",
       "title": "Determining likelihood of occurrence",
       "topics": ["likelihood", "probability", "threat event"],

@@ -45,6 +45,7 @@ export function QueueVolumeSparkline({
   const height = 36;
   const { line, area, max } = buildPath(series, width, height);
   const periodTotal = series.reduce((sum, p) => sum + p.total, 0);
+  const isEmpty = periodTotal === 0;
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setDrawn(true));
@@ -54,7 +55,7 @@ export function QueueVolumeSparkline({
   return (
     <div
       className={cn(
-        'flex min-h-[5.5rem] flex-col justify-between rounded-md border border-border bg-card px-3 py-2.5',
+        'flex min-h-[5.5rem] flex-col justify-between rounded-md border border-border bg-card px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md',
         className
       )}
     >
@@ -69,7 +70,7 @@ export function QueueVolumeSparkline({
 
       <div className="mt-2 flex items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-xl font-semibold tabular-nums leading-none tracking-tight">
+          <p className="font-mono text-xl font-semibold tabular-nums leading-none tracking-tight text-foreground">
             {periodTotal}
           </p>
           <p className="mt-1 text-[11px] text-muted-foreground">
@@ -82,7 +83,11 @@ export function QueueVolumeSparkline({
           width={width}
           height={height}
           role="img"
-          aria-label={`Ticket activity sparkline, ${periodTotal} events over 14 days, peak ${max} per day`}
+          aria-label={
+            isEmpty
+              ? 'Ticket activity sparkline, no opens or resolves in the last 14 days'
+              : `Ticket activity sparkline, ${periodTotal} events over 14 days, peak ${max} per day`
+          }
           className="shrink-0 text-primary"
         >
           <defs>
@@ -91,7 +96,20 @@ export function QueueVolumeSparkline({
               <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
             </linearGradient>
           </defs>
-          {periodTotal > 0 ? (
+          {isEmpty ? (
+            <path
+              d={
+                line ||
+                `M 0 ${height - 2} L ${width} ${height - 2}`
+              }
+              fill="none"
+              stroke="currentColor"
+              strokeOpacity="0.45"
+              strokeWidth="1.75"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          ) : (
             <>
               <path d={area} fill={`url(#${gradientId})`} />
               <path
@@ -109,18 +127,15 @@ export function QueueVolumeSparkline({
                 }}
               />
             </>
-          ) : (
-            <path
-              d={`M 0 ${height - 2} L ${width} ${height - 2}`}
-              fill="none"
-              stroke="currentColor"
-              strokeOpacity="0.25"
-              strokeWidth="1"
-              strokeDasharray="3 3"
-            />
           )}
         </svg>
       </div>
+
+      {isEmpty ? (
+        <p className="mt-2 text-[10px] leading-snug text-muted-foreground">
+          No ticket activity yet — resolve tickets to fill this chart.
+        </p>
+      ) : null}
     </div>
   );
 }

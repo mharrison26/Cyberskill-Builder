@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  buildConmonSystemProfileGapsMessage,
+  seedSystemProfileFromInitialState,
+  usesStudentConmonSystemProfile,
+  type ConmonSystemProfile,
+  type ConmonSystemProfileGap,
+} from '@/lib/grc/compileConmonSystemProfile';
 import {
   CONMON_STRATEGY_MIN_ESCALATION_LENGTH,
   CONMON_STRATEGY_MIN_FIELD_LENGTH,
@@ -50,6 +57,17 @@ type FormErrors = {
   escalationReporting?: string;
 };
 
+type SystemProfileResponse = {
+  error?: string;
+  systemProfile?: ConmonSystemProfile | null;
+  systemProfileSource?: 'student_grc03' | 'seed' | 'empty';
+  complete?: boolean;
+  gaps?: ConmonSystemProfileGap[];
+  gapsMessage?: string | null;
+  continuityLabel?: string | null;
+  useStudentSystemProfile?: boolean;
+};
+
 function asRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>;
@@ -81,67 +99,43 @@ function resolveMinLength(
   return fallback;
 }
 
-function formatSystemProfile(initialState: Record<string, unknown>): {
-  title: string;
-  lines: string[];
-} {
-  const profile = initialState.systemProfile ?? initialState.system_profile;
-  if (typeof profile === 'string' && profile.trim()) {
-    return {
-      title: 'System profile',
-      lines: profile
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean),
-    };
+function formatLoadedProfile(
+  profile: ConmonSystemProfile | null,
+  fallbackTitle = 'System profile'
+): { title: string; lines: string[] } {
+  if (!profile) {
+    return { title: fallbackTitle, lines: [] };
   }
-
-  const record = asRecord(profile);
-  const name =
-    typeof record.name === 'string' && record.name.trim()
-      ? record.name.trim()
-      : 'Fictional system profile';
 
   const lines: string[] = [];
-  const orderedKeys = [
-    'description',
-    'impact',
-    'environment',
-    'dataTypes',
-    'components',
-    'constraints',
-    'controlFamilies',
-  ];
-
-  for (const key of orderedKeys) {
-    const value = record[key];
-    if (typeof value === 'string' && value.trim()) {
-      lines.push(`${labelize(key)}: ${value.trim()}`);
-    } else if (Array.isArray(value)) {
-      const items = value.filter(
-        (entry) => typeof entry === 'string'
-      ) as string[];
-      if (items.length > 0) {
-        lines.push(`${labelize(key)}: ${items.join(', ')}`);
-      }
-    }
+  if (profile.description?.trim()) {
+    lines.push(profile.description.trim());
+  }
+  if (profile.authorizationBoundary?.trim()) {
+    lines.push(`Authorization boundary: ${profile.authorizationBoundary.trim()}`);
+  }
+  if (profile.impact?.trim()) {
+    lines.push(`Impact: ${profile.impact.trim()}`);
+  } else if (profile.impactLevel?.trim()) {
+    lines.push(`Impact: ${profile.impactLevel.trim()}`);
+  }
+  if (profile.environment?.trim()) {
+    lines.push(`Environment: ${profile.environment.trim()}`);
+  }
+  if (profile.controlFamilies && profile.controlFamilies.length > 0) {
+    lines.push(`Control families: ${profile.controlFamilies.join(', ')}`);
+  }
+  if (profile.components && profile.components.length > 0) {
+    lines.push(`SSP controls: ${profile.components.join('; ')}`);
+  }
+  if (profile.constraints?.trim()) {
+    lines.push(profile.constraints.trim());
   }
 
-  for (const [key, value] of Object.entries(record)) {
-    if (orderedKeys.includes(key) || key === 'name') continue;
-    if (typeof value === 'string' && value.trim()) {
-      lines.push(`${labelize(key)}: ${value.trim()}`);
-    }
-  }
-
-  return { title: name, lines };
-}
-
-function labelize(key: string): string {
-  return key
-    .replace(/_/g, ' ')
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  return {
+    title: profile.name?.trim() || fallbackTitle,
+    lines,
+  };
 }
 
 export function ConMonStrategyTicket({
@@ -151,6 +145,12 @@ export function ConMonStrategyTicket({
 }: ConMonStrategyTicketProps) {
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
+  const usesStudentProfile = usesStudentConmonSystemProfile(initialState);
+  const seedProfile = useMemo(
+    () => seedSystemProfileFromInitialState(initialState),
+    [initialState]
+  );
+
   const ticketCode =
     typeof initialState.ticketCode === 'string' &&
     initialState.ticketCode.trim()
@@ -159,38 +159,104 @@ export function ConMonStrategyTicket({
           initialState.ticket_code.trim()
         ? initialState.ticket_code.trim()
         : null;
+
+  const [loadedProfile, setLoadedProfile] = useState<ConmonSystemProfile | null>(
+    () => (usesStudentProfile ? null : seedProfile)
+  );
+  const [profileSource, setProfileSource] = useState<
+    'student_grc03' | 'seed' | 'empty' | null
+  >(usesStudentProfile ? null : seedProfile ? 'seed' : 'empty');
+  const [continuityLabel, setContinuityLabel] = useState<string | null>(null);
+  const [gaps, setGaps] = useState<ConmonSystemProfileGap[]>([]);
+  const [gapsMessage, setGapsMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(usesStudentProfile);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!usesStudentProfile) return;
+
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const res = await fetch(`/api/tickets/${ticket.id}/system-profile`, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json()) as SystemProfileResponse;
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to load GRC-03 system profile');
+        }
+        if (cancelled) return;
+
+        setLoadedProfile(data.systemProfile ?? null);
+        setProfileSource(data.systemProfileSource ?? 'empty');
+        setContinuityLabel(
+          typeof data.continuityLabel === 'string' ? data.continuityLabel : null
+        );
+        setGaps(Array.isArray(data.gaps) ? data.gaps : []);
+        setGapsMessage(
+          typeof data.gapsMessage === 'string'
+            ? data.gapsMessage
+            : !data.complete
+              ? buildConmonSystemProfileGapsMessage(data.gaps ?? [])
+              : null
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : 'Failed to load GRC-03 system profile'
+          );
+          setLoadedProfile(null);
+          setProfileSource('empty');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [ticket.id, usesStudentProfile]);
+
+  const activeProfile = loadedProfile;
   const impactLevelLabel = useMemo(() => {
-    const profileRecord = asRecord(initialState.systemProfile);
     const raw =
+      (activeProfile?.impactLevel && activeProfile.impactLevel) ||
+      (activeProfile?.impact && activeProfile.impact) ||
       (typeof initialState.impactLevel === 'string' &&
         initialState.impactLevel) ||
       (typeof expectedState.impactLevel === 'string' &&
         expectedState.impactLevel) ||
-      (typeof profileRecord.impactLevel === 'string' &&
-        profileRecord.impactLevel) ||
-      (typeof profileRecord.impact === 'string' && profileRecord.impact) ||
       null;
     if (!raw) return null;
-    const match = raw.match(/\b(low|moderate|medium|high)\b/i);
-    if (!match) return raw.trim();
+    const match = String(raw).match(/\b(low|moderate|medium|high)\b/i);
+    if (!match) return String(raw).trim();
     const level = match[1].toLowerCase();
     if (level === 'medium') return 'Moderate';
     return level.charAt(0).toUpperCase() + level.slice(1);
-  }, [initialState, expectedState]);
+  }, [activeProfile, initialState, expectedState]);
+
   const profile = useMemo(
-    () => formatSystemProfile(initialState),
-    [initialState]
+    () => formatLoadedProfile(activeProfile),
+    [activeProfile]
   );
 
   const families = useMemo(
     () =>
       resolveStringList(
-        initialState.controlFamilies ??
-          initialState.control_families ??
-          asRecord(initialState.systemProfile).controlFamilies,
+        activeProfile?.controlFamilies ??
+          initialState.controlFamilies ??
+          initialState.control_families,
         DEFAULT_CONMON_CONTROL_FAMILIES
       ).map((family) => family.toUpperCase()),
-    [initialState]
+    [activeProfile, initialState]
   );
 
   const tools = useMemo(
@@ -225,6 +291,15 @@ export function ConMonStrategyTicket({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [scoreStatus, setScoreStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFamilyRows((prev) => {
+      const byFamily = new Map(prev.map((row) => [row.family, row]));
+      return families.map(
+        (family) => byFamily.get(family) ?? { family, cadence: '', rationale: '' }
+      );
+    });
+  }, [families]);
 
   function validate(): boolean {
     const nextErrors: FormErrors = {};
@@ -319,12 +394,90 @@ export function ConMonStrategyTicket({
     }
   }
 
+  if (loading) {
+    return (
+      <section
+        aria-labelledby="conmon-strategy-heading"
+        className={cn(
+          'rounded-lg border border-dashed border-border bg-muted/30 px-5 py-8',
+          className
+        )}
+        data-ticket-type={ticket.ticket_type}
+        data-ticket-id={ticket.id}
+      >
+        <h2 id="conmon-strategy-heading" className="text-lg font-semibold">
+          System-level ConMon plan
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Loading your GRC-03 SSP system description…
+        </p>
+      </section>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <section
+        aria-labelledby="conmon-strategy-heading"
+        className={cn(
+          'rounded-lg border border-destructive/40 bg-destructive/5 px-5 py-8',
+          className
+        )}
+        data-ticket-type={ticket.ticket_type}
+        data-ticket-id={ticket.id}
+      >
+        <h2 id="conmon-strategy-heading" className="text-lg font-semibold">
+          System-level ConMon plan
+        </h2>
+        <p className="mt-2 text-sm text-destructive" role="alert">
+          {loadError}
+        </p>
+      </section>
+    );
+  }
+
+  if (
+    !activeProfile ||
+    (usesStudentProfile && (gaps.length > 0 || profileSource === 'empty'))
+  ) {
+    return (
+      <section
+        aria-labelledby="conmon-strategy-heading"
+        className={cn(
+          'rounded-lg border border-dashed border-border bg-muted/30 px-5 py-8',
+          className
+        )}
+        data-ticket-type={ticket.ticket_type}
+        data-ticket-id={ticket.id}
+        data-profile-source={profileSource ?? 'empty'}
+      >
+        <h2 id="conmon-strategy-heading" className="text-base font-semibold">
+          Prerequisites required
+        </h2>
+        <p className="mt-2 max-w-prose text-sm text-muted-foreground">
+          {usesStudentProfile
+            ? gapsMessage ||
+              'This ConMon ticket continues your GRC-03 system description. Complete and submit the OSCAL SSP fragment first — a fresh HarborNet scenario is not used.'
+            : 'This ticket has no system profile in initial_state.systemProfile. An admin should seed a system profile before students can draft a ConMon plan.'}
+        </p>
+        {usesStudentProfile && gaps.length > 0 ? (
+          <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-foreground">
+            {gaps.map((gap) => (
+              <li key={gap.key}>{gap.message}</li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
+    );
+  }
+
   return (
     <section
       aria-labelledby="conmon-strategy-heading"
       className={cn('space-y-6', className)}
       data-ticket-type={ticket.ticket_type}
       data-ticket-id={ticket.id}
+      data-profile-source={profileSource ?? undefined}
     >
       <div className="flex flex-wrap items-center gap-2">
         <h2 id="conmon-strategy-heading" className="text-lg font-semibold">
@@ -335,17 +488,22 @@ export function ConMonStrategyTicket({
         {impactLevelLabel ? (
           <Badge variant="outline">FIPS 199 {impactLevelLabel}</Badge>
         ) : null}
+        {profileSource === 'student_grc03' ? (
+          <Badge variant="outline">From your GRC-03</Badge>
+        ) : null}
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{profile.title}</CardTitle>
           <CardDescription>
-            Plan continuous monitoring for this one system from an ISSO
-            perspective—not an org-wide ISCM program. Set control-family
-            cadences that fit the system&apos;s FIPS 199 impact, map DefectDojo
-            / CloudSploit / Scuba coverage, and define escalation/reporting.
-            Graded against retrieved NIST SP 800-137.
+            {profileSource === 'student_grc03'
+              ? continuityLabel ||
+                'This ConMon plan continues the system description from your GRC-03 OSCAL SSP — not a new scenario.'
+              : 'Plan continuous monitoring for this one system from an ISSO perspective—not an org-wide ISCM program.'}{' '}
+            Set control-family cadences that fit the system&apos;s FIPS 199
+            impact, map DefectDojo / CloudSploit / Scuba coverage, and define
+            escalation/reporting. Graded against retrieved NIST SP 800-137.
           </CardDescription>
         </CardHeader>
         <CardContent>

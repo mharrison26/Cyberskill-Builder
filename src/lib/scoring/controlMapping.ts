@@ -1,3 +1,9 @@
+import { buildControlMappingOverlapGradingPrompt } from '@/lib/grading/buildControlMappingOverlapGradingPrompt';
+import {
+  callClaudeGrading,
+  MissingAnthropicApiKeyError,
+  type ClaudeGradingResult,
+} from '@/lib/grading/callClaudeGrading';
 import { parseControlMappingInitialState } from '@/lib/control-mappings/parseInitialState';
 import {
   createSupabaseControlMappingLookup,
@@ -6,8 +12,12 @@ import {
 import { normalizeControlIdList } from '@/lib/control-mappings/normalize';
 import type {
   ControlFramework,
+  ControlMappingRow,
   ControlMappingSubmission,
 } from '@/lib/control-mappings/types';
+import { getControlText } from '@/lib/oscal/getControl';
+import { captureFeatureException } from '@/lib/observability/sentry';
+import { CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH } from '@/lib/scoring/ticketUi';
 import type {
   ScorableTicket,
   TicketScoreResult,
@@ -36,6 +46,13 @@ export type ControlMappingTargetResult = {
   passed: boolean;
 };
 
+export type ControlMappingExpectedState = {
+  passThresholdPercent?: number;
+  scoringMode?: string;
+  gradeOverlapNarrative?: boolean;
+  minOverlapNarrativeLength?: number;
+};
+
 export type ControlMappingStructuredResult = {
   style: 'control_mapping';
   sourceFramework: ControlFramework;
@@ -45,7 +62,31 @@ export type ControlMappingStructuredResult = {
   passedCount: number;
   totalCount: number;
   targets: ControlMappingTargetResult[];
+  overlapNarrativeLength?: number;
+  minOverlapNarrativeLength?: number;
+  overlapNarrativeLengthOk?: boolean;
+  gradeOverlapNarrative?: boolean;
+  catalogPath?: string | null;
+  retrievedControlId?: string | null;
+  retrievedMappingCount?: number;
+  grading?: {
+    finding_state: ClaudeGradingResult['finding_state'];
+    strengths: string[];
+    gaps: string[];
+  };
+  reason?: string;
 };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function parseControlMappingExpectedState(
+  expectedState: unknown
+): ControlMappingExpectedState {
+  if (!isPlainObject(expectedState)) return {};
+  return expectedState as ControlMappingExpectedState;
+}
 
 function parseAnswers(
   submission: TicketSubmission
@@ -70,22 +111,30 @@ function parseAnswers(
   return answers;
 }
 
-function passThresholdFromExpected(expectedState: unknown): number {
-  if (
-    expectedState &&
-    typeof expectedState === 'object' &&
-    !Array.isArray(expectedState)
-  ) {
-    const value = (expectedState as { passThresholdPercent?: unknown })
-      .passThresholdPercent;
-    if (
-      typeof value === 'number' &&
-      Number.isFinite(value) &&
-      value >= 0 &&
-      value <= 100
-    ) {
-      return value;
+export function parseOverlapNarrative(submission: TicketSubmission): string {
+  for (const key of [
+    'overlapNarrative',
+    'overlap_narrative',
+    'narrative',
+    'justification',
+  ] as const) {
+    const value = submission[key];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
     }
+  }
+  return '';
+}
+
+function passThresholdFromExpected(expected: ControlMappingExpectedState): number {
+  const value = expected.passThresholdPercent;
+  if (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value >= 0 &&
+    value <= 100
+  ) {
+    return value;
   }
   return 100;
 }
@@ -220,6 +269,7 @@ export async function evaluateControlMapping(
   lookup: ControlMappingLookup
 ): Promise<ControlMappingStructuredResult> {
   const prompt = parseControlMappingInitialState(ticket.initial_state);
+  const expected = parseControlMappingExpectedState(ticket.expected_state);
   if (!prompt) {
     return {
       style: 'control_mapping',
@@ -230,11 +280,12 @@ export async function evaluateControlMapping(
       passedCount: 0,
       totalCount: 0,
       targets: [],
+      reason: 'invalid_initial_state',
     };
   }
 
   const answers = parseAnswers(submission);
-  const passThresholdPercent = passThresholdFromExpected(ticket.expected_state);
+  const passThresholdPercent = passThresholdFromExpected(expected);
 
   const targets: ControlMappingTargetResult[] = [];
   for (const target of prompt.targets) {
@@ -278,7 +329,26 @@ export async function evaluateControlMapping(
     passedCount,
     totalCount,
     targets,
+    gradeOverlapNarrative: expected.gradeOverlapNarrative === true,
   };
+}
+
+async function collectRetrievedMappingRows(
+  lookup: ControlMappingLookup,
+  sourceFramework: ControlFramework,
+  sourceControlId: string,
+  targetFrameworks: ControlFramework[]
+): Promise<ControlMappingRow[]> {
+  const rows: ControlMappingRow[] = [];
+  for (const framework of targetFrameworks) {
+    const batch = await lookup.listMappings(
+      sourceFramework,
+      sourceControlId,
+      framework
+    );
+    rows.push(...batch);
+  }
+  return rows;
 }
 
 export function createControlMappingTicketScorer(
@@ -299,6 +369,7 @@ export function createControlMappingTicketScorer(
         };
       }
 
+      const expected = parseControlMappingExpectedState(ticket.expected_state);
       const structured = await evaluateControlMapping(
         submission,
         ticket,
@@ -313,13 +384,133 @@ export function createControlMappingTicketScorer(
         };
       }
 
-      const resolved = structured.percentage >= structured.passThresholdPercent;
+      const idsResolved =
+        structured.percentage >= structured.passThresholdPercent;
 
-      return {
-        status: resolved ? 'resolved' : 'needs_revision',
-        structuredResult: structured,
-        feedback: controlMappingFeedback(structured),
-      };
+      if (!idsResolved) {
+        return {
+          status: 'needs_revision',
+          structuredResult: {
+            ...structured,
+            reason: 'control_ids_mismatch',
+          },
+          feedback: controlMappingFeedback(structured),
+        };
+      }
+
+      // Legacy tickets: deterministic ID match only.
+      if (expected.gradeOverlapNarrative !== true) {
+        return {
+          status: 'resolved',
+          structuredResult: structured,
+          feedback: controlMappingFeedback(structured),
+        };
+      }
+
+      const overlapNarrative = parseOverlapNarrative(submission);
+      const minOverlapNarrativeLength =
+        typeof expected.minOverlapNarrativeLength === 'number' &&
+        Number.isFinite(expected.minOverlapNarrativeLength) &&
+        expected.minOverlapNarrativeLength > 0
+          ? Math.floor(expected.minOverlapNarrativeLength)
+          : CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH;
+
+      const overlapNarrativeLength = overlapNarrative.length;
+      const overlapNarrativeLengthOk =
+        overlapNarrativeLength >= minOverlapNarrativeLength;
+
+      structured.overlapNarrativeLength = overlapNarrativeLength;
+      structured.minOverlapNarrativeLength = minOverlapNarrativeLength;
+      structured.overlapNarrativeLengthOk = overlapNarrativeLengthOk;
+      structured.gradeOverlapNarrative = true;
+
+      if (!overlapNarrativeLengthOk) {
+        structured.reason = 'overlap_narrative_too_short';
+        return {
+          status: 'needs_revision',
+          structuredResult: structured,
+          feedback: `Control IDs match the crosswalk, but the overlap narrative must be at least ${minOverlapNarrativeLength} characters. Explain where mappings are strong versus only partially overlapping.`,
+        };
+      }
+
+      try {
+        const control = getControlText(prompt.source_control_id);
+        const mappingRows = await collectRetrievedMappingRows(
+          lookup,
+          prompt.source_framework,
+          prompt.source_control_id,
+          prompt.targets.map((t) => t.framework)
+        );
+
+        const answers = parseAnswers(submission);
+        const gradingPrompt = buildControlMappingOverlapGradingPrompt(
+          control,
+          mappingRows,
+          {
+            sourceControlId: prompt.source_control_id,
+            selectedMappings: answers,
+            overlapNarrative,
+            scenarioBrief: ticket.scenario_brief,
+          }
+        );
+
+        const grading = await callClaudeGrading(gradingPrompt);
+
+        structured.catalogPath = 'data/oscal/NIST_SP-800-53_rev5_catalog.json';
+        structured.retrievedControlId = control.controlId;
+        structured.retrievedMappingCount = mappingRows.length;
+        structured.grading = {
+          finding_state: grading.finding_state,
+          strengths: grading.strengths,
+          gaps: grading.gaps,
+        };
+
+        if (grading.finding_state === 'satisfied') {
+          return {
+            status: 'resolved',
+            structuredResult: structured,
+            feedback: grading.feedback,
+          };
+        }
+
+        structured.reason = `grading_${grading.finding_state}`;
+        const gapHint =
+          grading.gaps.length > 0
+            ? ` Gaps: ${grading.gaps.slice(0, 3).join(' ')}`
+            : '';
+
+        return {
+          status: 'needs_revision',
+          structuredResult: structured,
+          feedback: `${grading.feedback}${gapHint}`,
+        };
+      } catch (error) {
+        if (error instanceof MissingAnthropicApiKeyError) {
+          structured.reason = 'grading_unavailable_missing_api_key';
+          return {
+            status: 'needs_revision',
+            structuredResult: structured,
+            feedback:
+              'Control IDs match, but overlap-narrative grading is unavailable (missing Anthropic API key). Try again once grading is configured.',
+          };
+        }
+
+        captureFeatureException(error, {
+          feature: 'scoring',
+          pi: 'PI-06',
+          operation: 'control_mapping_overlap_grading',
+          ticketId: ticket.id,
+          ticketType: ticket.ticket_type,
+          extras: { sourceControlId: prompt.source_control_id },
+        });
+        structured.reason = 'grading_error';
+        return {
+          status: 'needs_revision',
+          structuredResult: structured,
+          feedback:
+            'Control IDs match, but overlap-narrative grading failed unexpectedly. Please retry.',
+        };
+      }
     },
   };
 }
@@ -329,7 +520,8 @@ export const controlMappingTicketScorer: TicketScorer =
 
 /** Type guard helper for tests / API consumers. */
 export function asControlMappingSubmission(
-  answers: ControlMappingSubmission['answers']
+  answers: ControlMappingSubmission['answers'],
+  overlapNarrative?: string
 ): ControlMappingSubmission {
-  return { answers };
+  return { answers, overlapNarrative };
 }

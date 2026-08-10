@@ -1,10 +1,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+import type { CatalogLabSubmission } from '@/lib/lessons/catalogLabValidation';
+import type { ConceptualSubmission } from '@/lib/lessons/conceptualValidation';
 import type { ToolWalkthroughSubmission } from '@/lib/lessons/toolWalkthroughValidation';
 import type { CCCERValues } from '@/types';
 
-export type LessonSubmissionPayload = CCCERValues | ToolWalkthroughSubmission;
+export type LessonSubmissionPayload =
+  | CCCERValues
+  | ToolWalkthroughSubmission
+  | CatalogLabSubmission
+  | ConceptualSubmission;
 
 export type SubmitLessonContext = {
   supabase: SupabaseClient;

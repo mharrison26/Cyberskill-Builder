@@ -25,7 +25,7 @@ export function SystemsStatusPanel({
   return (
     <div
       className={cn(
-        'flex min-h-[5.5rem] flex-col rounded-md border border-border bg-card px-3 py-2.5',
+        'flex min-h-[5.5rem] flex-col rounded-md border border-border bg-card px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md',
         className
       )}
     >
@@ -57,9 +57,9 @@ export function SystemsStatusPanel({
               className={cn(
                 'shrink-0 tabular-nums',
                 system.health === 'operational'
-                  ? 'text-emerald-800'
+                  ? 'text-emerald-800 dark:text-emerald-400'
                   : system.health === 'degraded'
-                    ? 'text-amber-800'
+                    ? 'text-amber-800 dark:text-amber-400'
                     : 'text-muted-foreground'
               )}
             >

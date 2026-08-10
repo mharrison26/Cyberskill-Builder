@@ -37,6 +37,7 @@ import { FsPermissionsLabTicket } from '@/components/tickets/FsPermissionsLabTic
 import { MonitoringConfigTicket } from '@/components/tickets/MonitoringConfigTicket';
 import { NetworkDiagnosticsTicket } from '@/components/tickets/NetworkDiagnosticsTicket';
 import { NetworkTopologyFaultTicket } from '@/components/tickets/NetworkTopologyFaultTicket';
+import { OscalGeneratorTicket } from '@/components/tickets/OscalGeneratorTicket';
 import { OscalSspForm } from '@/components/tickets/OscalSspForm';
 import { OutageCapstoneTicket } from '@/components/tickets/OutageCapstoneTicket';
 import { P1StatusUpdatesTicket } from '@/components/tickets/P1StatusUpdatesTicket';
@@ -106,6 +107,7 @@ import {
   isPoamTicketType,
   isPolicySectionDraftTicketType,
   isSecurityBudgetAllocationTicketType,
+  isOscalGeneratorTicketType,
   isScriptRemediationTicketType,
   isScriptingTicketType,
   isSlaEscalationTicketType,
@@ -115,6 +117,7 @@ import { cn } from '@/lib/utils';
 
 export {
   initialStateToFiles,
+  isOscalGeneratorTicketType,
   isScriptRemediationTicketType,
   isScriptingTicketType,
 };
@@ -122,8 +125,9 @@ export {
 type TicketWorkSlotProps = {
   ticket: Pick<
     Ticket,
-    'id' | 'ticket_type' | 'initial_state' | 'expected_state'
-  >;
+    'id' | 'track_id' | 'ticket_type' | 'initial_state' | 'expected_state'
+  > &
+    Partial<Pick<Ticket, 'scenario_brief'>>;
   /** Disable sandbox submit / edits (admin preview). */
   readOnly?: boolean;
   className?: string;
@@ -200,10 +204,8 @@ export function isSecMaterialityTicketType(ticketType: string): boolean {
   return base === 'sec_materiality' || base === 'sec_cyber_materiality';
 }
 
-export function isConMonStrategyTicketType(ticketType: string): boolean {
-  const base = ticketTypeBase(ticketType);
-  return base === 'conmon_strategy' || base === 'continuous_monitoring';
-}
+import { isConMonStrategyTicketType } from '@/lib/scoring/conmonStrategy';
+export { isConMonStrategyTicketType };
 
 export function isContinuousAuditingTicketType(ticketType: string): boolean {
   const base = ticketTypeBase(ticketType);
@@ -265,7 +267,9 @@ export function isCoachingFeedbackTicketType(ticketType: string): boolean {
 
 /**
  * Extension point for ticket-type-specific work UIs.
- * Scripting / Python / oscal_generator (capstone_oscal) tickets mount CodeSandbox.
+ * oscal_generator / capstone_oscal (GRC-09) mount OscalGeneratorTicket:
+ *   WebContainer + run-on-submit against sample JSON; schema-only scoring.
+ * Other scripting tickets mount CodeSandbox.
  * script_remediation / scripting_lab (spooler_fix, sandbox_script, service_restart,
  * script_fixtures) also mounts CodeSandbox; scoring composes config-diff state /
  * fixture checks + RAG script-quality feedback (advisory).
@@ -290,8 +294,8 @@ export function isCoachingFeedbackTicketType(ticketType: string): boolean {
  * backup_dr_plan tickets mount the backup / disaster recovery plan form.
  * cmmc_gap_analysis tickets mount the CMMC L2 practice scoring / gap form.
  * security_assessment_report / sar_summary tickets mount SAR drafting over GRC-03/04.
- * authorization_package tickets mount the compiled GRC-03/04/09 package view.
- * ao_review tickets mount the Authorizing Official risk-acceptance Q&A.
+ * authorization_package tickets mount the compiled GRC-03/04/09 package view (ISSO-04).
+ * ao_review tickets mount sheet GRC-10: compiled package + RAG AO questions + DefenseRecorder (PI-14).
  * audit_committee_brief tickets mount exec summary + AC questions (AUD-07 flagship).
  * triage tickets mount the inbound priority + category form.
  * mock_directory tickets mount the simulated directory unlock/reset console.
@@ -340,6 +344,16 @@ export function TicketWorkSlot({
   if (isCisHardeningTicketType(ticket.ticket_type)) {
     return (
       <FlySandboxTicket
+        ticket={ticket}
+        readOnly={readOnly}
+        className={className}
+      />
+    );
+  }
+
+  if (isOscalGeneratorTicketType(ticket.ticket_type)) {
+    return (
+      <OscalGeneratorTicket
         ticket={ticket}
         readOnly={readOnly}
         className={className}

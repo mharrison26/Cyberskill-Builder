@@ -1,10 +1,13 @@
 import {
   detectOscalDocumentKind,
-  formatOscalSchemaErrors,
-  validateOscal,
+  validateOscalDocument,
   type OscalDocumentKind,
   type OscalSchemaError,
 } from '@/lib/oscal/validateOscal';
+import {
+  formatSspSchemaErrors,
+  validateOscalSsp,
+} from '@/lib/oscal/validateSsp';
 import type {
   ScorableTicket,
   TicketScoreResult,
@@ -13,25 +16,24 @@ import type {
 } from '@/lib/scoring/index';
 
 /**
- * Capstone OSCAL generator scoring (PI-04 CodeSandbox submissions).
+ * GRC-09 / Capstone OSCAL generator scoring (PI-04 WebContainer submissions).
  *
- * Students write a Python or Node script that reads a JSON input file and
- * emits a minimal OSCAL SSP or Assessment Results document. The WebContainer
- * sandbox submits `{ files: { [path]: content } }`. Grading is deterministic:
+ * Students write a Node/Python script that reads a sample JSON input template
+ * and emits an OSCAL SSP. On submit, the browser sandbox re-runs the script
+ * against the seeded sample input, then the server validates the resulting
+ * JSON against the vendored OSCAL SSP schema.
  *
- * 1. Basic static checks on the submitted script (structure, I/O intent)
- * 2. JSON Schema validation of the generated OSCAL output file
- *
- * The scorer does **not** execute student code on the server — students must
- * run their script in the sandbox so the output file is present at submit time.
+ * Pass/fail is **schema validation only** (not subjective code quality).
+ * Optional static structure checks are advisory feedback only.
  *
  * expected_state (optional knobs):
  * {
- *   documentKind?: 'ssp' | 'assessment-results' | 'either'; // default either
- *   scriptPath?: string;   // default: auto-detect *.js|*.mjs|*.cjs|*.py|*.ts
- *   inputPath?: string;    // default: input/*.json or first *.json under input/
- *   outputPath?: string;   // default: output/*.json or auto-detect OSCAL JSON
- *   minScriptChars?: number; // default 80
+ *   documentKind?: 'ssp' | 'assessment-results' | 'either'; // default ssp
+ *   scriptPath?: string;
+ *   inputPath?: string;    // default: input/system.json
+ *   outputPath?: string;   // default: output/ssp.json
+ *   minScriptChars?: number; // advisory static check only
+ *   requireStaticChecks?: boolean; // default false — when true, gates pass
  * }
  */
 
@@ -43,6 +45,8 @@ export type OscalGeneratorExpectedState = {
   inputPath?: string;
   outputPath?: string;
   minScriptChars?: number;
+  /** When true, static structure checks also gate pass/fail. Default false. */
+  requireStaticChecks?: boolean;
 };
 
 export type StaticCheckResult = {
@@ -60,6 +64,8 @@ export type OscalGeneratorStructuredResult = {
   staticPassed: boolean;
   schemaValid: boolean;
   schemaErrors: OscalSchemaError[];
+  /** How the OSCAL document was located for validation. */
+  outputSource?: 'file' | 'generatedOscal' | 'stdout' | null;
   reason?: string;
 };
 
@@ -147,6 +153,7 @@ function parseExpectedState(
       expected.minScriptChars > 0
         ? expected.minScriptChars
         : undefined,
+    requireStaticChecks: expected.requireStaticChecks === true,
   };
 }
 
@@ -198,6 +205,64 @@ function tryParseJson(content: string): unknown | null {
   }
 }
 
+/** Best-effort extract of a JSON object from script stdout. */
+export function parseJsonFromStdout(stdout: unknown): unknown | null {
+  if (typeof stdout !== 'string' || !stdout.trim()) return null;
+  const trimmed = stdout.trim();
+  const direct = tryParseJson(trimmed);
+  if (direct !== null) return direct;
+
+  // Brace-match objects in the stream. Prefer OSCAL roots, then longest JSON
+  // (scripts often log a line, then print the full document).
+  let found: unknown | null = null;
+  let foundScore = -1;
+  for (let i = 0; i < trimmed.length; i++) {
+    if (trimmed[i] !== '{') continue;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let j = i; j < trimmed.length; j++) {
+      const ch = trimmed[j]!;
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+      if (ch === '"') {
+        inString = true;
+        continue;
+      }
+      if (ch === '{') depth += 1;
+      else if (ch === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          const candidate = tryParseJson(trimmed.slice(i, j + 1));
+          if (candidate !== null) {
+            const oscalBonus =
+              isPlainObject(candidate) &&
+              ('system-security-plan' in candidate ||
+                'assessment-results' in candidate)
+                ? 1_000_000
+                : 0;
+            const score = oscalBonus + (j + 1 - i);
+            if (score > foundScore) {
+              found = candidate;
+              foundScore = score;
+            }
+          }
+          break;
+        }
+      }
+    }
+  }
+  return found;
+}
+
 export function resolveOutputPath(
   files: Record<string, string>,
   configured?: string
@@ -223,6 +288,58 @@ export function resolveOutputPath(
   return underOutput[0] ?? candidates[0] ?? null;
 }
 
+/**
+ * Resolve the OSCAL document to validate from submission files / stdout /
+ * generatedOscal fields (in that priority for configured outputPath).
+ */
+export function resolveGeneratedOscal(args: {
+  submission: TicketSubmission;
+  files: Record<string, string>;
+  outputPath: string | null;
+}): { document: unknown | null; source: 'file' | 'generatedOscal' | 'stdout' | null; outputPath: string | null } {
+  const { submission, files, outputPath } = args;
+
+  if (outputPath && files[outputPath] !== undefined) {
+    const parsed = tryParseJson(files[outputPath] ?? '');
+    if (parsed !== null) {
+      return { document: parsed, source: 'file', outputPath };
+    }
+    return { document: null, source: 'file', outputPath };
+  }
+
+  if (isPlainObject(submission.generatedOscal)) {
+    return {
+      document: submission.generatedOscal,
+      source: 'generatedOscal',
+      outputPath,
+    };
+  }
+  if (isPlainObject(submission.oscalDocument)) {
+    return {
+      document: submission.oscalDocument,
+      source: 'generatedOscal',
+      outputPath,
+    };
+  }
+
+  const fromStdout = parseJsonFromStdout(submission.stdout);
+  if (fromStdout !== null) {
+    return { document: fromStdout, source: 'stdout', outputPath };
+  }
+
+  // Fall back to auto-detected output file even without configured path.
+  const autoPath = resolveOutputPath(files, undefined);
+  if (autoPath && files[autoPath] !== undefined) {
+    const parsed = tryParseJson(files[autoPath] ?? '');
+    if (parsed !== null) {
+      return { document: parsed, source: 'file', outputPath: autoPath };
+    }
+    return { document: null, source: 'file', outputPath: autoPath };
+  }
+
+  return { document: null, source: null, outputPath: autoPath };
+}
+
 function stripCommentsAndStrings(
   source: string,
   language: 'js' | 'py'
@@ -246,7 +363,7 @@ function languageFromPath(scriptPath: string): 'js' | 'py' {
 }
 
 /**
- * Basic static structure / I/O intent checks (not a full code review).
+ * Basic static structure / I/O intent checks (advisory; not a full code review).
  * Exported for focused unit tests.
  */
 export function runStaticScriptChecks(args: {
@@ -352,50 +469,110 @@ export function runStaticScriptChecks(args: {
   return checks;
 }
 
-function feedbackFromResult(result: OscalGeneratorStructuredResult): string {
+function feedbackFromResult(
+  result: OscalGeneratorStructuredResult,
+  requireStaticChecks: boolean
+): string {
   const parts: string[] = [];
 
   if (result.reason === 'missing_files') {
-    return 'No sandbox files were submitted. Open the lab sandbox, complete the script, run it to generate OSCAL JSON, then submit.';
+    return 'No sandbox files were submitted. Open the lab sandbox, complete the script, submit so it runs against the sample input, then try again.';
   }
   if (result.reason === 'missing_script') {
     return 'Could not find a Python or Node generator script in the submission. Add generate_ssp.js / generate_ssp.py (or set expected_state.scriptPath).';
   }
   if (result.reason === 'missing_output') {
-    return 'Could not find generated OSCAL JSON output. Run your script in the sandbox so it writes the output file, then submit again.';
+    return 'Could not find generated OSCAL JSON output (file, stdout, or generatedOscal). The sandbox should run your script against the sample input on submit — fix the generator and resubmit.';
   }
   if (result.reason === 'invalid_json') {
-    return `Output file ${result.outputPath ?? '(unknown)'} is not valid JSON. Fix the generator and re-run it before submitting.`;
+    return `Generator output${
+      result.outputPath ? ` (${result.outputPath})` : ''
+    } is not valid JSON. Fix the generator and resubmit.`;
+  }
+  if (result.reason === 'sandbox_run_failed') {
+    return 'The sandbox failed to run your script against the sample input. Check the terminal output, fix runtime errors, and resubmit.';
   }
 
-  if (!result.staticPassed) {
+  if (requireStaticChecks && !result.staticPassed) {
     const failed = result.staticChecks
       .filter((c) => !c.passed)
       .map((c) => c.summary);
     parts.push(`Script structure checks failed: ${failed.join('; ')}.`);
-  } else {
-    parts.push('Script structure checks passed.');
+  } else if (!result.staticPassed && result.staticChecks.length > 0) {
+    const failed = result.staticChecks
+      .filter((c) => !c.passed)
+      .map((c) => c.summary);
+    if (failed.length > 0) {
+      parts.push(
+        `Advisory script notes (not graded): ${failed.join('; ')}.`
+      );
+    }
   }
 
   if (!result.schemaValid) {
-    const detail = formatOscalSchemaErrors(result.schemaErrors);
+    const detail = formatSspSchemaErrors(result.schemaErrors);
     parts.push(
-      `Generated OSCAL document failed schema validation${
+      `Generated OSCAL document failed SSP schema validation${
         result.documentKind ? ` (${result.documentKind})` : ''
       }.`
     );
     if (detail) parts.push(detail);
-  } else {
-    parts.push(
-      `Generated OSCAL ${result.documentKind ?? 'document'} validates against the schema.`
-    );
+    return parts.join(' ');
   }
 
-  if (result.staticPassed && result.schemaValid) {
-    return `Capstone accepted. ${parts.join(' ')}`;
+  parts.unshift(
+    `Generated OSCAL SSP validates against the NIST OSCAL SSP JSON Schema${
+      result.outputSource ? ` (via ${result.outputSource})` : ''
+    }.`
+  );
+  return `Capstone accepted. ${parts.join(' ')}`;
+}
+
+function validateAgainstSchema(
+  document: unknown,
+  preferred: OscalGeneratorDocumentKind
+): {
+  valid: boolean;
+  errors: OscalSchemaError[];
+  documentKind: OscalDocumentKind | null;
+} {
+  const detected = detectOscalDocumentKind(document);
+
+  // GRC-09 primary path: SSP schema via validateOscalSsp (same as GRC-03).
+  if (preferred === 'ssp') {
+    const ssp = validateOscalSsp(document);
+    return {
+      valid: ssp.valid,
+      errors: ssp.errors,
+      documentKind: ssp.valid || detected === 'ssp' ? 'ssp' : detected,
+    };
   }
 
-  return parts.join(' ');
+  if (preferred === 'assessment-results') {
+    const result = validateOscalDocument(document, 'assessment-results');
+    return {
+      valid: result.valid,
+      errors: result.errors,
+      documentKind: result.kind,
+    };
+  }
+
+  // preferred === 'either'
+  if (detected === 'assessment-results') {
+    const result = validateOscalDocument(document, 'assessment-results');
+    return {
+      valid: result.valid,
+      errors: result.errors,
+      documentKind: result.kind,
+    };
+  }
+
+  const ssp = validateOscalSsp(document);
+  return {
+    valid: ssp.valid,
+    errors: ssp.errors,
+    documentKind: ssp.valid || detected === 'ssp' ? 'ssp' : detected,
+  };
 }
 
 export function evaluateOscalGenerator(
@@ -405,7 +582,12 @@ export function evaluateOscalGenerator(
   const expected = parseExpectedState(ticket);
   const files = extractSubmissionFiles(submission);
 
-  if (Object.keys(files).length === 0) {
+  if (
+    Object.keys(files).length === 0 &&
+    !isPlainObject(submission.generatedOscal) &&
+    !isPlainObject(submission.oscalDocument) &&
+    typeof submission.stdout !== 'string'
+  ) {
     return {
       style: 'oscal_generator',
       scriptPath: null,
@@ -415,12 +597,50 @@ export function evaluateOscalGenerator(
       staticPassed: false,
       schemaValid: false,
       schemaErrors: [],
+      outputSource: null,
       reason: 'missing_files',
     };
   }
 
+  if (submission.sandboxRunFailed === true) {
+    const scriptPath = resolveScriptPath(files, expected.scriptPath);
+    return {
+      style: 'oscal_generator',
+      scriptPath,
+      outputPath: expected.outputPath ?? null,
+      documentKind: null,
+      staticChecks: [],
+      staticPassed: false,
+      schemaValid: false,
+      schemaErrors: [],
+      outputSource: null,
+      reason: 'sandbox_run_failed',
+    };
+  }
+
   const scriptPath = resolveScriptPath(files, expected.scriptPath);
-  if (!scriptPath) {
+  // Allow schema-only grading from generatedOscal/stdout without a script file
+  // (e.g. tests), but normal sandbox submits include the script.
+  const inputPath = resolveInputPath(files, expected.inputPath);
+  const configuredOutput = expected.outputPath ?? null;
+  const outputPath =
+    configuredOutput && files[configuredOutput] !== undefined
+      ? configuredOutput
+      : resolveOutputPath(files, expected.outputPath);
+
+  const staticChecks = scriptPath
+    ? runStaticScriptChecks({
+        scriptPath,
+        scriptSource: files[scriptPath] ?? '',
+        inputPath,
+        outputPath: outputPath ?? configuredOutput,
+        minScriptChars: expected.minScriptChars,
+      })
+    : [];
+  const staticPassed =
+    staticChecks.length === 0 ? true : staticChecks.every((c) => c.passed);
+
+  if (!scriptPath && Object.keys(files).length > 0 && !submission.generatedOscal && !submission.oscalDocument && typeof submission.stdout !== 'string') {
     return {
       style: 'oscal_generator',
       scriptPath: null,
@@ -430,42 +650,37 @@ export function evaluateOscalGenerator(
       staticPassed: false,
       schemaValid: false,
       schemaErrors: [],
+      outputSource: null,
       reason: 'missing_script',
     };
   }
 
-  const inputPath = resolveInputPath(files, expected.inputPath);
-  const outputPath = resolveOutputPath(files, expected.outputPath);
-
-  const staticChecks = runStaticScriptChecks({
-    scriptPath,
-    scriptSource: files[scriptPath] ?? '',
-    inputPath,
-    outputPath,
-    minScriptChars: expected.minScriptChars,
+  const resolved = resolveGeneratedOscal({
+    submission,
+    files,
+    outputPath: outputPath ?? configuredOutput,
   });
-  const staticPassed = staticChecks.every((c) => c.passed);
 
-  if (!outputPath) {
+  if (resolved.document === null && resolved.source === null) {
     return {
       style: 'oscal_generator',
       scriptPath,
-      outputPath: null,
+      outputPath: resolved.outputPath,
       documentKind: null,
       staticChecks,
       staticPassed,
       schemaValid: false,
       schemaErrors: [],
+      outputSource: null,
       reason: 'missing_output',
     };
   }
 
-  const parsed = tryParseJson(files[outputPath] ?? '');
-  if (parsed === null) {
+  if (resolved.document === null) {
     return {
       style: 'oscal_generator',
       scriptPath,
-      outputPath,
+      outputPath: resolved.outputPath,
       documentKind: null,
       staticChecks,
       staticPassed,
@@ -477,36 +692,39 @@ export function evaluateOscalGenerator(
           message: 'Output is not valid JSON',
         },
       ],
+      outputSource: resolved.source,
       reason: 'invalid_json',
     };
   }
 
-  const preferred = expected.documentKind ?? 'either';
-  const schemaResult = validateOscal(parsed, preferred);
-  const documentKind =
-    schemaResult.kind ?? detectOscalDocumentKind(parsed) ?? null;
+  const preferred = expected.documentKind ?? 'ssp';
+  const schemaResult = validateAgainstSchema(resolved.document, preferred);
 
   return {
     style: 'oscal_generator',
     scriptPath,
-    outputPath,
-    documentKind,
+    outputPath: resolved.outputPath,
+    documentKind: schemaResult.documentKind,
     staticChecks,
     staticPassed,
     schemaValid: schemaResult.valid,
     schemaErrors: schemaResult.errors,
+    outputSource: resolved.source,
   };
 }
 
 export const oscalGeneratorTicketScorer: TicketScorer = {
   score(submission, ticket): TicketScoreResult {
+    const expected = parseExpectedState(ticket);
     const structured = evaluateOscalGenerator(submission, ticket);
-    const resolved = structured.staticPassed && structured.schemaValid;
+    const resolved = expected.requireStaticChecks
+      ? structured.staticPassed && structured.schemaValid
+      : structured.schemaValid;
 
     return {
       status: resolved ? 'resolved' : 'needs_revision',
       structuredResult: structured,
-      feedback: feedbackFromResult(structured),
+      feedback: feedbackFromResult(structured, expected.requireStaticChecks === true),
     };
   },
 };

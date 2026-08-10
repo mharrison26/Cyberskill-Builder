@@ -4,66 +4,88 @@ import type { ScorableTicket } from '@/lib/scoring';
 import {
   evaluateOscalGenerator,
   oscalGeneratorTicketScorer,
+  parseJsonFromStdout,
   runStaticScriptChecks,
 } from '@/lib/scoring/oscalGenerator';
 
 const UUID = '11111111-1111-4111-8111-111111111111';
 const NOW = '2024-01-15T12:00:00Z';
 
+const SAMPLE_INPUT = {
+  system_name: 'Northwind CUI Enclave',
+  fips_199_category: 'moderate',
+  controls: [
+    {
+      id: 'ac-2',
+      status: 'implemented',
+      narrative: 'Accounts provisioned via SSO with MFA.',
+    },
+    {
+      id: 'ia-5',
+      status: 'partial',
+      narrative: 'Password complexity enforced; hardware tokens planned.',
+    },
+  ],
+};
+
 const GOOD_SCRIPT = `#!/usr/bin/env node
 const fs = require('fs');
 
 function buildSsp(input) {
   const uuid = '11111111-1111-4111-8111-111111111111';
+  const impact = 'fips-199-' + (input.fips_199_category || 'moderate');
   return {
     'system-security-plan': {
       uuid,
       metadata: {
-        title: input.systemName + ' SSP',
+        title: input.system_name + ' SSP',
         'last-modified': '2024-01-15T12:00:00Z',
         version: '1.0',
         'oscal-version': '1.1.2',
       },
-      'import-profile': { href: input.profileHref || '#profile' },
+      'import-profile': { href: '#profile' },
       'system-characteristics': {
-        'system-ids': [{ id: input.systemId }],
-        'system-name': input.systemName,
-        description: input.description,
+        'system-ids': [{ id: 'NW-CUI-01' }],
+        'system-name': input.system_name,
+        description: 'Generated from sample JSON template.',
         'system-information': {
           'information-types': [{
             uuid,
-            title: 'Business info',
-            description: 'General business information.',
+            title: 'CUI',
+            description: 'Controlled unclassified information.',
             categorizations: [{
               system: 'https://doi.org/10.6028/NIST.SP.800-60v2r1',
               'information-type-ids': ['C.2.8.12'],
             }],
-            'confidentiality-impact': { base: 'fips-199-low' },
-            'integrity-impact': { base: 'fips-199-low' },
-            'availability-impact': { base: 'fips-199-low' },
+            'confidentiality-impact': { base: impact },
+            'integrity-impact': { base: impact },
+            'availability-impact': { base: impact },
           }],
         },
         'security-impact-level': {
-          'security-objective-confidentiality': 'fips-199-low',
-          'security-objective-integrity': 'fips-199-low',
-          'security-objective-availability': 'fips-199-low',
+          'security-objective-confidentiality': impact,
+          'security-objective-integrity': impact,
+          'security-objective-availability': impact,
         },
         status: { state: 'operational' },
-        'authorization-boundary': { description: input.boundary },
+        'authorization-boundary': { description: 'Isolated VPC enclave.' },
       },
       'system-implementation': {
         users: [{ uuid, title: 'System Admin' }],
         components: [{
           uuid,
           type: 'system',
-          title: input.systemName,
-          description: input.description,
+          title: input.system_name,
+          description: 'Generated component.',
           status: { state: 'operational' },
         }],
       },
       'control-implementation': {
         description: 'Control implementation summary.',
-        'implemented-requirements': [{ uuid, 'control-id': 'ac-1' }],
+        'implemented-requirements': (input.controls || []).map((c, i) => ({
+          uuid: '11111111-1111-4111-8111-11111111111' + i,
+          'control-id': c.id,
+        })),
       },
     },
   };
@@ -79,41 +101,41 @@ const VALID_SSP = {
   'system-security-plan': {
     uuid: UUID,
     metadata: {
-      title: 'Demo System SSP',
+      title: 'Northwind CUI Enclave SSP',
       'last-modified': NOW,
       version: '1.0',
       'oscal-version': '1.1.2',
     },
     'import-profile': { href: '#profile' },
     'system-characteristics': {
-      'system-ids': [{ id: 'SYS-1' }],
-      'system-name': 'Demo System',
-      description: 'A demo system for the lab.',
+      'system-ids': [{ id: 'NW-CUI-01' }],
+      'system-name': 'Northwind CUI Enclave',
+      description: 'Generated from sample JSON template.',
       'system-information': {
         'information-types': [
           {
             uuid: UUID,
-            title: 'Business info',
-            description: 'General business information.',
+            title: 'CUI',
+            description: 'Controlled unclassified information.',
             categorizations: [
               {
                 system: 'https://doi.org/10.6028/NIST.SP.800-60v2r1',
                 'information-type-ids': ['C.2.8.12'],
               },
             ],
-            'confidentiality-impact': { base: 'fips-199-low' },
-            'integrity-impact': { base: 'fips-199-low' },
-            'availability-impact': { base: 'fips-199-low' },
+            'confidentiality-impact': { base: 'fips-199-moderate' },
+            'integrity-impact': { base: 'fips-199-moderate' },
+            'availability-impact': { base: 'fips-199-moderate' },
           },
         ],
       },
       'security-impact-level': {
-        'security-objective-confidentiality': 'fips-199-low',
-        'security-objective-integrity': 'fips-199-low',
-        'security-objective-availability': 'fips-199-low',
+        'security-objective-confidentiality': 'fips-199-moderate',
+        'security-objective-integrity': 'fips-199-moderate',
+        'security-objective-availability': 'fips-199-moderate',
       },
       status: { state: 'operational' },
-      'authorization-boundary': { description: 'Boundary description.' },
+      'authorization-boundary': { description: 'Isolated VPC enclave.' },
     },
     'system-implementation': {
       users: [{ uuid: UUID, title: 'System Admin' }],
@@ -121,15 +143,15 @@ const VALID_SSP = {
         {
           uuid: UUID,
           type: 'system',
-          title: 'Demo System',
-          description: 'A demo system for the lab.',
+          title: 'Northwind CUI Enclave',
+          description: 'Generated component.',
           status: { state: 'operational' },
         },
       ],
     },
     'control-implementation': {
       description: 'Control implementation summary.',
-      'implemented-requirements': [{ uuid: UUID, 'control-id': 'ac-1' }],
+      'implemented-requirements': [{ uuid: UUID, 'control-id': 'ac-2' }],
     },
   },
 };
@@ -144,7 +166,13 @@ function ticket(overrides: Partial<ScorableTicket> = {}): ScorableTicket {
     difficulty: 'high',
     sla_minutes: 90,
     scenario_brief: 'Capstone: generate a minimal OSCAL SSP',
-    initial_state: {},
+    initial_state: {
+      sheetId: 'GRC-09',
+      sampleJsonTemplate: SAMPLE_INPUT,
+      files: {
+        'input/system.json': JSON.stringify(SAMPLE_INPUT, null, 2),
+      },
+    },
     expected_state: {
       documentKind: 'ssp',
       scriptPath: 'generate_ssp.js',
@@ -182,16 +210,31 @@ describe('runStaticScriptChecks', () => {
   });
 });
 
+describe('parseJsonFromStdout', () => {
+  it('parses a trailing JSON object from noisy stdout', () => {
+    const doc = parseJsonFromStdout(
+      `Wrote output/ssp.json\n${JSON.stringify(VALID_SSP)}`
+    );
+    expect(doc).toMatchObject({
+      'system-security-plan': { uuid: UUID },
+    });
+  });
+});
+
 describe('evaluateOscalGenerator / oscalGeneratorTicketScorer', () => {
-  it('resolves when static checks and schema validation both pass', async () => {
+  it('resolves when SSP schema validation passes (static checks advisory)', async () => {
+    // Intentionally stubby script — schema pass/fail is the gate.
+    const stubScript = `const fs = require('fs');
+const input = JSON.parse(fs.readFileSync('input/system.json','utf8'));
+fs.mkdirSync('output',{recursive:true});
+fs.writeFileSync('output/ssp.json', JSON.stringify({ ok: true }));
+`;
+
     const result = await oscalGeneratorTicketScorer.score(
       {
         files: {
-          'generate_ssp.js': GOOD_SCRIPT,
-          'input/system.json': JSON.stringify({
-            systemId: 'SYS-1',
-            systemName: 'Demo System',
-          }),
+          'generate_ssp.js': stubScript,
+          'input/system.json': JSON.stringify(SAMPLE_INPUT),
           'output/ssp.json': JSON.stringify(VALID_SSP),
         },
       },
@@ -201,18 +244,19 @@ describe('evaluateOscalGenerator / oscalGeneratorTicketScorer', () => {
     expect(result.status).toBe('resolved');
     expect(result.structuredResult).toMatchObject({
       style: 'oscal_generator',
-      staticPassed: true,
       schemaValid: true,
       documentKind: 'ssp',
     });
+    // Static checks may fail on the stub; they must not gate pass/fail.
+    expect(result.structuredResult.staticPassed).toBe(false);
   });
 
-  it('needs revision when OSCAL output fails schema validation', () => {
+  it('needs revision when OSCAL output fails SSP schema validation', async () => {
     const structured = evaluateOscalGenerator(
       {
         files: {
           'generate_ssp.js': GOOD_SCRIPT,
-          'input/system.json': '{}',
+          'input/system.json': JSON.stringify(SAMPLE_INPUT),
           'output/ssp.json': JSON.stringify({
             'system-security-plan': { uuid: UUID },
           }),
@@ -221,9 +265,60 @@ describe('evaluateOscalGenerator / oscalGeneratorTicketScorer', () => {
       ticket()
     );
 
-    expect(structured.staticPassed).toBe(true);
     expect(structured.schemaValid).toBe(false);
     expect(structured.schemaErrors.length).toBeGreaterThan(0);
+
+    const result = await oscalGeneratorTicketScorer.score(
+      {
+        files: {
+          'generate_ssp.js': GOOD_SCRIPT,
+          'input/system.json': JSON.stringify(SAMPLE_INPUT),
+          'output/ssp.json': JSON.stringify({
+            'system-security-plan': { uuid: UUID },
+          }),
+        },
+      },
+      ticket()
+    );
+    expect(result.status).toBe('needs_revision');
+  });
+
+  it('accepts valid SSP JSON from stdout when output file is missing', async () => {
+    const result = await oscalGeneratorTicketScorer.score(
+      {
+        files: {
+          'generate_ssp.js': GOOD_SCRIPT,
+          'input/system.json': JSON.stringify(SAMPLE_INPUT),
+        },
+        stdout: JSON.stringify(VALID_SSP),
+      },
+      ticket()
+    );
+
+    expect(result.status).toBe('resolved');
+    expect(result.structuredResult).toMatchObject({
+      schemaValid: true,
+      outputSource: 'stdout',
+    });
+  });
+
+  it('needs revision when sandbox run failed', async () => {
+    const result = await oscalGeneratorTicketScorer.score(
+      {
+        files: {
+          'generate_ssp.js': GOOD_SCRIPT,
+          'input/system.json': JSON.stringify(SAMPLE_INPUT),
+          'output/ssp.json': JSON.stringify(VALID_SSP),
+        },
+        sandboxRunFailed: true,
+      },
+      ticket()
+    );
+
+    expect(result.status).toBe('needs_revision');
+    expect(result.structuredResult).toMatchObject({
+      reason: 'sandbox_run_failed',
+    });
   });
 
   it('needs revision when generated output is missing', async () => {
@@ -231,7 +326,7 @@ describe('evaluateOscalGenerator / oscalGeneratorTicketScorer', () => {
       {
         files: {
           'generate_ssp.js': GOOD_SCRIPT,
-          'input/system.json': '{}',
+          'input/system.json': JSON.stringify(SAMPLE_INPUT),
         },
       },
       ticket()
@@ -240,6 +335,37 @@ describe('evaluateOscalGenerator / oscalGeneratorTicketScorer', () => {
     expect(result.status).toBe('needs_revision');
     expect(result.structuredResult).toMatchObject({
       reason: 'missing_output',
+    });
+  });
+
+  it('can still require static checks when expected_state.requireStaticChecks', async () => {
+    const stubScript = `const fs = require('fs');
+fs.writeFileSync('output/ssp.json', '{}');
+`;
+    const result = await oscalGeneratorTicketScorer.score(
+      {
+        files: {
+          'generate_ssp.js': stubScript,
+          'input/system.json': JSON.stringify(SAMPLE_INPUT),
+          'output/ssp.json': JSON.stringify(VALID_SSP),
+        },
+      },
+      ticket({
+        expected_state: {
+          documentKind: 'ssp',
+          scriptPath: 'generate_ssp.js',
+          inputPath: 'input/system.json',
+          outputPath: 'output/ssp.json',
+          requireStaticChecks: true,
+          minScriptChars: 80,
+        },
+      })
+    );
+
+    expect(result.status).toBe('needs_revision');
+    expect(result.structuredResult).toMatchObject({
+      schemaValid: true,
+      staticPassed: false,
     });
   });
 });

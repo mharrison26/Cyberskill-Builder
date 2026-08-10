@@ -34,6 +34,7 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
   const cohortCode = String(formData.get('cohortCode') ?? '').trim();
+  const displayName = String(formData.get('displayName') ?? '').trim();
 
   const emailError = validateEmail(email);
   if (emailError) return { error: emailError };
@@ -41,11 +42,21 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   const passwordError = validatePassword(password);
   if (passwordError) return { error: passwordError };
 
+  const metadata: Record<string, string> = {};
+  if (cohortCode) metadata.cohort_code = cohortCode;
+  // Copied into public.users.display_name by handle_new_user when present.
+  if (displayName) {
+    metadata.full_name = displayName;
+    metadata.name = displayName;
+    metadata.display_name = displayName;
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: cohortCode ? { data: { cohort_code: cohortCode } } : undefined,
+    options:
+      Object.keys(metadata).length > 0 ? { data: metadata } : undefined,
   });
 
   if (error) return { error: error.message };

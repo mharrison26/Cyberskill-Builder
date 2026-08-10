@@ -24,13 +24,28 @@ import type {
   TicketSubmission,
 } from '@/lib/scoring/index';
 
-export { AO_REVIEW_MIN_ANSWER_LENGTH } from '@/lib/scoring/ticketUi';
-import { AO_REVIEW_MIN_ANSWER_LENGTH } from '@/lib/scoring/ticketUi';
+export {
+  AO_REVIEW_MIN_ANSWER_LENGTH,
+  AO_REVIEW_MIN_DEFENSE_SECONDS,
+} from '@/lib/scoring/ticketUi';
+import {
+  AO_REVIEW_MIN_ANSWER_LENGTH,
+  AO_REVIEW_MIN_DEFENSE_SECONDS,
+} from '@/lib/scoring/ticketUi';
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export type AoReviewResponsePath = 'verbal' | 'written';
 
 export type AoReviewStructuredResult = {
   style: 'ao_review';
-  /** Track flagship portfolio item on resolve (ISSO-05 / GRC-11). */
+  /** Track flagship portfolio item on resolve (sheet GRC-10 / ISSO-05 / legacy GRC-11). */
   flagshipEligible: true;
+  /** Primary verbal defense (PI-14 DefenseRecorder) vs written Q&A fallback. */
+  responsePath: AoReviewResponsePath;
+  defenseRecordingId: string | null;
+  defenseDurationSeconds: number | null;
   questionCount: number;
   answeredCount: number;
   shortAnswerIds: string[];
@@ -94,6 +109,15 @@ export function extractAoAnswers(
   return answers;
 }
 
+export function extractDefenseRecordingId(
+  submission: TicketSubmission
+): string | null {
+  const raw = submission.defenseRecordingId;
+  if (typeof raw !== 'string') return null;
+  const id = raw.trim();
+  return id.length > 0 ? id : null;
+}
+
 export function evaluateAoReviewDeterministic(
   submission: TicketSubmission,
   options?: { minAnswerLength?: number }
@@ -101,6 +125,7 @@ export function evaluateAoReviewDeterministic(
   ok: boolean;
   questions: AoQuestion[];
   answers: Record<string, string>;
+  defenseRecordingId: string | null;
   structured: AoReviewStructuredResult;
   feedback: string;
 } {
@@ -108,16 +133,20 @@ export function evaluateAoReviewDeterministic(
     options?.minAnswerLength ?? AO_REVIEW_MIN_ANSWER_LENGTH;
   const questions = extractAoQuestions(submission);
   const answers = extractAoAnswers(submission);
+  const defenseRecordingId = extractDefenseRecordingId(submission);
+  const usingVerbal = Boolean(defenseRecordingId);
 
   const missingAnswerIds: string[] = [];
   const shortAnswerIds: string[] = [];
 
-  for (const question of questions) {
-    const answer = answers[question.id]?.trim() ?? '';
-    if (!answer) {
-      missingAnswerIds.push(question.id);
-    } else if (answer.length < minAnswerLength) {
-      shortAnswerIds.push(question.id);
+  if (!usingVerbal) {
+    for (const question of questions) {
+      const answer = answers[question.id]?.trim() ?? '';
+      if (!answer) {
+        missingAnswerIds.push(question.id);
+      } else if (answer.length < minAnswerLength) {
+        shortAnswerIds.push(question.id);
+      }
     }
   }
 
@@ -128,6 +157,9 @@ export function evaluateAoReviewDeterministic(
   const structured: AoReviewStructuredResult = {
     style: 'ao_review',
     flagshipEligible: true,
+    responsePath: usingVerbal ? 'verbal' : 'written',
+    defenseRecordingId,
+    defenseDurationSeconds: null,
     questionCount: questions.length,
     answeredCount,
     shortAnswerIds,
@@ -143,9 +175,38 @@ export function evaluateAoReviewDeterministic(
       ok: false,
       questions,
       answers,
+      defenseRecordingId,
       structured: { ...structured, reason: 'questions_missing' },
       feedback:
         'AO review questions are not loaded yet. Open the ticket to generate questions, then answer and resubmit.',
+    };
+  }
+
+  if (usingVerbal) {
+    if (
+      !defenseRecordingId ||
+      defenseRecordingId.startsWith('defense-local-') ||
+      !UUID_RE.test(defenseRecordingId)
+    ) {
+      return {
+        ok: false,
+        questions,
+        answers,
+        defenseRecordingId,
+        structured: { ...structured, reason: 'defense_upload_incomplete' },
+        feedback:
+          'Verbal defense upload did not finish. Confirm & upload to Supabase, then submit again.',
+      };
+    }
+
+    return {
+      ok: true,
+      questions,
+      answers,
+      defenseRecordingId,
+      structured,
+      feedback:
+        'Verbal defense recording attached. Written answers are optional.',
     };
   }
 
@@ -154,8 +215,9 @@ export function evaluateAoReviewDeterministic(
       ok: false,
       questions,
       answers,
+      defenseRecordingId,
       structured: { ...structured, reason: 'missing_answers' },
-      feedback: `Answer all AO questions. Missing: ${missingAnswerIds.join(', ')}.`,
+      feedback: `Record a verbal defense (primary), or answer all AO questions in writing. Missing: ${missingAnswerIds.join(', ')}.`,
     };
   }
 
@@ -164,8 +226,9 @@ export function evaluateAoReviewDeterministic(
       ok: false,
       questions,
       answers,
+      defenseRecordingId,
       structured: { ...structured, reason: 'answers_too_short' },
-      feedback: `Expand these answers (min ${minAnswerLength} chars): ${shortAnswerIds.join(', ')}.`,
+      feedback: `Expand these answers (min ${minAnswerLength} chars), or submit a verbal defense recording instead: ${shortAnswerIds.join(', ')}.`,
     };
   }
 
@@ -173,6 +236,7 @@ export function evaluateAoReviewDeterministic(
     ok: true,
     questions,
     answers,
+    defenseRecordingId,
     structured,
     feedback: 'All AO questions answered.',
   };
@@ -211,6 +275,77 @@ function minAnswerLengthFromExpected(ticket: ScorableTicket): number {
   return AO_REVIEW_MIN_ANSWER_LENGTH;
 }
 
+async function verifyOwnedDefenseRecording(recordingId: string): Promise<{
+  ok: boolean;
+  durationSeconds: number | null;
+  feedback?: string;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      durationSeconds: null,
+      feedback: 'Sign in to submit your verbal defense.',
+    };
+  }
+
+  const { data: recording, error } = await supabase
+    .from('defense_recordings')
+    .select('id, student_id, duration_seconds, storage_path')
+    .eq('id', recordingId)
+    .maybeSingle();
+
+  if (error || !recording) {
+    return {
+      ok: false,
+      durationSeconds: null,
+      feedback:
+        'Could not find your uploaded defense recording. Record again and confirm upload.',
+    };
+  }
+
+  if (recording.student_id !== user.id) {
+    return {
+      ok: false,
+      durationSeconds: null,
+      feedback: 'Defense recording does not belong to the signed-in student.',
+    };
+  }
+
+  const durationSeconds =
+    typeof recording.duration_seconds === 'number'
+      ? recording.duration_seconds
+      : null;
+
+  if (
+    durationSeconds === null ||
+    durationSeconds < AO_REVIEW_MIN_DEFENSE_SECONDS
+  ) {
+    return {
+      ok: false,
+      durationSeconds,
+      feedback: `Verbal defense must be at least ${AO_REVIEW_MIN_DEFENSE_SECONDS} seconds. Record a fuller answer to the AO questions, then resubmit.`,
+    };
+  }
+
+  if (
+    typeof recording.storage_path !== 'string' ||
+    !recording.storage_path.trim()
+  ) {
+    return {
+      ok: false,
+      durationSeconds,
+      feedback: 'Defense recording is missing storage media. Upload again.',
+    };
+  }
+
+  return { ok: true, durationSeconds };
+}
+
 export function createAoReviewTicketScorer(
   compile: PackageCompileFn = defaultCompilePackage
 ): TicketScorer {
@@ -228,6 +363,30 @@ export function createAoReviewTicketScorer(
         };
       }
 
+      let defenseDurationSeconds: number | null = null;
+      if (
+        deterministic.structured.responsePath === 'verbal' &&
+        deterministic.defenseRecordingId
+      ) {
+        const verified = await verifyOwnedDefenseRecording(
+          deterministic.defenseRecordingId
+        );
+        if (!verified.ok) {
+          return {
+            status: 'needs_revision',
+            structuredResult: {
+              ...deterministic.structured,
+              defenseDurationSeconds: verified.durationSeconds,
+              reason: 'defense_invalid',
+            },
+            feedback:
+              verified.feedback ??
+              'Verbal defense recording could not be verified.',
+          };
+        }
+        defenseDurationSeconds = verified.durationSeconds;
+      }
+
       let pkg: CompiledAuthorizationPackage;
       try {
         pkg = await compile(ticket);
@@ -237,10 +396,36 @@ export function createAoReviewTicketScorer(
           status: 'needs_revision',
           structuredResult: {
             ...deterministic.structured,
+            defenseDurationSeconds,
             reason: 'compile_failed',
           },
           feedback:
             'Could not load your compiled authorization package for grading. Complete ISSO-04 / GRC-03–09 (or use the seeded sample package), then retry.',
+        };
+      }
+
+      const hasWrittenAnswers = deterministic.questions.every(
+        (q) => (deterministic.answers[q.id]?.trim().length ?? 0) > 0
+      );
+
+      // Verbal primary path: record-and-share (no speech AI grading). Optional
+      // written answers still go through RAG when complete.
+      if (
+        deterministic.structured.responsePath === 'verbal' &&
+        !hasWrittenAnswers
+      ) {
+        return {
+          status: 'resolved',
+          structuredResult: {
+            ...deterministic.structured,
+            flagshipEligible: true,
+            defenseDurationSeconds,
+            packageComplete: pkg.complete,
+            packageSource: pkg.packageSource,
+            reason: 'verbal_defense_accepted',
+          },
+          feedback:
+            'Verbal AO defense accepted (recording uploaded). Speech is not auto-graded — share the clip on your portfolio for recruiters. This resolution is marked as your track flagship portfolio item (ISSO-05).',
         };
       }
 
@@ -271,6 +456,7 @@ export function createAoReviewTicketScorer(
         const structured: AoReviewStructuredResult = {
           ...deterministic.structured,
           flagshipEligible: true,
+          defenseDurationSeconds,
           packageComplete: pkg.complete,
           packageSource: pkg.packageSource,
           guidancePath: guidance.catalogPath,
@@ -310,6 +496,7 @@ export function createAoReviewTicketScorer(
             structuredResult: {
               ...deterministic.structured,
               flagshipEligible: true,
+              defenseDurationSeconds,
               packageComplete: pkg.complete,
               packageSource: pkg.packageSource,
               reason: 'rag_feedback_unavailable_missing_api_key',
@@ -334,6 +521,7 @@ export function createAoReviewTicketScorer(
           structuredResult: {
             ...deterministic.structured,
             flagshipEligible: true,
+            defenseDurationSeconds,
             packageComplete: pkg.complete,
             packageSource: pkg.packageSource,
             reason: 'rag_feedback_error',

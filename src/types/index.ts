@@ -18,6 +18,19 @@ export interface WorkRoleCode {
   source_url: string | null;
 }
 
+/** Authoring payload stored in lessons.content (GRC Lesson Content sheet). */
+export interface LessonContentPayload {
+  sheetId?: string;
+  scenarioBrief?: string;
+  gradingFocus?: string;
+  keyArtifact?: string;
+  cursorPrompt?: string;
+  source?: string;
+  /** Optional markdown body; when absent UI renders scenarioBrief. */
+  body?: string;
+  [key: string]: unknown;
+}
+
 export interface Lesson {
   id: string;
   track_id: string;
@@ -28,6 +41,10 @@ export interface Lesson {
   learning_objectives: string | null;
   /** FK → work_role_codes.code (nullable). */
   dcwf_code: string | null;
+  /** Optional prerequisite lesson (e.g. IAM lab for tool walkthroughs). */
+  depends_on_lesson_id?: string | null;
+  /** Scenario / rubric payload from the GRC Lesson Content sheet. */
+  content?: LessonContentPayload | null;
 }
 
 /** Ticket content model (parallel to lessons). Tier is 1 | 2 | 3. */
