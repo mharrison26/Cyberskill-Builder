@@ -265,7 +265,7 @@ export function isCoachingFeedbackTicketType(ticketType: string): boolean {
 
 /**
  * Extension point for ticket-type-specific work UIs.
- * Scripting / Python / oscal_generator (capstone_oscal) tickets mount CodeSandbox.
+ * Scripting / oscal_generator (capstone_oscal) tickets mount CodeSandbox.
  * script_remediation / scripting_lab (spooler_fix, sandbox_script, service_restart,
  * script_fixtures) also mounts CodeSandbox; scoring composes config-diff state /
  * fixture checks + RAG script-quality feedback (advisory).

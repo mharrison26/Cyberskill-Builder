@@ -14,7 +14,6 @@ export const TICKET_TYPES = [
   'iac_lab',
   'ansible_lab',
   'terraform_lab',
-  'python',
   'shell',
   'sysadmin',
   'cccer',

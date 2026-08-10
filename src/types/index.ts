@@ -243,7 +243,7 @@ export interface MockTrackTicket {
   engagementTitle?: string;
   /** Auditor workpaper checklist lines. */
   workpaperItems?: Array<{ id: string; label: string; done: boolean }>;
-  /** Python / issue-tracker labels. */
+  /** Optional issue-tracker / console labels. */
   labels?: string[];
   /** ISSO: system / authorization boundary name. */
   systemName?: string;
