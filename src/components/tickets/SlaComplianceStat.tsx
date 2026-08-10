@@ -50,15 +50,14 @@ export function SlaComplianceStat({
       ) : (
         <>
           <div className="flex items-center gap-2">
-            <StatusDot
-              className={slaDotClass(percent)}
-              pulse={percent < 90}
-            />
+            <StatusDot className={slaDotClass(percent)} pulse={percent < 90} />
             <span className="font-mono text-xl font-semibold tabular-nums leading-none tracking-tight text-foreground">
               {percent}%
             </span>
           </div>
-          <p className="text-xs text-muted-foreground">resolved within window</p>
+          <p className="text-xs text-muted-foreground">
+            resolved within window
+          </p>
         </>
       )}
     </div>

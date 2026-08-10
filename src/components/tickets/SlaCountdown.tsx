@@ -70,9 +70,7 @@ export function SlaCountdown({
       <span className="inline-flex items-center gap-1.5">
         <StatusDot
           className={
-            state.isOverdue
-              ? 'bg-status-blocked-foreground'
-              : 'bg-emerald-700'
+            state.isOverdue ? 'bg-status-blocked-foreground' : 'bg-emerald-700'
           }
           pulse={!state.isOverdue}
         />

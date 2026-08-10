@@ -89,7 +89,10 @@ export function DashboardLoadingSkeleton() {
         <Skeleton className="h-4 w-72 max-w-full" />
       </header>
 
-      <section aria-label="Operations overview" className="grid gap-3 sm:grid-cols-3">
+      <section
+        aria-label="Operations overview"
+        className="grid gap-3 sm:grid-cols-3"
+      >
         <SkeletonStatCard variant="sparkline" />
         <SkeletonStatCard variant="list" />
         <SkeletonStatCard variant="metric" />
