@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 type MockSandboxSurfaceProps = {
   hostname?: string;
-  /** Dominant terminal (sysadmin) vs editor+terminal (python). */
+  /** Dominant terminal (sysadmin) vs editor+terminal layout. */
   layout?: 'terminal' | 'editor';
   className?: string;
 };

@@ -125,7 +125,6 @@ export async function getAppShellContext(): Promise<AppShellContext> {
     { slug: 'helpdesk', name: 'HelpDesk' },
     { slug: 'sysadmin', name: 'IT Admin' },
     { slug: 'auditor', name: 'IT Auditor' },
-    { slug: 'python', name: 'Python' },
     { slug: 'isso', name: 'ISSO' },
     { slug: 'issm', name: 'ISSM' },
   ];

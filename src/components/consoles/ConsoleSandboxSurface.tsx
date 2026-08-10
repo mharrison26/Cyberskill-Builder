@@ -13,7 +13,7 @@ import type { MockTrackTicket } from '@/types';
 
 type ConsoleSandboxSurfaceProps = {
   ticket: MockTrackTicket;
-  /** Dominant terminal (sysadmin) vs editor+terminal (python). */
+  /** Dominant terminal (sysadmin) vs editor+terminal layout. */
   preferredLayout?: 'terminal' | 'editor';
   className?: string;
 };

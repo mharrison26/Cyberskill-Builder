@@ -6,8 +6,6 @@ const TRACK_DESCRIPTIONS: Record<string, string> = {
     'IT admin / sysadmin operations — NOC monitoring, incident response, configuration, and host-level troubleshooting in a sandbox.',
   auditor:
     'IT audit engagements — workpaper procedures, sampling, evidence examination, and CCCER documentation across control families.',
-  python:
-    'Python engineering labs — issue-driven coding with WebContainer editor/terminal, tests, and machine-readable outputs.',
   isso: 'Information System Security Officer track — day-to-day system stewardship, evidence collection, POA&M closure, and ConMon for systems you own.',
   issm: 'Information Systems Security Manager track — portfolio authorization oversight, ISSO escalations, and package decision gates.',
 };
