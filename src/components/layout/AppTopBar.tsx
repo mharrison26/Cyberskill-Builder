@@ -105,12 +105,12 @@ export function AppTopBar({
             render={
               <Button
                 variant="ghost"
-                className="gap-2 px-2"
+                className="gap-2 px-2 transition-hover hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label="User menu"
               />
             }
           >
-            <Avatar className="size-7">
+            <Avatar className="size-7 transition-hover group-hover/button:opacity-90 group-aria-expanded/button:ring-2 group-aria-expanded/button:ring-ring/50">
               <AvatarFallback className="bg-primary text-xs text-primary-foreground">
                 {getAvatarInitials(user.name)}
               </AvatarFallback>

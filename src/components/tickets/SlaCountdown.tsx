@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Clock3 } from 'lucide-react';
 
 import { OverdueBadge } from '@/components/tickets/OverdueBadge';
+import { StatusDot } from '@/components/ui/status-dot';
 import { formatSlaCountdown, getSlaState } from '@/lib/tickets/sla';
 import { cn } from '@/lib/utils';
 
@@ -43,11 +43,11 @@ export function SlaCountdown({
     return (
       <span
         className={cn(
-          'inline-flex items-center gap-1.5 text-sm text-muted-foreground',
+          'inline-flex items-center gap-1.5 font-mono text-xs tabular-nums text-muted-foreground',
           className
         )}
       >
-        <Clock3 className="size-3.5 shrink-0" aria-hidden="true" />
+        <StatusDot className="bg-muted-foreground/45" />
         <span>Not started · {formatSlaWindow(slaMinutes)}</span>
       </span>
     );
@@ -68,7 +68,14 @@ export function SlaCountdown({
     >
       {state.isOverdue ? <OverdueBadge /> : null}
       <span className="inline-flex items-center gap-1.5">
-        <Clock3 className="size-3.5 shrink-0" aria-hidden="true" />
+        <StatusDot
+          className={
+            state.isOverdue
+              ? 'bg-status-blocked-foreground'
+              : 'bg-emerald-700'
+          }
+          pulse={!state.isOverdue}
+        />
         <span>{formatSlaCountdown(state.remainingMs)}</span>
       </span>
     </span>
