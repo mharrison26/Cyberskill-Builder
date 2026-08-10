@@ -23,30 +23,40 @@ const LESSON_TYPE_CONFIG: Record<
   tool_walkthrough: { label: 'Tool Walkthrough', icon: MonitorPlay },
 };
 
+/** Canonical lesson detail path for a track + lesson id. */
+export function lessonDetailHref(trackSlug: string, lessonId: string): string {
+  return `/tracks/${trackSlug}/lessons/${lessonId}`;
+}
+
 type LessonCardProps = {
   id: string;
+  trackSlug: string;
   title: string;
   status: StatusKey;
   lessonType: LessonType;
   tier: string;
-  href: string;
   className?: string;
 };
 
 export function LessonCard({
+  id,
+  trackSlug,
   title,
   status,
   lessonType,
   tier,
-  href,
   className,
 }: LessonCardProps) {
   const typeConfig = LESSON_TYPE_CONFIG[lessonType];
   const TypeIcon = typeConfig.icon;
+  const href = lessonDetailHref(trackSlug, id);
 
   return (
     <Card
-      className={cn('transition-colors hover:border-primary/40', className)}
+      className={cn(
+        'bg-card text-card-foreground shadow-sm transition-[box-shadow,border-color] hover:border-primary/40 hover:shadow-md',
+        className
+      )}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">

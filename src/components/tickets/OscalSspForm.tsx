@@ -85,6 +85,20 @@ export function OscalSspForm({
     () => parseRequirements(asRecord(ticket.initial_state)),
     [ticket.initial_state]
   );
+  const systemMeta = useMemo(() => {
+    const initial = asRecord(ticket.initial_state);
+    const systemName =
+      typeof initial.systemName === 'string' && initial.systemName.trim()
+        ? initial.systemName.trim()
+        : null;
+    const systemDescription =
+      typeof initial.systemDescription === 'string' &&
+      initial.systemDescription.trim()
+        ? initial.systemDescription.trim()
+        : null;
+    return { systemName, systemDescription };
+  }, [ticket.initial_state]);
+  const { systemName, systemDescription } = systemMeta;
 
   const [drafts, setDrafts] = useState<Record<string, AnswerDraft>>(() => {
     const initial: Record<string, AnswerDraft> = {};
@@ -96,6 +110,9 @@ export function OscalSspForm({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [schemaErrors, setSchemaErrors] = useState<
+    Array<{ instancePath: string; message: string }>
+  >([]);
   const [scoreStatus, setScoreStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -105,6 +122,7 @@ export function OscalSspForm({
       [requirementId]: { ...prev[requirementId]!, ...patch },
     }));
     setFeedback(null);
+    setSchemaErrors([]);
     setScoreStatus(null);
     setSubmitError(null);
   }
@@ -138,6 +156,7 @@ export function OscalSspForm({
 
     setSubmitError(null);
     setFeedback(null);
+    setSchemaErrors([]);
     setScoreStatus(null);
 
     if (!validate()) return;
@@ -177,18 +196,19 @@ export function OscalSspForm({
       }
 
       setScoreStatus(payload.status ?? null);
+      setFeedback(payload.feedback ?? 'Submission recorded.');
 
-      let nextFeedback = payload.feedback ?? 'Submission recorded.';
-      const schemaErrors = payload.structuredResult?.schemaErrors;
-      if (
-        schemaErrors &&
-        schemaErrors.length > 0 &&
-        payload.status !== 'resolved'
-      ) {
-        // Feedback already includes schema errors from the scorer; keep as-is.
-        nextFeedback = payload.feedback ?? nextFeedback;
-      }
-      setFeedback(nextFeedback);
+      const nextSchemaErrors =
+        payload.status !== 'resolved' &&
+        Array.isArray(payload.structuredResult?.schemaErrors)
+          ? payload.structuredResult.schemaErrors.filter(
+              (error) =>
+                error &&
+                typeof error.message === 'string' &&
+                error.message.trim().length > 0
+            )
+          : [];
+      setSchemaErrors(nextSchemaErrors);
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -220,6 +240,22 @@ export function OscalSspForm({
           into a minimal OSCAL System Security Plan JSON fragment and validated
           against the NIST OSCAL SSP schema before acceptance.
         </p>
+        {systemName || systemDescription ? (
+          <div className="max-w-prose space-y-1 rounded-md border border-border bg-muted/30 px-4 py-3 text-sm">
+            {systemName ? (
+              <p className="font-medium text-foreground">{systemName}</p>
+            ) : null}
+            {systemDescription ? (
+              <p className="leading-relaxed text-muted-foreground">
+                {systemDescription}
+              </p>
+            ) : null}
+            <p className="text-xs text-muted-foreground">
+              Complete implementation statements for:{' '}
+              {requirements.map((req) => req.id).join(', ')}.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-8">
@@ -395,14 +431,17 @@ export function OscalSspForm({
           </p>
         ) : null}
 
-        {feedback ? (
+        {feedback || schemaErrors.length > 0 ? (
           <div
-            role="status"
+            role={schemaErrors.length > 0 ? 'alert' : 'status'}
+            data-testid="oscal-ssp-feedback"
             className={cn(
-              'whitespace-pre-wrap rounded-md border px-4 py-3 text-sm',
+              'rounded-md border px-4 py-3 text-sm',
               scoreStatus === 'resolved'
                 ? 'border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground'
-                : 'border-border bg-muted/40 text-foreground'
+                : schemaErrors.length > 0
+                  ? 'border-destructive/30 bg-destructive/10 text-foreground'
+                  : 'border-border bg-muted/40 text-foreground'
             )}
           >
             {scoreStatus ? (
@@ -410,7 +449,31 @@ export function OscalSspForm({
                 {scoreStatus.replace(/_/g, ' ')}
               </p>
             ) : null}
-            <p>{feedback}</p>
+            {feedback ? (
+              <p className="whitespace-pre-wrap">{feedback}</p>
+            ) : null}
+            {schemaErrors.length > 0 ? (
+              <div className="mt-3 space-y-2">
+                <p className="font-medium text-destructive">
+                  OSCAL SSP schema errors
+                </p>
+                <ul className="list-disc space-y-1 pl-5 text-destructive">
+                  {schemaErrors.map((error, index) => {
+                    const pathLabel =
+                      !error.instancePath || error.instancePath === ''
+                        ? '/'
+                        : error.instancePath;
+                    return (
+                      <li key={`${pathLabel}-${error.message}-${index}`}>
+                        <span className="font-mono text-xs">{pathLabel}</span>
+                        {': '}
+                        {error.message}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

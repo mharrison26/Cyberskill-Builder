@@ -35,6 +35,7 @@ type PracticePrompt = {
   id: string;
   title?: string;
   domain?: string;
+  implementationSummary?: string;
 };
 
 type FormErrors = {
@@ -79,6 +80,13 @@ function parsePracticePrompts(
                 ? record.practiceId.trim()
                 : '';
           if (!id) return null;
+          const implementationSummary =
+            typeof record.implementationSummary === 'string' &&
+            record.implementationSummary.trim()
+              ? record.implementationSummary.trim()
+              : typeof record.summary === 'string' && record.summary.trim()
+                ? record.summary.trim()
+                : undefined;
           return {
             id,
             title:
@@ -89,6 +97,7 @@ function parsePracticePrompts(
               typeof record.domain === 'string' && record.domain.trim()
                 ? record.domain.trim()
                 : undefined,
+            implementationSummary,
           };
         }
         return null;
@@ -144,6 +153,14 @@ export function CmmcGapAnalysisTicket({
       : typeof initialState.summary === 'string' && initialState.summary.trim()
         ? initialState.summary.trim()
         : 'No implementation summary was provided on this ticket.';
+  const readinessFormula =
+    typeof initialState.readinessFormula === 'string' &&
+    initialState.readinessFormula.trim()
+      ? initialState.readinessFormula.trim()
+      : typeof expectedState.readinessFormula === 'string' &&
+          expectedState.readinessFormula.trim()
+        ? expectedState.readinessFormula.trim()
+        : null;
 
   const [scores, setScores] = useState<
     Record<string, CmmcPracticeScoreValue | ''>
@@ -317,6 +334,11 @@ export function CmmcGapAnalysisTicket({
                       {practice.title}
                     </p>
                   ) : null}
+                  {practice.implementationSummary ? (
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {practice.implementationSummary}
+                    </p>
+                  ) : null}
                   <div className="flex flex-wrap gap-4">
                     {CMMC_PRACTICE_SCORE_VALUES.map((value) => {
                       const inputId = `${practice.id}-${value}`;
@@ -370,8 +392,9 @@ export function CmmcGapAnalysisTicket({
           <CardHeader>
             <CardTitle className="text-base">Overall readiness</CardTitle>
             <CardDescription>
-              Estimate the company&apos;s CMMC Level 2 readiness for this
-              practice subset (0–100%).
+              {readinessFormula
+                ? `Derive readiness from your practice scores using: ${readinessFormula}`
+                : "Estimate the company's CMMC Level 2 readiness for this practice subset (0–100%)."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">

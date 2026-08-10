@@ -7,6 +7,7 @@ import { getMyPortfolioItems } from '@/lib/portfolio/getMyPortfolio';
 import { toFindingStateDisplay } from '@/lib/portfolio/getPublicPortfolio';
 import { MOCK_FINDINGS, MOCK_USER } from '@/lib/mock-data';
 import { createClient } from '@/lib/supabase/server';
+import { getUserDisplayName } from '@/lib/users/displayName';
 
 export const metadata: Metadata = {
   title: 'Capability ledger',
@@ -20,25 +21,19 @@ export default async function MyPortfolioPage() {
     data: { user: authUser },
   } = await supabase.auth.getUser();
 
-  let displayName = MOCK_USER.name;
+  let displayName: string | null = MOCK_USER.name;
   let usingMock = true;
   let items: Awaited<ReturnType<typeof getMyPortfolioItems>> = [];
 
   if (authUser) {
     const { data: profile } = await supabase
       .from('users')
-      .select('id, email')
+      .select('id, display_name')
       .eq('id', authUser.id)
       .maybeSingle();
 
     if (profile) {
-      displayName =
-        profile.email
-          .split('@')[0]
-          ?.split(/[._-]+/)
-          .filter(Boolean)
-          .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
-          .join(' ') ?? MOCK_USER.name;
+      displayName = getUserDisplayName({ display_name: profile.display_name });
       items = await getMyPortfolioItems(supabase, profile.id);
       usingMock = items.length === 0;
     }
@@ -54,9 +49,10 @@ export default async function MyPortfolioPage() {
         </p>
         <h1 className="text-2xl font-semibold tracking-tight">My Portfolio</h1>
         <p className="max-w-2xl text-muted-foreground">
-          {displayName} — machine-readable findings and ticket resolutions
-          mapped to DCWF / DoD 8570 work roles. Each entry carries a timestamp,
-          work-role code, and downloadable OSCAL record.
+          {displayName ? `${displayName} — ` : null}
+          machine-readable findings and ticket resolutions mapped to DCWF / DoD
+          8570 work roles. Each entry carries a timestamp, work-role code, and
+          downloadable OSCAL record.
         </p>
       </header>
 

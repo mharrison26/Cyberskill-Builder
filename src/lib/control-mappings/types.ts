@@ -32,6 +32,8 @@ export type ControlMappingInitialState = {
 /** Student submission payload for control_mapping tickets. */
 export type ControlMappingSubmission = {
   answers: Partial<Record<ControlFramework, string[]>>;
+  /** Strong vs partial overlap explanation (GRC-01 RAG-graded narrative). */
+  overlapNarrative?: string;
 };
 
 export function isControlFramework(value: unknown): value is ControlFramework {

@@ -18,7 +18,9 @@ Do not expand this into a full CMMC catalog unless product requirements call for
 
 ## Ticket shape (summary)
 
-- `initial_state.companyName` / `implementationSummary` — fictional company control summary
-- `initial_state.practiceIds` — subset of practice IDs from this file
+- `initial_state.companyName` / `companySummary` / per-practice `practices[].implementationSummary` — fictional company control evidence
+- `initial_state.practiceIds` — subset of practice IDs from this file (GRC-07 uses 10)
 - Student submits practice scores (`met` / `partial` / `not_met`), gap notes, and overall readiness `%`
-- `expected_state.minGapAnalysisLength` (optional) — deterministic length gate before RAG grading
+- `expected_state.expectedPracticeScores` + `expectedReadinessPercent` — deterministic answer key (GRC-07: 4 met / 3 partial / 3 not_met → **55%**)
+- Readiness formula: `round(100 * Σ weight(score) / N)` with `met=1`, `partial=0.5`, `not_met=0`
+- `expected_state.minGapAnalysisLength` (optional) — length gate before RAG grading against this pinned file

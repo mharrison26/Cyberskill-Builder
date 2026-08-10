@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { LogOut, Menu, User } from 'lucide-react';
-import { useTransition } from 'react';
+import { LogOut, Menu, Settings, User } from 'lucide-react';
+import { Suspense, useTransition } from 'react';
 
 import { signOut } from '@/app/(auth)/actions';
 
+import { AppBreadcrumb } from '@/components/layout/AppBreadcrumb';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { OrgSwitcher } from '@/components/layout/OrgSwitcher';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +33,7 @@ import type {
   SidebarTrack,
 } from '@/lib/auth/appShell';
 import type { WorkspaceOption } from '@/lib/tenants/workspaces';
+import { getAvatarInitials } from '@/lib/users/displayName';
 
 type AppTopBarProps = {
   user: AppShellUser;
@@ -40,15 +43,6 @@ type AppTopBarProps = {
   enrollments?: SidebarTrack[];
   workspaces?: WorkspaceOption[];
 };
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 export function AppTopBar({
   user,
@@ -93,8 +87,11 @@ export function AppTopBar({
           CyberSkill Builder
         </p>
 
-        <div className="hidden min-w-0 md:block">
+        <div className="hidden min-w-0 items-center gap-1 md:flex">
           <OrgSwitcher workspaces={workspaces} />
+          <Suspense fallback={null}>
+            <AppBreadcrumb enrollments={enrollments} />
+          </Suspense>
         </div>
       </div>
 
@@ -102,6 +99,7 @@ export function AppTopBar({
         <div className="md:hidden">
           <OrgSwitcher workspaces={workspaces} />
         </div>
+        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -114,23 +112,35 @@ export function AppTopBar({
           >
             <Avatar className="size-7">
               <AvatarFallback className="bg-primary text-xs text-primary-foreground">
-                {getInitials(user.name)}
+                {getAvatarInitials(user.name)}
               </AvatarFallback>
             </Avatar>
-            <span className="hidden text-sm font-medium sm:inline">
-              {user.name}
-            </span>
+            {user.name ? (
+              <span className="hidden text-sm font-medium sm:inline">
+                {user.name}
+              </span>
+            ) : null}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span>{user.name}</span>
+                {user.name ? (
+                  <span>{user.name}</span>
+                ) : (
+                  <span className="font-normal text-muted-foreground">
+                    Preferred name not set
+                  </span>
+                )}
                 <span className="text-xs font-normal text-muted-foreground">
                   {user.email}
                 </span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link href="/account" />}>
+              <Settings className="size-4" aria-hidden="true" />
+              {user.name ? 'Account Settings' : 'Set preferred name'}
+            </DropdownMenuItem>
             <DropdownMenuItem render={<Link href="/portfolio" />}>
               <User className="size-4" aria-hidden="true" />
               My Portfolio
@@ -141,7 +151,7 @@ export function AppTopBar({
               onClick={() => startSignOut(() => signOut())}
             >
               <LogOut className="size-4" aria-hidden="true" />
-              {isSigningOut ? 'Signing out…' : 'Sign out'}
+              {isSigningOut ? 'Signing out…' : 'Sign Out'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

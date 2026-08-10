@@ -37,6 +37,9 @@ describe('capstone ticket codes', () => {
     expect(ISSO_TICKET_CODES.AO_REVIEW).toBe('ISSO-05');
     expect(isAuthorizationPackageTicketCode('ISSO-04')).toBe(true);
     expect(isAoReviewTicketCode('ISSO-05')).toBe(true);
+    // Sheet GRC-10 is ao_review (RMF package defense); GRC-11 remains a legacy alias.
+    expect(isAoReviewTicketCode('GRC-10')).toBe(true);
+    expect(isAoReviewTicketCode('GRC-11')).toBe(true);
   });
 
   it('recognizes security_assessment_report / sar_summary (GRC-05)', () => {

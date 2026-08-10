@@ -4,8 +4,10 @@ import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { parseControlMappingInitialState } from '@/lib/control-mappings/parseInitialState';
 import type { ControlFramework } from '@/lib/control-mappings/types';
+import { CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH } from '@/lib/scoring/ticketUi';
 import { cn } from '@/lib/utils';
 import type { Ticket } from '@/types';
 
@@ -16,7 +18,7 @@ const FRAMEWORK_LABELS: Record<ControlFramework, string> = {
 };
 
 type ControlMappingWorkAreaProps = {
-  ticket: Pick<Ticket, 'id' | 'initial_state'>;
+  ticket: Pick<Ticket, 'id' | 'initial_state' | 'expected_state'>;
   readOnly?: boolean;
   className?: string;
 };
@@ -38,6 +40,29 @@ export function ControlMappingWorkArea({
     [ticket.initial_state]
   );
 
+  const gradeOverlapNarrative = useMemo(() => {
+    const expected = ticket.expected_state;
+    return (
+      !!expected &&
+      typeof expected === 'object' &&
+      !Array.isArray(expected) &&
+      (expected as { gradeOverlapNarrative?: unknown })
+        .gradeOverlapNarrative === true
+    );
+  }, [ticket.expected_state]);
+
+  const minOverlapNarrativeLength = useMemo(() => {
+    const expected = ticket.expected_state;
+    if (expected && typeof expected === 'object' && !Array.isArray(expected)) {
+      const value = (expected as { minOverlapNarrativeLength?: unknown })
+        .minOverlapNarrativeLength;
+      if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+        return Math.floor(value);
+      }
+    }
+    return CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH;
+  }, [ticket.expected_state]);
+
   const [selected, setSelected] = useState<
     Partial<Record<ControlFramework, Set<string>>>
   >(() => {
@@ -47,6 +72,7 @@ export function ControlMappingWorkArea({
     }
     return initial;
   });
+  const [overlapNarrative, setOverlapNarrative] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
@@ -82,6 +108,18 @@ export function ControlMappingWorkArea({
 
   async function handleSubmit() {
     if (readOnly || isSubmitting) return;
+
+    if (
+      gradeOverlapNarrative &&
+      overlapNarrative.trim().length < minOverlapNarrativeLength
+    ) {
+      setFeedback(
+        `Overlap narrative must be at least ${minOverlapNarrativeLength} characters.`
+      );
+      setFeedbackTone('error');
+      return;
+    }
+
     setIsSubmitting(true);
     setFeedback(null);
     setFeedbackTone(null);
@@ -95,7 +133,12 @@ export function ControlMappingWorkArea({
       const response = await fetch(`/api/tickets/${ticket.id}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({
+          answers,
+          ...(gradeOverlapNarrative
+            ? { overlapNarrative: overlapNarrative.trim() }
+            : {}),
+        }),
       });
       const body = (await response.json()) as SubmitResponse;
       if (!response.ok) {
@@ -126,19 +169,23 @@ export function ControlMappingWorkArea({
         </h2>
         <p className="text-sm text-muted-foreground">
           {prompt.prompt ??
-            'Identify equivalent controls in the other frameworks. Scoring uses the reference crosswalk table, not an AI guess.'}
+            `Given ${prompt.source_control_id}, select every equivalent control in the other frameworks. Scoring uses the reference crosswalk table, not an AI guess.`}
         </p>
       </div>
 
       <div className="rounded-md border border-border bg-muted/40 px-4 py-3">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Source control
+          Given control ID
         </p>
         <p className="mt-1 font-mono text-lg font-semibold tracking-tight">
           {prompt.source_control_id}
         </p>
         <p className="mt-0.5 text-sm text-muted-foreground">
           {prompt.source_label ?? FRAMEWORK_LABELS[prompt.source_framework]}
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Task: mark every equivalent in each framework below. Leave distractors
+          unchecked.
         </p>
       </div>
 
@@ -150,7 +197,9 @@ export function ControlMappingWorkArea({
 
           return (
             <fieldset key={target.framework} className="space-y-3">
-              <legend className="text-sm font-semibold">{label}</legend>
+              <legend className="text-sm font-semibold">
+                Equivalents in {label}
+              </legend>
               {options.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No candidate controls configured for this framework.
@@ -191,6 +240,30 @@ export function ControlMappingWorkArea({
           );
         })}
       </div>
+
+      {gradeOverlapNarrative ? (
+        <div className="space-y-2">
+          <Label htmlFor={`${ticket.id}-overlap-narrative`}>
+            Overlap narrative (strong vs partial)
+          </Label>
+          <Textarea
+            id={`${ticket.id}-overlap-narrative`}
+            value={overlapNarrative}
+            disabled={readOnly}
+            rows={5}
+            placeholder="Explain where the SOC 2 and ISO mappings are strong versus only partially overlapping relative to AC-2 (for example account review cadence)."
+            onChange={(event) => {
+              setOverlapNarrative(event.target.value);
+              setFeedback(null);
+              setFeedbackTone(null);
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            {overlapNarrative.trim().length}/{minOverlapNarrativeLength}{' '}
+            characters minimum
+          </p>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         <Button

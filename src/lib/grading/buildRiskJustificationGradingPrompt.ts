@@ -5,6 +5,8 @@ export type RiskJustificationSubmission = {
   riskRegisterId: string;
   justification: string;
   scenarioBrief?: string;
+  /** Structured vendor profile facts from ticket initial_state (when present). */
+  vendorProfileText?: string;
 };
 
 /**
@@ -25,9 +27,17 @@ ${submission.scenarioBrief.trim()}
 `
     : '';
 
+  const vendorBlock = submission.vendorProfileText?.trim()
+    ? `## Vendor profile (ticket scenario data)
+
+${submission.vendorProfileText.trim()}
+
+`
+    : '';
+
   return `You are evaluating a student's likelihood/impact justification for a risk register entry against NIST SP 800-30 Rev. 1 guidance text ONLY.
 
-Use only the retrieved SP 800-30 guidance sections provided below. Do not rely on outside knowledge, memorized NIST content, parametric values, or assumptions about organizational context beyond what the student wrote.
+Use only the retrieved SP 800-30 guidance sections provided below. Do not rely on outside knowledge, memorized NIST content, parametric values, or assumptions about organizational context beyond what the student wrote and the ticket scenario/vendor profile provided here.
 
 Source document: ${guidance.document} — ${guidance.title}
 Pinned path: ${guidance.catalogPath}
@@ -36,7 +46,7 @@ Pinned path: ${guidance.catalogPath}
 
 ${guidanceText}
 
-${scenarioBlock}## Student submission
+${scenarioBlock}${vendorBlock}## Student submission
 
 **Risk register entry ID**
 ${submission.riskRegisterId}
@@ -46,11 +56,11 @@ ${submission.justification}
 
 ## Instructions
 
-Evaluate whether the justification demonstrates a defensible likelihood and impact assessment based solely on the retrieved guidance above.
+Evaluate whether the justification demonstrates a defensible likelihood and impact assessment based solely on the retrieved guidance above (and the ticket scenario/vendor profile when provided). Prefer justifications that identify relevant threat sources, tie likelihood to concrete factors, and connect impact to harm categories such as confidentiality of sensitive data.
 
 Return structured JSON via the submit_grading tool with:
 - finding_state: "satisfied", "insufficient_evidence", or "not_satisfied"
 - feedback: concise overall assessment for the student
 - strengths: specific strengths observed in the justification relative to the guidance
-- gaps: specific gaps or weaknesses relative to the guidance (for example missing likelihood factors, missing impact harm categories, or unsupported risk labels)`;
+- gaps: specific gaps or weaknesses relative to the guidance (for example missing threat sources, missing likelihood factors, missing impact harm categories, or unsupported risk labels)`;
 }

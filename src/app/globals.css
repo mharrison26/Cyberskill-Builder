@@ -44,6 +44,7 @@
   }
 
   :root {
+    color-scheme: light;
     --background: #f8f9fb;
     --foreground: #1f2937;
     --card: #ffffff;
@@ -80,6 +81,45 @@
     --status-blocked-foreground: #7f1d1d;
     --status-not-started: #f3f4f6;
     --status-not-started-foreground: #374151;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --background: #0f1419;
+    --foreground: #e5e7eb;
+    --card: #171d26;
+    --card-foreground: #e5e7eb;
+    --popover: #171d26;
+    --popover-foreground: #e5e7eb;
+    --primary: #6b9fd4;
+    --primary-foreground: #0f1419;
+    --secondary: #1e2733;
+    --secondary-foreground: #e5e7eb;
+    --muted: #1e2733;
+    --muted-foreground: #9ca3af;
+    --accent: #8aa0b5;
+    --accent-foreground: #0f1419;
+    --destructive: #f87171;
+    --destructive-foreground: #0f1419;
+    --border: #2d3748;
+    --input: #2d3748;
+    --ring: #6b9fd4;
+    --sidebar: #121820;
+    --sidebar-foreground: #e5e7eb;
+    --sidebar-primary: #6b9fd4;
+    --sidebar-primary-foreground: #0f1419;
+    --sidebar-accent: #1e2733;
+    --sidebar-accent-foreground: #e5e7eb;
+    --sidebar-border: #2d3748;
+    --sidebar-ring: #6b9fd4;
+    --status-satisfied: #14532d;
+    --status-satisfied-foreground: #bbf7d0;
+    --status-insufficient: #78350f;
+    --status-insufficient-foreground: #fde68a;
+    --status-blocked: #7f1d1d;
+    --status-blocked-foreground: #fecaca;
+    --status-not-started: #1f2937;
+    --status-not-started-foreground: #d1d5db;
   }
 
   * {

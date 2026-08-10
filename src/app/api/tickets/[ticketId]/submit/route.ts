@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server';
 
 import { isAoReviewTicketType } from '@/lib/capstone/ticketCodes';
+import {
+  buildConmonSystemProfileGapsMessage,
+  compileConmonSystemProfile,
+  usesStudentConmonSystemProfile,
+} from '@/lib/grc/compileConmonSystemProfile';
+import {
+  buildPoamSourceGapsMessage,
+  compilePoamSourceFindings,
+  toPriorFindingsSeedShape,
+  usesStudentPoamSourceFindings,
+} from '@/lib/grc/compilePoamSourceFindings';
 import { isAuditCommitteeBriefTicketType } from '@/lib/grc/ticketCodes';
 import { isFlagshipEligibleTicketType } from '@/lib/helpdesk/ticketCodes';
 import { isInfraDesignCapstoneTicketType } from '@/lib/infra/ticketCodes';
@@ -11,6 +22,7 @@ import {
   scoreStatusToProgressStatus,
   type TicketSubmission,
 } from '@/lib/scoring';
+import { isConMonStrategyTicketType } from '@/lib/scoring/conmonStrategy';
 import { isPoamTicketType } from '@/lib/scoring/poam';
 import { createClient } from '@/lib/supabase/server';
 import { wasResolvedWithinSla } from '@/lib/tickets/sla';
@@ -18,6 +30,7 @@ import {
   loadTicketProgress,
   resolveSubmitTicketContext,
 } from '@/lib/tickets/submitTicketContext';
+import type { Ticket } from '@/types';
 
 type RouteContext = {
   params: { ticketId: string };
@@ -174,11 +187,77 @@ export async function POST(request: Request, { params }: RouteContext) {
           )
         : parsedSubmission;
 
+  let ticketForScoring: Ticket = context.ticket;
+  const ticketInitialState = isPlainObject(context.ticket.initial_state)
+    ? context.ticket.initial_state
+    : {};
+
+  if (
+    isPoamTicketType(context.ticket.ticket_type) &&
+    usesStudentPoamSourceFindings(ticketInitialState)
+  ) {
+    const compiled = await compilePoamSourceFindings({
+      supabase: context.supabase,
+      studentId: context.appUser.id,
+      trackId: context.ticket.track_id,
+      initialState: ticketInitialState,
+    });
+
+    if (!compiled.complete || compiled.findings.length < 2) {
+      return NextResponse.json(
+        {
+          error: buildPoamSourceGapsMessage(compiled.gaps),
+          gaps: compiled.gaps,
+        },
+        { status: 400 }
+      );
+    }
+
+    ticketForScoring = {
+      ...context.ticket,
+      initial_state: {
+        ...ticketInitialState,
+        prior_findings: toPriorFindingsSeedShape(compiled.findings),
+      },
+    };
+  }
+
+  if (
+    isConMonStrategyTicketType(context.ticket.ticket_type) &&
+    usesStudentConmonSystemProfile(ticketInitialState)
+  ) {
+    const compiled = await compileConmonSystemProfile({
+      supabase: context.supabase,
+      studentId: context.appUser.id,
+      trackId: context.ticket.track_id,
+      initialState: ticketInitialState,
+    });
+
+    if (!compiled.complete || !compiled.systemProfile) {
+      return NextResponse.json(
+        {
+          error: buildConmonSystemProfileGapsMessage(compiled.gaps),
+          gaps: compiled.gaps,
+        },
+        { status: 400 }
+      );
+    }
+
+    ticketForScoring = {
+      ...context.ticket,
+      initial_state: {
+        ...ticketInitialState,
+        systemProfile: compiled.systemProfile,
+        systemProfileSource: compiled.source,
+      },
+    };
+  }
+
   const scorer = resolveTicketScorer(context.ticket.ticket_type);
 
   let scoreResult;
   try {
-    scoreResult = await scorer.score(submission, context.ticket);
+    scoreResult = await scorer.score(submission, ticketForScoring);
   } catch (error) {
     console.error('Ticket scoring failed:', error);
     captureFeatureException(error, {

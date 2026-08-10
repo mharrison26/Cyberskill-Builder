@@ -116,6 +116,7 @@ export {
   evaluateControlMapping,
 } from '@/lib/scoring/controlMapping';
 export type {
+  ControlMappingExpectedState,
   ControlMappingStructuredResult,
   ControlMappingTargetResult,
 } from '@/lib/scoring/controlMapping';

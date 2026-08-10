@@ -22,6 +22,10 @@ export type BuildSspFragmentOptions = {
   requirements?: readonly Nist800171Requirement[];
   roles?: readonly SspResponsibleRole[];
   systemName?: string;
+  /** Populates system-characteristics.description when provided. */
+  systemDescription?: string;
+  /** Populates authorization-boundary.description when provided. */
+  authorizationBoundary?: string;
   title?: string;
   /** Inject for deterministic tests. Defaults to crypto.randomUUID. */
   uuid?: () => string;
@@ -62,6 +66,12 @@ export function buildSspFragment(
   const roles = options.roles ?? SSP_RESPONSIBLE_ROLES;
   const lastModified = options.lastModified ?? new Date().toISOString();
   const systemName = options.systemName ?? 'Training Lab Information System';
+  const systemDescription =
+    options.systemDescription?.trim() ||
+    'Minimal system characteristics scaffolding for student OSCAL SSP practice.';
+  const authorizationBoundary =
+    options.authorizationBoundary?.trim() ||
+    'The authorization boundary includes the lab application and supporting identity services used in this exercise.';
   const title =
     options.title ??
     'Student SSP fragment — NIST SP 800-171 Rev 3 curated subset';
@@ -125,8 +135,7 @@ export function buildSspFragment(
       'system-characteristics': {
         'system-ids': [{ id: 'lab-ssp-demo' }],
         'system-name': systemName,
-        description:
-          'Minimal system characteristics scaffolding for student OSCAL SSP practice.',
+        description: systemDescription,
         'system-information': {
           'information-types': [
             {
@@ -138,8 +147,7 @@ export function buildSspFragment(
         },
         status: { state: 'operational' },
         'authorization-boundary': {
-          description:
-            'The authorization boundary includes the lab application and supporting identity services used in this exercise.',
+          description: authorizationBoundary,
         },
       },
       'system-implementation': {
@@ -155,7 +163,7 @@ export function buildSspFragment(
             uuid: componentUuid,
             type: 'this-system',
             title: systemName,
-            description: 'Primary system component for the lab SSP fragment.',
+            description: systemDescription,
             status: { state: 'operational' },
           },
         ],

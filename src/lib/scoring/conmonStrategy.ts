@@ -6,6 +6,7 @@ import {
 import { buildConMonStrategyGradingPrompt } from '@/lib/grading/buildConMonStrategyGradingPrompt';
 import { retrieveSp800137Guidance } from '@/lib/nist/getSp800137Guidance';
 import { captureFeatureException } from '@/lib/observability/sentry';
+import { ticketTypeBase } from '@/lib/capstone/ticketCodes';
 import type {
   ScorableTicket,
   TicketScoreResult,
@@ -15,7 +16,7 @@ import type {
 import type { Fips199ImpactLevel } from '@/lib/scoring/ticketUi';
 
 /**
- * Tier 3 continuous monitoring strategy memo scoring (ISSO-01 system-level).
+ * Tier 3 continuous monitoring strategy memo scoring (GRC-06 / ISSO-01).
  *
  * Deterministic:
  *   - cadence rows for required control families
@@ -27,6 +28,11 @@ import type { Fips199ImpactLevel } from '@/lib/scoring/ticketUi';
  *   - retrieve pinned SP 800-137 guidance text
  *   - grade memo against retrieved text only (incl. impact-based frequencies)
  */
+
+export function isConMonStrategyTicketType(ticketType: string): boolean {
+  const base = ticketTypeBase(ticketType);
+  return base === 'conmon_strategy' || base === 'continuous_monitoring';
+}
 
 export {
   CONMON_STRATEGY_MIN_FIELD_LENGTH,

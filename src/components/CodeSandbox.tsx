@@ -16,6 +16,20 @@ import { cn } from '@/lib/utils';
 
 import '@xterm/xterm/css/xterm.css';
 
+/**
+ * Optional pre-submit hook: rewrite a canonical sample input file, run the
+ * student script in the WebContainer (PI-04), and include stdout in the
+ * submission payload. Used by GRC-09 oscal_generator.
+ */
+export type CodeSandboxRunOnSubmit = {
+  inputPath: string;
+  inputContents: string;
+  scriptPath: string;
+  /** Override argv; default is `node <script>` or `python3 <script>`. */
+  command?: string[];
+  timeoutMs?: number;
+};
+
 export type CodeSandboxProps = {
   ticketId: string;
   /** Flat path → file contents map used to seed the WebContainer FS. */
@@ -26,6 +40,11 @@ export type CodeSandboxProps = {
   showFileBrowser?: boolean;
   /** Show the "Submit lab" button that posts filesystem snapshots. */
   showSubmit?: boolean;
+  /**
+   * When set, Submit rewrites the sample input and runs the student script
+   * inside WebContainer before posting the filesystem snapshot.
+   */
+  runOnSubmit?: CodeSandboxRunOnSubmit;
   readOnly?: boolean;
   className?: string;
   onSubmitComplete?: (result: {
@@ -208,12 +227,114 @@ function mergeSeedFiles(
   return files;
 }
 
+function defaultRunCommand(scriptPath: string): string[] {
+  const lower = scriptPath.toLowerCase();
+  if (lower.endsWith('.py')) return ['python3', scriptPath];
+  return ['node', scriptPath];
+}
+
+/** Prefer configured path; if missing, try common Node↔Python swap for generators. */
+async function resolveRunnableScriptPath(
+  container: WebContainer,
+  configured: string
+): Promise<string> {
+  const scriptPath = normalizePath(configured);
+  try {
+    await container.fs.readFile(scriptPath, 'utf8');
+    return scriptPath;
+  } catch {
+    // Fall through to alternates.
+  }
+
+  const alternates: string[] = [];
+  if (/\.js$/i.test(scriptPath)) {
+    alternates.push(scriptPath.replace(/\.js$/i, '.py'));
+  } else if (/\.py$/i.test(scriptPath)) {
+    alternates.push(scriptPath.replace(/\.py$/i, '.js'));
+  }
+  // Capstone convention: generate_ssp.* regardless of configured extension.
+  const base = scriptPath.replace(/\.[^.]+$/, '');
+  for (const ext of ['.js', '.mjs', '.cjs', '.py', '.ts']) {
+    const candidate = `${base}${ext}`;
+    if (candidate !== scriptPath) alternates.push(candidate);
+  }
+
+  for (const candidate of alternates) {
+    try {
+      await container.fs.readFile(candidate, 'utf8');
+      return candidate;
+    } catch {
+      // try next
+    }
+  }
+  return scriptPath;
+}
+
+async function runScriptInContainer(
+  container: WebContainer,
+  run: CodeSandboxRunOnSubmit,
+  terminal: Terminal | null
+): Promise<{ stdout: string; exitCode: number }> {
+  const inputPath = normalizePath(run.inputPath);
+  const scriptPath = await resolveRunnableScriptPath(container, run.scriptPath);
+  const dir = inputPath.includes('/')
+    ? inputPath.slice(0, inputPath.lastIndexOf('/'))
+    : '';
+  if (dir) {
+    await container.fs.mkdir(dir, { recursive: true });
+  }
+  await container.fs.writeFile(inputPath, run.inputContents);
+
+  const argv = run.command?.length
+    ? run.command
+    : defaultRunCommand(scriptPath);
+  const [bin, ...args] = argv;
+  if (!bin) {
+    return { stdout: '', exitCode: 1 };
+  }
+
+  terminal?.writeln(`\r\n$ ${argv.join(' ')}\r\n`);
+
+  const process = await container.spawn(bin, args);
+  let stdout = '';
+  process.output
+    .pipeTo(
+      new WritableStream({
+        write(chunk) {
+          stdout += chunk;
+          terminal?.write(chunk);
+        },
+      })
+    )
+    .catch(() => {
+      // Ignore late pipe errors after process exit.
+    });
+
+  const timeoutMs = run.timeoutMs ?? 20_000;
+  const exitCode = await Promise.race([
+    process.exit,
+    new Promise<number>((resolve) => {
+      window.setTimeout(() => {
+        try {
+          process.kill();
+        } catch {
+          // Process may already have exited.
+        }
+        resolve(124);
+      }, timeoutMs);
+    }),
+  ]);
+
+  return { stdout, exitCode };
+}
+
 export function CodeSandbox({
   ticketId,
   initialState,
   fileModes,
   showFileBrowser = true,
   showSubmit = true,
+  runOnSubmit,
   readOnly = false,
   className,
   onSubmitComplete,
@@ -244,6 +365,10 @@ export function CodeSandbox({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitFeedback, setSubmitFeedback] = useState<string | null>(null);
+  const [submitScoreStatus, setSubmitScoreStatus] = useState<
+    'resolved' | 'needs_revision' | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -443,9 +568,34 @@ export function CodeSandbox({
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitSuccess(false);
+    setSubmitFeedback(null);
+    setSubmitScoreStatus(null);
 
     try {
       await persistActiveFile();
+
+      let stdout: string | undefined;
+      let sandboxRunFailed = false;
+      if (runOnSubmit) {
+        try {
+          const runResult = await runScriptInContainer(
+            container,
+            runOnSubmit,
+            terminalRef.current
+          );
+          stdout = runResult.stdout;
+          sandboxRunFailed = runResult.exitCode !== 0;
+        } catch (error) {
+          sandboxRunFailed = true;
+          stdout =
+            error instanceof Error
+              ? error.message
+              : 'Failed to run script in sandbox';
+          terminalRef.current?.writeln(
+            `\r\n[sandbox] run-on-submit failed: ${stdout}\r\n`
+          );
+        }
+      }
 
       let files: Record<string, string>;
       try {
@@ -461,7 +611,12 @@ export function CodeSandbox({
       const response = await fetch(`/api/tickets/${ticketId}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files, fileModes }),
+        body: JSON.stringify({
+          files,
+          fileModes,
+          ...(stdout !== undefined ? { stdout } : {}),
+          ...(runOnSubmit ? { sandboxRunFailed } : {}),
+        }),
       });
 
       let body: unknown;
@@ -484,6 +639,24 @@ export function CodeSandbox({
         return;
       }
 
+      const feedback =
+        typeof body === 'object' &&
+        body !== null &&
+        'feedback' in body &&
+        typeof (body as { feedback: unknown }).feedback === 'string'
+          ? (body as { feedback: string }).feedback.trim()
+          : '';
+      const scoreStatus =
+        typeof body === 'object' &&
+        body !== null &&
+        'status' in body &&
+        ((body as { status: unknown }).status === 'resolved' ||
+          (body as { status: unknown }).status === 'needs_revision')
+          ? (body as { status: 'resolved' | 'needs_revision' }).status
+          : null;
+
+      setSubmitFeedback(feedback || null);
+      setSubmitScoreStatus(scoreStatus);
       setSubmitSuccess(true);
       onSubmitComplete?.({ ok: true, status: response.status, body });
     } catch {
@@ -639,12 +812,26 @@ export function CodeSandbox({
         </p>
       ) : null}
       {submitSuccess ? (
-        <p
-          className="border-t border-border px-4 py-2 text-sm text-[color:var(--status-satisfied-foreground)]"
-          role="status"
+        <div
+          className={cn(
+            'space-y-1 border-t border-border px-4 py-2 text-sm',
+            submitScoreStatus === 'needs_revision'
+              ? 'text-destructive'
+              : 'text-[color:var(--status-satisfied-foreground)]'
+          )}
+          role={submitScoreStatus === 'needs_revision' ? 'alert' : 'status'}
         >
-          Submission received.
-        </p>
+          <p className="font-medium">
+            {submitScoreStatus === 'resolved'
+              ? 'Lab accepted.'
+              : submitScoreStatus === 'needs_revision'
+                ? 'Needs revision.'
+                : 'Submission received.'}
+          </p>
+          {submitFeedback ? (
+            <p className="text-muted-foreground">{submitFeedback}</p>
+          ) : null}
+        </div>
       ) : null}
     </section>
   );

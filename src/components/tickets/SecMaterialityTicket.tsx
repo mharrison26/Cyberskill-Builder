@@ -81,17 +81,19 @@ export function SecMaterialityTicket({
 
   const breach = useMemo(() => {
     const nested = asRecord(initialState.breach);
+    const companyFallback =
+      typeof initialState.companyName === 'string'
+        ? initialState.companyName
+        : typeof initialState.company === 'string'
+          ? initialState.company
+          : 'See scenario brief.';
     return {
       company:
-        typeof nested.company === 'string'
-          ? nested.company
-          : typeof initialState.company === 'string'
-            ? initialState.company
-            : 'Northline Analytics, Inc. (fictional public company)',
+        typeof nested.company === 'string' ? nested.company : companyFallback,
       discoveredAt:
         typeof nested.discoveredAt === 'string'
           ? nested.discoveredAt
-          : 'Day 0 (discovery)',
+          : 'See scenario brief.',
       systemsAffected:
         typeof nested.systemsAffected === 'string'
           ? nested.systemsAffected
@@ -100,12 +102,27 @@ export function SecMaterialityTicket({
         typeof nested.dataExposed === 'string'
           ? nested.dataExposed
           : 'See scenario brief.',
+      customersImpacted:
+        typeof nested.customersImpacted === 'string'
+          ? nested.customersImpacted
+          : null,
+      remediationStatus:
+        typeof nested.remediationStatus === 'string'
+          ? nested.remediationStatus
+          : null,
       businessImpact:
         typeof nested.businessImpact === 'string'
           ? nested.businessImpact
           : 'See scenario brief.',
+      scopeNote: typeof nested.scopeNote === 'string' ? nested.scopeNote : null,
     };
   }, [initialState]);
+
+  const keyArtifact =
+    typeof initialState.keyArtifact === 'string' &&
+    initialState.keyArtifact.trim()
+      ? initialState.keyArtifact.trim()
+      : null;
 
   const [determination, setDetermination] = useState<
     SecMaterialityDetermination | ''
@@ -224,6 +241,20 @@ export function SecMaterialityTicket({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
+          {breach.scopeNote || keyArtifact ? (
+            <p
+              role="note"
+              className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm leading-relaxed text-foreground"
+            >
+              {breach.scopeNote ??
+                'This is a vendor breach affecting a subset of customers — not a direct issuer system breach. Materiality is a judgment call; defend your conclusion with the factors below.'}
+            </p>
+          ) : null}
+          {keyArtifact ? (
+            <p className="whitespace-pre-wrap text-muted-foreground">
+              {keyArtifact}
+            </p>
+          ) : null}
           <p>
             <span className="font-medium text-foreground">Company: </span>
             <span className="text-muted-foreground">{breach.company}</span>
@@ -244,6 +275,26 @@ export function SecMaterialityTicket({
               {breach.dataExposed}
             </p>
           </div>
+          {breach.customersImpacted ? (
+            <p>
+              <span className="font-medium text-foreground">
+                Customers impacted:{' '}
+              </span>
+              <span className="text-muted-foreground">
+                {breach.customersImpacted} (subset of Northwind customers)
+              </span>
+            </p>
+          ) : null}
+          {breach.remediationStatus ? (
+            <p>
+              <span className="font-medium text-foreground">
+                Vendor remediation:{' '}
+              </span>
+              <span className="text-muted-foreground">
+                {breach.remediationStatus}
+              </span>
+            </p>
+          ) : null}
           <div>
             <p className="font-medium text-foreground">Business impact</p>
             <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
@@ -261,7 +312,10 @@ export function SecMaterialityTicket({
             </CardTitle>
             <CardDescription>
               Decide whether the incident is material for disclosure and explain
-              whether the four-business-day filing clock has started.
+              whether the four-business-day filing clock has started. Either
+              conclusion can be defensible — grade weight is on factor reasoning
+              (including vendor boundary and subset scope), not a single obvious
+              yes/no.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
