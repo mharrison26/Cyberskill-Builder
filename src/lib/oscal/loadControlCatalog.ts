@@ -8,9 +8,7 @@ import {
 } from '@/lib/oscal/controlCatalogTypes';
 import { normalizeControlId } from '@/lib/oscal/parseCatalog';
 
-export {
-  formatBaselineLabel,
-} from '@/lib/oscal/controlCatalogTypes';
+export { formatBaselineLabel } from '@/lib/oscal/controlCatalogTypes';
 export { controlDetailPath } from '@/lib/oscal/controlPaths';
 
 const EMPTY_CATALOG: ProcessedControlCatalog = {
@@ -73,9 +71,7 @@ export function getProcessedControl(
   if (typeof controlId !== 'string' || !controlId.trim()) return null;
   const lookup = buildLookup();
   const key = normalizeControlId(controlId);
-  return (
-    lookup.get(key) ?? lookup.get(controlId.trim().toLowerCase()) ?? null
-  );
+  return lookup.get(key) ?? lookup.get(controlId.trim().toLowerCase()) ?? null;
 }
 
 export function listProcessedControls(): ProcessedControlEntry[] {

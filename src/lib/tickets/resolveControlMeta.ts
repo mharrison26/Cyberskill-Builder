@@ -1,7 +1,4 @@
-import {
-  controlFamilyFromId,
-  familyLabel,
-} from '@/lib/progress/controlFamily';
+import { controlFamilyFromId, familyLabel } from '@/lib/progress/controlFamily';
 
 /**
  * Default control id / family for GRC ticket types when initial_state omits

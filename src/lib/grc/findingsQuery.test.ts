@@ -115,27 +115,18 @@ describe('filterFindings', () => {
     const byControl = parseFindingsQuery(new URLSearchParams('q=AC-2'));
     expect(filterFindings(sample, byControl).map((t) => t.id)).toEqual(['1']);
 
-    const byType = parseFindingsQuery(
-      new URLSearchParams('q=conmon_strategy')
-    );
+    const byType = parseFindingsQuery(new URLSearchParams('q=conmon_strategy'));
     expect(filterFindings(sample, byType).map((t) => t.id)).toEqual(['3']);
   });
 
   it('hides completed tickets when hideCompleted is set', () => {
-    const state = parseFindingsQuery(
-      new URLSearchParams('hideCompleted=1')
-    );
-    expect(filterFindings(sample, state).map((t) => t.id)).toEqual([
-      '1',
-      '3',
-    ]);
+    const state = parseFindingsQuery(new URLSearchParams('hideCompleted=1'));
+    expect(filterFindings(sample, state).map((t) => t.id)).toEqual(['1', '3']);
   });
 
   it('applies multi-select status and family chips', () => {
     const state = parseFindingsQuery(
-      new URLSearchParams(
-        'status=new,in_progress&family=Access%20Control'
-      )
+      new URLSearchParams('status=new,in_progress&family=Access%20Control')
     );
     expect(filterFindings(sample, state).map((t) => t.id)).toEqual(['1']);
   });
@@ -174,9 +165,7 @@ describe('paginateFindings', () => {
 
 describe('countFindingsFacets', () => {
   it('counts status facets against other active filters', () => {
-    const state = parseFindingsQuery(
-      new URLSearchParams('hideCompleted=1')
-    );
+    const state = parseFindingsQuery(new URLSearchParams('hideCompleted=1'));
     const facets = countFindingsFacets(sample, state);
     expect(facets.status.new).toBe(1);
     expect(facets.status.in_progress).toBe(1);

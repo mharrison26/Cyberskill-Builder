@@ -218,10 +218,7 @@ export function GrcComplianceConsole({
   });
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const query = useMemo(
-    () => parseFindingsQuery(searchParams),
-    [searchParams]
-  );
+  const query = useMemo(() => parseFindingsQuery(searchParams), [searchParams]);
   const [searchDraft, setSearchDraft] = useState(query.q);
 
   useEffect(() => {
@@ -261,8 +258,7 @@ export function GrcComplianceConsole({
 
   const selected = findings.find((t) => t.id === selectedId) ?? null;
   /** Detail pane only for tickets that cannot navigate to a workbench. */
-  const detailTicket =
-    selected && !selected.workbenchHref ? selected : null;
+  const detailTicket = selected && !selected.workbenchHref ? selected : null;
 
   const {
     counts: openBySeverity,
@@ -331,8 +327,7 @@ export function GrcComplianceConsole({
   const hasFilters = findingsQueryHasFilters(query);
 
   const difficultyOptions = useMemo(
-    () =>
-      Object.keys(facets.difficulty).sort((a, b) => a.localeCompare(b)),
+    () => Object.keys(facets.difficulty).sort((a, b) => a.localeCompare(b)),
     [facets.difficulty]
   );
   const familyOptions = useMemo(
@@ -650,10 +645,7 @@ export function GrcComplianceConsole({
                         active={query.difficulty.includes(diff)}
                         onClick={() =>
                           replaceQuery({
-                            difficulty: toggleListValue(
-                              query.difficulty,
-                              diff
-                            ),
+                            difficulty: toggleListValue(query.difficulty, diff),
                             page: 1,
                           })
                         }
@@ -773,9 +765,7 @@ export function GrcComplianceConsole({
                             tabIndex={0}
                             aria-label={activationLabel(ticket)}
                             aria-current={
-                              !opensWorkbench && isSelected
-                                ? 'true'
-                                : undefined
+                              !opensWorkbench && isSelected ? 'true' : undefined
                             }
                             data-state={isSelected ? 'selected' : undefined}
                             className={cn(
@@ -799,9 +789,7 @@ export function GrcComplianceConsole({
                               />
                             </TableCell>
                             <TableCell className="hidden align-top lg:table-cell">
-                              <DifficultyBadge
-                                difficulty={ticket.difficulty}
-                              />
+                              <DifficultyBadge difficulty={ticket.difficulty} />
                             </TableCell>
                             <TableCell className="align-top whitespace-nowrap">
                               {isFindingSeverity(ticket.severity) ? (
@@ -873,17 +861,16 @@ export function GrcComplianceConsole({
                 >
                   {detailTicket.controlId ? (
                     <>
-                      <span className="font-mono">{detailTicket.controlId}</span>
+                      <span className="font-mono">
+                        {detailTicket.controlId}
+                      </span>
                       {' · '}
                     </>
                   ) : null}
                   {detailTicket.title}
                 </h2>
                 {detailTicket.scenarioBrief ? (
-                  <ScenarioProse
-                    as="p"
-                    className="mt-2 text-muted-foreground"
-                  >
+                  <ScenarioProse as="p" className="mt-2 text-muted-foreground">
                     {detailTicket.scenarioBrief}
                   </ScenarioProse>
                 ) : detailTicket.subtitle ? (

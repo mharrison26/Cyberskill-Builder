@@ -9,10 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  getGlossaryTerm,
-  glossaryHref,
-} from '@/lib/glossary/terms';
+import { getGlossaryTerm, glossaryHref } from '@/lib/glossary/terms';
 import { cn } from '@/lib/utils';
 
 type GlossaryTermProps = {

@@ -31,9 +31,7 @@ describe('extractControlRefs', () => {
   });
 
   it('referencesControl matches normalized forms', () => {
-    expect(
-      referencesControl('AC-2', { source_control_id: 'ac-2' })
-    ).toBe(true);
+    expect(referencesControl('AC-2', { source_control_id: 'ac-2' })).toBe(true);
     expect(referencesControl('ac-2', { title: 'Unrelated' })).toBe(false);
   });
 });

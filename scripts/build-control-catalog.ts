@@ -46,11 +46,15 @@ function loadBaselineIds(profilePath: string): Set<string> {
   const absolute = path.join(process.cwd(), profilePath);
   const ids = new Set<string>();
   if (!existsSync(absolute)) {
-    console.warn(`[build-control-catalog] missing baseline profile: ${profilePath}`);
+    console.warn(
+      `[build-control-catalog] missing baseline profile: ${profilePath}`
+    );
     return ids;
   }
 
-  const raw = JSON.parse(readFileSync(absolute, 'utf8')) as OscalProfileDocument;
+  const raw = JSON.parse(
+    readFileSync(absolute, 'utf8')
+  ) as OscalProfileDocument;
 
   for (const imp of raw.profile?.imports ?? []) {
     for (const include of imp['include-controls'] ?? []) {

@@ -64,7 +64,9 @@ function walk(value: unknown, ids: Set<string>, keyHint?: string): void {
   }
 
   if (typeof value === 'object') {
-    for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    for (const [key, child] of Object.entries(
+      value as Record<string, unknown>
+    )) {
       const normalizedKey = key.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
       walk(child, ids, normalizedKey);
     }

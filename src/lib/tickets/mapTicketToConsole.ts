@@ -103,7 +103,8 @@ export function mapTicketToConsoleTicket(args: {
     ticketType,
     difficulty,
     slaMinutes:
-      typeof ticket.sla_minutes === 'number' && Number.isFinite(ticket.sla_minutes)
+      typeof ticket.sla_minutes === 'number' &&
+      Number.isFinite(ticket.sla_minutes)
         ? ticket.sla_minutes
         : 45,
     startedAt: args.startedAt ?? null,

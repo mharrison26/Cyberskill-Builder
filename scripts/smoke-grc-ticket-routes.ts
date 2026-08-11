@@ -36,7 +36,11 @@ function requireAuthCredentials(): { email: string; password: string } {
   return { email, password };
 }
 
-async function signIn(page: Page, email: string, password: string): Promise<void> {
+async function signIn(
+  page: Page,
+  email: string,
+  password: string
+): Promise<void> {
   await page.goto(`${BASE_URL}/sign-in`, { waitUntil: 'networkidle' });
   await page.locator('#sign-in-email').fill(email);
   await page.locator('#sign-in-password').fill(password);
@@ -59,7 +63,11 @@ async function main(): Promise<void> {
       throw new Error(`Ticket list failed: HTTP ${listRes.status()}`);
     }
     const payload = (await listRes.json()) as {
-      tickets?: Array<{ id: string; workbenchHref?: string | null; title?: string }>;
+      tickets?: Array<{
+        id: string;
+        workbenchHref?: string | null;
+        title?: string;
+      }>;
       source?: string;
     };
     const tickets = (payload.tickets ?? []).filter((t) => t.workbenchHref);

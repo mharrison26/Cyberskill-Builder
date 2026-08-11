@@ -92,8 +92,8 @@ function isTruthyParam(value: string | null): boolean {
 export function parseFindingsQuery(
   params: URLSearchParams | ReadonlyURLSearchParams
 ): FindingsQueryState {
-  const status = splitCsv(params.get('status')).filter((v): v is TicketProgressStatus =>
-    (STATUS_VALUES as string[]).includes(v)
+  const status = splitCsv(params.get('status')).filter(
+    (v): v is TicketProgressStatus => (STATUS_VALUES as string[]).includes(v)
   );
   const severity = splitCsv(params.get('severity')).filter(
     (v): v is FindingsQueryState['severity'][number] =>
@@ -150,7 +150,8 @@ export function serializeFindingsQuery(
   if (state.tier.length) params.set('tier', state.tier.join(','));
   if (state.hideCompleted) params.set('hideCompleted', '1');
   if (state.groupByFamily) params.set('group', 'family');
-  if (state.sort !== DEFAULT_FINDINGS_QUERY.sort) params.set('sort', state.sort);
+  if (state.sort !== DEFAULT_FINDINGS_QUERY.sort)
+    params.set('sort', state.sort);
   if (state.dir !== DEFAULT_FINDINGS_QUERY.dir) params.set('dir', state.dir);
   if (state.page > 1) params.set('page', String(state.page));
   if (state.pageSize !== DEFAULT_FINDINGS_QUERY.pageSize) {
@@ -162,12 +163,12 @@ export function serializeFindingsQuery(
 export function findingsQueryHasFilters(state: FindingsQueryState): boolean {
   return Boolean(
     state.q ||
-      state.status.length ||
-      state.severity.length ||
-      state.difficulty.length ||
-      state.family.length ||
-      state.tier.length ||
-      state.hideCompleted
+    state.status.length ||
+    state.severity.length ||
+    state.difficulty.length ||
+    state.family.length ||
+    state.tier.length ||
+    state.hideCompleted
   );
 }
 
@@ -227,7 +228,13 @@ function difficultyRank(difficulty: string): number {
 export type FindingsFilterOptions = {
   /** When set, only apply these dimensions (used for facet counts). */
   ignore?: Array<
-    'status' | 'severity' | 'difficulty' | 'family' | 'tier' | 'hideCompleted' | 'q'
+    | 'status'
+    | 'severity'
+    | 'difficulty'
+    | 'family'
+    | 'tier'
+    | 'hideCompleted'
+    | 'q'
   >;
 };
 
@@ -286,7 +293,9 @@ export function sortFindings(
     let cmp = 0;
     switch (sort) {
       case 'title':
-        cmp = a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+        cmp = a.title.localeCompare(b.title, undefined, {
+          sensitivity: 'base',
+        });
         break;
       case 'control':
         cmp = (a.controlId ?? '').localeCompare(b.controlId ?? '', undefined, {
@@ -300,8 +309,12 @@ export function sortFindings(
         cmp = severityRank(a.severity) - severityRank(b.severity);
         break;
       case 'poamDue': {
-        const aTime = a.poamDueAt ? Date.parse(a.poamDueAt) : Number.POSITIVE_INFINITY;
-        const bTime = b.poamDueAt ? Date.parse(b.poamDueAt) : Number.POSITIVE_INFINITY;
+        const aTime = a.poamDueAt
+          ? Date.parse(a.poamDueAt)
+          : Number.POSITIVE_INFINITY;
+        const bTime = b.poamDueAt
+          ? Date.parse(b.poamDueAt)
+          : Number.POSITIVE_INFINITY;
         cmp = aTime - bTime;
         break;
       }
@@ -368,9 +381,10 @@ export function countFindingsFacets(
   tickets: MockTrackTicket[],
   state: FindingsQueryState
 ): FindingsFacetCounts {
-  const status = Object.fromEntries(
-    STATUS_VALUES.map((s) => [s, 0])
-  ) as Record<TicketProgressStatus, number>;
+  const status = Object.fromEntries(STATUS_VALUES.map((s) => [s, 0])) as Record<
+    TicketProgressStatus,
+    number
+  >;
   const severity = Object.fromEntries(
     SEVERITY_VALUES.map((s) => [s, 0])
   ) as FindingsFacetCounts['severity'];

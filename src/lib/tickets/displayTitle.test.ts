@@ -50,7 +50,7 @@ describe('resolveTicketDisplayTitle', () => {
 
   it('does not use scenario_brief as the list title', () => {
     const brief =
-      'Northwind\'s new enterprise customer wants written assurance that Northwind\'s existing SOC 2 report also covers ISO 27001.';
+      "Northwind's new enterprise customer wants written assurance that Northwind's existing SOC 2 report also covers ISO 27001.";
     expect(
       resolveTicketDisplayTitle({
         ticket_type: 'control_mapping',
