@@ -92,7 +92,11 @@ export function QueueVolumeSparkline({
         <div>
           <div className="flex items-center gap-2">
             <StatusDot
-              className={isEmpty ? 'bg-muted-foreground/45' : 'bg-status-satisfied-foreground'}
+              className={
+                isEmpty
+                  ? 'bg-muted-foreground/45'
+                  : 'bg-status-satisfied-foreground'
+              }
             />
             <p className="font-mono text-xl font-semibold tabular-nums leading-none tracking-tight text-foreground">
               {periodTotal}

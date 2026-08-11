@@ -83,14 +83,22 @@ export function AuditPlanningMemoTicket({
     return parts;
   }, [initialState.engagementScope, initialState.scope]);
 
-  const [objective, setObjective] = useState(() => restoredString(submission, 'objective'));
+  const [objective, setObjective] = useState(() =>
+    restoredString(submission, 'objective')
+  );
   const [scope, setScope] = useState(() => restoredString(submission, 'scope'));
-  const [riskFocus, setRiskFocus] = useState(() => restoredString(submission, 'riskFocus'));
-  const [plannedProcedures, setPlannedProcedures] = useState(() => restoredString(submission, 'plannedProcedures'));
+  const [riskFocus, setRiskFocus] = useState(() =>
+    restoredString(submission, 'riskFocus')
+  );
+  const [plannedProcedures, setPlannedProcedures] = useState(() =>
+    restoredString(submission, 'plannedProcedures')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [trainingFeedback, setTrainingFeedback] =
     useState<TrainingFeedback | null>(() =>
       extractTrainingFeedback(lastStructuredResult)

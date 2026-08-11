@@ -86,7 +86,10 @@ function restoredAnswerMap(
 function parseStoredInfraQuestions(raw: unknown): InfraQuestion[] {
   if (!Array.isArray(raw)) return [];
   return raw
-    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+    .filter(
+      (item): item is Record<string, unknown> =>
+        !!item && typeof item === 'object'
+    )
     .map((item) => ({
       id: typeof item.id === 'string' ? item.id : '',
       prompt: typeof item.prompt === 'string' ? item.prompt : '',
@@ -95,7 +98,9 @@ function parseStoredInfraQuestions(raw: unknown): InfraQuestion[] {
     .filter((item) => item.id && item.prompt);
 }
 
-function restoredDesignDoc(submission: Record<string, unknown> | null | undefined): {
+function restoredDesignDoc(
+  submission: Record<string, unknown> | null | undefined
+): {
   title: string;
   body: string;
   topologyChoice: string;
@@ -114,7 +119,10 @@ function restoredDesignDoc(submission: Record<string, unknown> | null | undefine
       typeof record.title === 'string' && record.title.trim()
         ? record.title
         : 'Harbor Dental backup topology ADR',
-    body: typeof record.body === 'string' ? record.body : restoredString(submission, 'body'),
+    body:
+      typeof record.body === 'string'
+        ? record.body
+        : restoredString(submission, 'body'),
     topologyChoice:
       typeof record.topologyChoice === 'string'
         ? record.topologyChoice
@@ -127,12 +135,8 @@ export function InfraDesignCapstoneTicket({
   readOnly = false,
   className,
 }: InfraDesignCapstoneTicketProps) {
-  const {
-    submission,
-    formReadOnly,
-    hideSubmit,
-    lastFeedback,
-  } = useTicketWorkbenchForm(readOnly);
+  const { submission, formReadOnly, hideSubmit, lastFeedback } =
+    useTicketWorkbenchForm(readOnly);
   const restored = asSubmissionRecord(submission);
   const savedAnswers = restoredAnswerMap(restored);
   const storedQuestions = parseStoredInfraQuestions(restored.questions);
@@ -161,10 +165,16 @@ export function InfraDesignCapstoneTicket({
     storedQuestions.length > 0 ? 'questions' : 'design'
   );
   const [title, setTitle] = useState(savedDesignDoc.title);
-  const [topologyChoice, setTopologyChoice] = useState(savedDesignDoc.topologyChoice);
+  const [topologyChoice, setTopologyChoice] = useState(
+    savedDesignDoc.topologyChoice
+  );
   const [body, setBody] = useState(savedDesignDoc.body);
-  const [questions, setQuestions] = useState<InfraQuestion[]>(() => storedQuestions);
-  const [answers, setAnswers] = useState<Record<string, string>>(() => savedAnswers);
+  const [questions, setQuestions] = useState<InfraQuestion[]>(
+    () => storedQuestions
+  );
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    () => savedAnswers
+  );
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -487,7 +497,9 @@ export function InfraDesignCapstoneTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
+            feedbackTone === 'ok'
+              ? 'text-status-satisfied-foreground'
+              : 'text-destructive'
           )}
           role="status"
         >

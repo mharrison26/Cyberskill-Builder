@@ -210,9 +210,15 @@ export function KpiReportTicket({
     const value = restoredString(submission, 'mode');
     return value === 'script' || value === 'manual' ? value : 'manual';
   });
-  const [averageResolutionHours, setAverageResolutionHours] = useState(() => restoredString(submission, 'averageResolutionHours'));
-  const [slaCompliancePercent, setSlaCompliancePercent] = useState(() => restoredString(submission, 'slaCompliancePercent'));
-  const [medianResolutionHours, setMedianResolutionHours] = useState(() => restoredString(submission, 'medianResolutionHours'));
+  const [averageResolutionHours, setAverageResolutionHours] = useState(() =>
+    restoredString(submission, 'averageResolutionHours')
+  );
+  const [slaCompliancePercent, setSlaCompliancePercent] = useState(() =>
+    restoredString(submission, 'slaCompliancePercent')
+  );
+  const [medianResolutionHours, setMedianResolutionHours] = useState(() =>
+    restoredString(submission, 'medianResolutionHours')
+  );
   const [volumeByCategory, setVolumeByCategory] = useState(() => {
     const raw = restored.volumeByCategory;
     if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
@@ -227,11 +233,15 @@ export function KpiReportTicket({
     }
     return '{\n  "access": 0\n}';
   });
-  const [report, setReport] = useState(() => restoredString(submission, 'report'));
+  const [report, setReport] = useState(() =>
+    restoredString(submission, 'report')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

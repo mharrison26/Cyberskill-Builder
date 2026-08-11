@@ -200,7 +200,10 @@ function parseStakeholderSeed(
 function restoredPostedUpdates(raw: unknown): PostedUpdate[] {
   if (!Array.isArray(raw)) return [];
   return raw
-    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+    .filter(
+      (item): item is Record<string, unknown> =>
+        !!item && typeof item === 'object'
+    )
     .map((item, index) => ({
       id: typeof item.id === 'string' ? item.id : `restored-${index}`,
       postedAtSimMinutes:
@@ -280,13 +283,17 @@ export function P1StatusUpdatesTicket({
   const [updates, setUpdates] = useState<PostedUpdate[]>(() =>
     restoredPostedUpdates(restored.updates)
   );
-  const [impact, setImpact] = useState(() => restoredString(submission, 'impact'));
+  const [impact, setImpact] = useState(() =>
+    restoredString(submission, 'impact')
+  );
   const [eta, setEta] = useState(() => restoredString(submission, 'eta'));
   const [nextUpdateAtSimMinutes, setNextUpdateAtSimMinutes] = useState('');
   const [draftErrors, setDraftErrors] = useState<DraftErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const channelMessages = useMemo((): ChannelMessage[] => {
@@ -699,7 +706,9 @@ export function P1StatusUpdatesTicket({
                 <Button
                   type="button"
                   variant="secondary"
-                  disabled={formReadOnly || isSubmitting || updates.length === 0}
+                  disabled={
+                    formReadOnly || isSubmitting || updates.length === 0
+                  }
                   onClick={() => void handleSubmitForScoring()}
                 >
                   {isSubmitting ? 'Submitting…' : 'Submit for scoring'}

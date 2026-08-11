@@ -214,11 +214,15 @@ export function MonitoringConfigTicket({
     [initialState]
   );
 
-  const [alerts, setAlerts] = useState<AlertDraft[]>(() => restoredAlerts(restored));
+  const [alerts, setAlerts] = useState<AlertDraft[]>(() =>
+    restoredAlerts(restored)
+  );
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -402,7 +406,9 @@ export function MonitoringConfigTicket({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      disabled={formReadOnly || isSubmitting || alerts.length <= 1}
+                      disabled={
+                        formReadOnly || isSubmitting || alerts.length <= 1
+                      }
                       onClick={() => removeAlert(row.key)}
                     >
                       Remove

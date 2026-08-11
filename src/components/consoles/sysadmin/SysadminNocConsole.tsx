@@ -6,10 +6,7 @@ import { X } from 'lucide-react';
 
 import { ConsoleSandboxSurface } from '@/components/consoles/ConsoleSandboxSurface';
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
-import {
-  TicketRow,
-  toTicketRowData,
-} from '@/components/tickets/TicketRow';
+import { TicketRow, toTicketRowData } from '@/components/tickets/TicketRow';
 import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

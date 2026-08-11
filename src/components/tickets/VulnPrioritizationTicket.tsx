@@ -5,7 +5,6 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import {
-  restoredString,
   restoredStringArray,
   useTicketWorkbenchForm,
 } from '@/hooks/useTicketWorkbenchForm';
@@ -101,7 +100,9 @@ export function VulnPrioritizationTicket({
   });
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const byId = useMemo(() => {

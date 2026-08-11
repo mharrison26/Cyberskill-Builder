@@ -17,7 +17,6 @@ import {
   POAM_STATUS_UPDATE_MIN_JUSTIFICATION_LENGTH,
   parsePoamStatusUpdateEvidence,
   parsePoamStatusUpdateItem,
-  type PoamStatusUpdateStatus,
 } from '@/lib/scoring/poamStatusUpdate';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
@@ -92,15 +91,21 @@ export function PoamStatusUpdateTicket({
 
   const asOfDate = readString(initialState, ['asOfDate', 'as_of_date'], '');
 
-  const [status, setStatus] = useState(() => restoredString(submission, 'status'));
-  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
+  const [status, setStatus] = useState(() =>
+    restoredString(submission, 'status')
+  );
+  const [justification, setJustification] = useState(() =>
+    restoredString(submission, 'justification')
+  );
   const [citedEvidenceIds, setCitedEvidenceIds] = useState<Set<string>>(() =>
     restoredStringSet(submission, 'citedEvidenceIds')
   );
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function toggleEvidence(id: string) {

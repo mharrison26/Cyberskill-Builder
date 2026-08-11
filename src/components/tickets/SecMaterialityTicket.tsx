@@ -23,7 +23,6 @@ import {
   SEC_MATERIALITY_FACTOR_LABELS,
   SEC_MATERIALITY_MIN_FACTOR_LENGTH,
   SEC_MATERIALITY_MIN_RATIONALE_LENGTH,
-  type SecMaterialityDetermination,
   type SecMaterialityFactorKey,
 } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
@@ -137,24 +136,30 @@ export function SecMaterialityTicket({
       ? initialState.keyArtifact.trim()
       : null;
 
-  const [determination, setDetermination] = useState(() => restoredString(submission, 'determination'));
-  const [rationale, setRationale] = useState(() => restoredString(submission, ['determinationRationale', 'rationale']));
-  const [factors, setFactors] = useState<Record<SecMaterialityFactorKey, string>>(
-    () => {
-      const base = emptyFactors();
-      const raw = restored.factors;
-      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return base;
-      for (const key of SEC_MATERIALITY_FACTOR_KEYS) {
-        const value = (raw as Record<string, unknown>)[key];
-        if (typeof value === 'string') base[key] = value;
-      }
-      return base;
-    }
+  const [determination, setDetermination] = useState(() =>
+    restoredString(submission, 'determination')
   );
+  const [rationale, setRationale] = useState(() =>
+    restoredString(submission, ['determinationRationale', 'rationale'])
+  );
+  const [factors, setFactors] = useState<
+    Record<SecMaterialityFactorKey, string>
+  >(() => {
+    const base = emptyFactors();
+    const raw = restored.factors;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return base;
+    for (const key of SEC_MATERIALITY_FACTOR_KEYS) {
+      const value = (raw as Record<string, unknown>)[key];
+      if (typeof value === 'string') base[key] = value;
+    }
+    return base;
+  });
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

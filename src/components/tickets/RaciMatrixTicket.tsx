@@ -143,12 +143,22 @@ function restoredAssignments(
 
   for (const activityId of activityIds) {
     const activityRecord = (raw as Record<string, unknown>)[activityId];
-    if (!activityRecord || typeof activityRecord !== 'object' || Array.isArray(activityRecord)) {
+    if (
+      !activityRecord ||
+      typeof activityRecord !== 'object' ||
+      Array.isArray(activityRecord)
+    ) {
       continue;
     }
     for (const roleId of roleIds) {
       const cell = (activityRecord as Record<string, unknown>)[roleId];
-      if (cell === 'R' || cell === 'A' || cell === 'C' || cell === 'I' || cell === '') {
+      if (
+        cell === 'R' ||
+        cell === 'A' ||
+        cell === 'C' ||
+        cell === 'I' ||
+        cell === ''
+      ) {
         base[activityId]![roleId] = cell;
       }
     }
@@ -209,7 +219,9 @@ export function RaciMatrixTicket({
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

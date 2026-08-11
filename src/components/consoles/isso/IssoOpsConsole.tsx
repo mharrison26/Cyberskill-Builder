@@ -4,10 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
-import {
-  TicketRow,
-  toTicketRowData,
-} from '@/components/tickets/TicketRow';
+import { TicketRow, toTicketRowData } from '@/components/tickets/TicketRow';
 import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,10 +12,7 @@ import { useSharedSlaClock } from '@/hooks/useTicketSlaCountdown';
 import { useTrackTickets } from '@/hooks/useTrackTickets';
 import { MOCK_ISSO_SYSTEMS } from '@/lib/mock-data';
 import { needsLiveSlaCountdown } from '@/lib/tickets/sla';
-import {
-  isClosedTicketStatus,
-  isOpenTicketStatus,
-} from '@/lib/tickets/status';
+import { isClosedTicketStatus, isOpenTicketStatus } from '@/lib/tickets/status';
 import { cn } from '@/lib/utils';
 
 /**

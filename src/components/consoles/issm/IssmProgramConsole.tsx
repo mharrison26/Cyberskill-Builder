@@ -4,10 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
-import {
-  TicketRow,
-  toTicketRowData,
-} from '@/components/tickets/TicketRow';
+import { TicketRow, toTicketRowData } from '@/components/tickets/TicketRow';
 import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

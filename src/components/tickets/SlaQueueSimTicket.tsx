@@ -123,7 +123,8 @@ function restoredQueueWork(
           ? (priority as TriagePriority)
           : '',
       category: typeof record.category === 'string' ? record.category : '',
-      resolution: typeof record.resolution === 'string' ? record.resolution : '',
+      resolution:
+        typeof record.resolution === 'string' ? record.resolution : '',
       resolvedAt:
         typeof record.resolvedAt === 'string' ? record.resolvedAt : null,
     };
@@ -170,7 +171,9 @@ export function SlaQueueSimTicket({
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -355,7 +358,11 @@ export function SlaQueueSimTicket({
             {resolvedCount}/{items.length} resolved
           </span>
           {!simulationStartedAt ? (
-            <Button type="button" onClick={startSimulation} disabled={formReadOnly}>
+            <Button
+              type="button"
+              onClick={startSimulation}
+              disabled={formReadOnly}
+            >
               Start simulation
             </Button>
           ) : (

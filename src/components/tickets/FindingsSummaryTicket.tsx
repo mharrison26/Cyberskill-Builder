@@ -97,13 +97,21 @@ export function FindingsSummaryTicket({
       );
   }, [initialState]);
 
-  const [executiveSummary, setExecutiveSummary] = useState(() => restoredString(submission, 'executiveSummary'));
-  const [findingsDetail, setFindingsDetail] = useState(() => restoredString(submission, 'findingsDetail'));
-  const [recommendations, setRecommendations] = useState(() => restoredString(submission, 'recommendations'));
+  const [executiveSummary, setExecutiveSummary] = useState(() =>
+    restoredString(submission, 'executiveSummary')
+  );
+  const [findingsDetail, setFindingsDetail] = useState(() =>
+    restoredString(submission, 'findingsDetail')
+  );
+  const [recommendations, setRecommendations] = useState(() =>
+    restoredString(submission, 'recommendations')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {

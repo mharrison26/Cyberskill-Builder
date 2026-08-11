@@ -222,12 +222,18 @@ export function ToolWalkthroughTicket({
       ? initialState.toolHint.trim()
       : 'Use your self-hosted SimpleRisk instance to log the risk described in the scenario brief.';
 
-  const [riskRegisterId, setRiskRegisterId] = useState(() => restoredString(submission, 'riskRegisterId'));
-  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
+  const [riskRegisterId, setRiskRegisterId] = useState(() =>
+    restoredString(submission, 'riskRegisterId')
+  );
+  const [justification, setJustification] = useState(() =>
+    restoredString(submission, 'justification')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {

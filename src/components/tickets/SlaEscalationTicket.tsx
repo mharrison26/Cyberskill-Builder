@@ -21,7 +21,6 @@ import {
   SLA_ESCALATION_DECISIONS,
   SLA_ESCALATION_DECISION_LABELS,
   SLA_ESCALATION_MIN_JUSTIFICATION_LENGTH,
-  type SlaEscalationDecision,
 } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
@@ -178,12 +177,18 @@ export function SlaEscalationTicket({
     };
   }, [initialState]);
 
-  const [decision, setDecision] = useState(() => restoredString(submission, 'decision'));
-  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
+  const [decision, setDecision] = useState(() =>
+    restoredString(submission, 'decision')
+  );
+  const [justification, setJustification] = useState(() =>
+    restoredString(submission, 'justification')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

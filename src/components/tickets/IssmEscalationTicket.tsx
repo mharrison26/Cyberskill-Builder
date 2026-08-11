@@ -21,7 +21,6 @@ import {
   ISSM_ESCALATION_DECISIONS,
   ISSM_ESCALATION_DECISION_LABELS,
   ISSM_ESCALATION_MIN_MEMO_LENGTH,
-  type IssmEscalationDecision,
 } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
@@ -168,12 +167,16 @@ export function IssmEscalationTicket({
     };
   }, [initialState]);
 
-  const [decision, setDecision] = useState(() => restoredString(submission, 'decision'));
+  const [decision, setDecision] = useState(() =>
+    restoredString(submission, 'decision')
+  );
   const [memo, setMemo] = useState(() => restoredString(submission, 'memo'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

@@ -245,10 +245,18 @@ export function ContinuousAuditingTicket({
       controlAreaOptions[0] ||
       ''
   );
-  const [frequency, setFrequency] = useState(() => restoredString(submission, 'frequency'));
-  const [frequencyNote, setFrequencyNote] = useState(() => restoredString(submission, 'frequencyNote'));
-  const [dataSource, setDataSource] = useState(() => restoredString(submission, 'dataSource'));
-  const [exceptionHandling, setExceptionHandling] = useState(() => restoredString(submission, 'exceptionHandling'));
+  const [frequency, setFrequency] = useState(() =>
+    restoredString(submission, 'frequency')
+  );
+  const [frequencyNote, setFrequencyNote] = useState(() =>
+    restoredString(submission, 'frequencyNote')
+  );
+  const [dataSource, setDataSource] = useState(() =>
+    restoredString(submission, 'dataSource')
+  );
+  const [exceptionHandling, setExceptionHandling] = useState(() =>
+    restoredString(submission, 'exceptionHandling')
+  );
   const [optionalFields, setOptionalFields] = useState<
     Record<OptionalFieldKey, string>
   >(() => ({
@@ -260,7 +268,9 @@ export function ContinuousAuditingTicket({
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearStatus() {

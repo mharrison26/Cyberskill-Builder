@@ -137,7 +137,9 @@ export function OutageCapstoneTicket({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [terminalReady, setTerminalReady] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<keyof IncidentReportFields, string>>
@@ -631,7 +633,10 @@ export function OutageCapstoneTicket({
         ) : null}
 
         {!hideSubmit ? (
-          <Button type="submit" disabled={formReadOnly || isSubmitting || !session}>
+          <Button
+            type="submit"
+            disabled={formReadOnly || isSubmitting || !session}
+          >
             {isSubmitting ? 'Submitting…' : 'Submit remediation + report'}
           </Button>
         ) : null}

@@ -203,12 +203,18 @@ export function SamplingMethodologyTicket({
     return counts;
   }, [transactions]);
 
-  const [sampleSelection, setSampleSelection] = useState(() => restoredString(submission, 'sampleSelection'));
-  const [riskBasedAdditions, setRiskBasedAdditions] = useState(() => restoredString(submission, 'riskBasedAdditions'));
+  const [sampleSelection, setSampleSelection] = useState(() =>
+    restoredString(submission, 'sampleSelection')
+  );
+  const [riskBasedAdditions, setRiskBasedAdditions] = useState(() =>
+    restoredString(submission, 'riskBasedAdditions')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {

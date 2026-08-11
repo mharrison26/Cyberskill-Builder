@@ -91,7 +91,10 @@ function seedFindingsFromTicket(
 function parseStoredQuestions(raw: unknown): AcQuestion[] {
   if (!Array.isArray(raw)) return [];
   return raw
-    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+    .filter(
+      (item): item is Record<string, unknown> =>
+        !!item && typeof item === 'object'
+    )
     .map((item) => ({
       id: typeof item.id === 'string' ? item.id : '',
       prompt: typeof item.prompt === 'string' ? item.prompt : '',
@@ -105,12 +108,8 @@ export function AuditCommitteeBriefTicket({
   readOnly = false,
   className,
 }: AuditCommitteeBriefTicketProps) {
-  const {
-    submission,
-    formReadOnly,
-    hideSubmit,
-    lastFeedback,
-  } = useTicketWorkbenchForm(readOnly);
+  const { submission, formReadOnly, hideSubmit, lastFeedback } =
+    useTicketWorkbenchForm(readOnly);
   const restored = asSubmissionRecord(submission);
   const storedQuestions = parseStoredQuestions(restored.questions);
   const expectedState = asRecord(ticket.expected_state);
@@ -128,15 +127,21 @@ export function AuditCommitteeBriefTicket({
   const [phase, setPhase] = useState<'summary' | 'questions'>(() =>
     storedQuestions.length > 0 ? 'questions' : 'summary'
   );
-  const [executiveSummary, setExecutiveSummary] = useState(() => restoredString(submission, 'executiveSummary'));
+  const [executiveSummary, setExecutiveSummary] = useState(() =>
+    restoredString(submission, 'executiveSummary')
+  );
   const [priorFindings, setPriorFindings] = useState<PriorFinding[]>(() =>
     seedFindingsFromTicket(initialState)
   );
   const [priorFindingsSource, setPriorFindingsSource] = useState<
     'prior_submission' | 'seed' | 'empty'
   >('seed');
-  const [priorFindingsNarrative, setPriorFindingsNarrative] = useState(() => restoredString(submission, 'priorFindingsNarrative'));
-  const [questions, setQuestions] = useState<AcQuestion[]>(() => storedQuestions);
+  const [priorFindingsNarrative, setPriorFindingsNarrative] = useState(() =>
+    restoredString(submission, 'priorFindingsNarrative')
+  );
+  const [questions, setQuestions] = useState<AcQuestion[]>(
+    () => storedQuestions
+  );
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -456,7 +461,9 @@ export function AuditCommitteeBriefTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
+            feedbackTone === 'ok'
+              ? 'text-status-satisfied-foreground'
+              : 'text-destructive'
           )}
           role="status"
         >

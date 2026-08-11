@@ -21,7 +21,6 @@ import {
   CONTROL_IMPLEMENTATION_ADEQUACY_JUDGMENTS,
   CONTROL_IMPLEMENTATION_ADEQUACY_JUDGMENT_LABELS,
   CONTROL_IMPLEMENTATION_ADEQUACY_MIN_JUSTIFICATION_LENGTH,
-  type ControlImplementationAdequacyJudgment,
 } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
@@ -119,12 +118,18 @@ export function ControlImplementationAdequacyTicket({
     };
   }, [expectedState, initialState]);
 
-  const [judgment, setJudgment] = useState(() => restoredString(submission, 'judgment'));
-  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
+  const [judgment, setJudgment] = useState(() =>
+    restoredString(submission, 'judgment')
+  );
+  const [justification, setJustification] = useState(() =>
+    restoredString(submission, 'justification')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

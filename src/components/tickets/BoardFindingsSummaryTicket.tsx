@@ -178,7 +178,9 @@ export function BoardFindingsSummaryTicket({
       ? org.context.trim()
       : null;
 
-  const [summary, setSummary] = useState(() => restoredString(submission, 'summary'));
+  const [summary, setSummary] = useState(() =>
+    restoredString(submission, 'summary')
+  );
   const [askType, setAskType] = useState<BoardFindingsAskType | ''>(() => {
     const value = restoredString(submission, 'askType');
     return (BOARD_FINDINGS_ASK_TYPES as readonly string[]).includes(value)
@@ -191,7 +193,9 @@ export function BoardFindingsSummaryTicket({
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -407,7 +411,9 @@ export function BoardFindingsSummaryTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            scoreStatus === 'resolved' ? 'text-status-satisfied-foreground' : 'text-destructive'
+            scoreStatus === 'resolved'
+              ? 'text-status-satisfied-foreground'
+              : 'text-destructive'
           )}
           role="status"
         >

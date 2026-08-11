@@ -120,11 +120,17 @@ export function IssmQualityReviewTicket({
   const [selectedIssues, setSelectedIssues] = useState<Set<string>>(() =>
     restoredStringSet(submission, 'issueIds')
   );
-  const [feedback, setFeedbackDraft] = useState(() => restoredString(submission, ['feedback']));
+  const [feedback, setFeedbackDraft] = useState(() =>
+    restoredString(submission, ['feedback'])
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [scoreFeedback, setScoreFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreFeedback, setScoreFeedback] = useState<string | null>(
+    () => lastFeedback
+  );
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

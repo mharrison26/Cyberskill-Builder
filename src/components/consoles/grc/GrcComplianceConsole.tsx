@@ -5,10 +5,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { BookOpen, Radio } from 'lucide-react';
 
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
-import {
-  TicketRow,
-  toTicketRowData,
-} from '@/components/tickets/TicketRow';
+import { TicketRow, toTicketRowData } from '@/components/tickets/TicketRow';
 import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,10 +28,7 @@ import {
   type FindingSeverity,
 } from '@/lib/tickets/openBySeverity';
 import { needsLiveSlaCountdown } from '@/lib/tickets/sla';
-import {
-  isClosedTicketStatus,
-  isOpenTicketStatus,
-} from '@/lib/tickets/status';
+import { isClosedTicketStatus, isOpenTicketStatus } from '@/lib/tickets/status';
 import type { MockTrackTicket } from '@/types';
 import { cn } from '@/lib/utils';
 

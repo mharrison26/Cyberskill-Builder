@@ -1,7 +1,4 @@
-import {
-  computeSlaDueAt,
-  wasResolvedWithinSla,
-} from '@/lib/tickets/sla';
+import { computeSlaDueAt, wasResolvedWithinSla } from '@/lib/tickets/sla';
 import type {
   MockControl,
   MockDefenseRecording,
@@ -336,10 +333,7 @@ function closedSlaFields(
   startedMinutes: number,
   resolvedAfterMinutes: number,
   slaMinutes: number
-): Pick<
-  MockTrackTicket,
-  'startedAt' | 'resolvedAt' | 'slaDueAt' | 'slaMet'
-> {
+): Pick<MockTrackTicket, 'startedAt' | 'resolvedAt' | 'slaDueAt' | 'slaMet'> {
   const startedAt = startedMinutesAgo(startedMinutes);
   const resolvedAt = startedMinutesAgo(startedMinutes - resolvedAfterMinutes);
   return {

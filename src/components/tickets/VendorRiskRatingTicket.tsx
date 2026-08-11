@@ -21,7 +21,6 @@ import {
   VENDOR_RISK_MIN_JUSTIFICATION_LENGTH,
   VENDOR_RISK_RATING_LEVELS,
   VENDOR_RISK_RATING_LEVEL_LABELS,
-  type VendorRiskRatingLevel,
 } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
@@ -204,12 +203,18 @@ export function VendorRiskRatingTicket({
     };
   }, [initialState]);
 
-  const [rating, setRating] = useState(() => restoredString(submission, 'rating'));
-  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
+  const [rating, setRating] = useState(() =>
+    restoredString(submission, 'rating')
+  );
+  const [justification, setJustification] = useState(() =>
+    restoredString(submission, 'justification')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

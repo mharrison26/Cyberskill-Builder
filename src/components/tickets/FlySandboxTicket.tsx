@@ -6,9 +6,7 @@ import type { Terminal } from '@xterm/xterm';
 import { useTheme } from 'next-themes';
 
 import { Button } from '@/components/ui/button';
-import {
-  useTicketWorkbenchForm,
-} from '@/hooks/useTicketWorkbenchForm';
+import { useTicketWorkbenchForm } from '@/hooks/useTicketWorkbenchForm';
 import {
   parseCisHardeningChecklist,
   type CisHardeningChecklistItem,
@@ -62,11 +60,8 @@ export function FlySandboxTicket({
   readOnly = false,
   className,
 }: FlySandboxTicketProps) {
-  const {
-    submission,
-    formReadOnly,
-    hideSubmit,
-  } = useTicketWorkbenchForm(readOnly);
+  const { submission, formReadOnly, hideSubmit } =
+    useTicketWorkbenchForm(readOnly);
   const { resolvedTheme } = useTheme();
   const checklist = checklistFromTicket(ticket);
   const prompt = promptFromTicket(ticket);

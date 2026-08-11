@@ -154,7 +154,9 @@ export function PoamTicketWork({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
 
   useEffect(() => {
     if (!usesStudentHistory) return;
@@ -227,7 +229,13 @@ export function PoamTicketWork({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (formReadOnly || hideSubmit || isSubmitting || priorFindings.length === 0) return;
+    if (
+      formReadOnly ||
+      hideSubmit ||
+      isSubmitting ||
+      priorFindings.length === 0
+    )
+      return;
 
     setIsSubmitting(true);
     setSubmitError(null);

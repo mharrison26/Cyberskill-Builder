@@ -146,12 +146,18 @@ export function ProgramRiskSummaryTicket({
   const [topRiskIds, setTopRiskIds] = useState<string[]>(() =>
     restoredStringArray(submission, 'topRiskIds')
   );
-  const [themeIds, setThemeIds] = useState<Set<string>>(() => restoredStringSet(submission, 'themeIds'));
-  const [summary, setSummary] = useState(() => restoredString(submission, 'summary'));
+  const [themeIds, setThemeIds] = useState<Set<string>>(() =>
+    restoredStringSet(submission, 'themeIds')
+  );
+  const [summary, setSummary] = useState(() =>
+    restoredString(submission, 'summary')
+  );
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

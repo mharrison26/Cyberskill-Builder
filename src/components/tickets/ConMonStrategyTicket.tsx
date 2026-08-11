@@ -94,7 +94,9 @@ function restoredToolRows(
       if (!tool) continue;
       const familiesRaw = record.families;
       const families = Array.isArray(familiesRaw)
-        ? familiesRaw.filter((item): item is string => typeof item === 'string').join(', ')
+        ? familiesRaw
+            .filter((item): item is string => typeof item === 'string')
+            .join(', ')
         : typeof familiesRaw === 'string'
           ? familiesRaw
           : '';
@@ -361,7 +363,9 @@ export function ConMonStrategyTicket({
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {

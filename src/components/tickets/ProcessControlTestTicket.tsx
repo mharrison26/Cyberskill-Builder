@@ -11,10 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  parseProcessControlSampleItems,
-  type ProcessControlOutcome,
-} from '@/lib/scoring/processControlTest';
+import { parseProcessControlSampleItems } from '@/lib/scoring/processControlTest';
 import { PROCESS_CONTROL_TEST_MIN_NOTES_LENGTH } from '@/lib/scoring/ticketUi';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
@@ -85,7 +82,9 @@ export function ProcessControlTestTicket({
     return Array.from(keys);
   }, [sampleItems]);
 
-  const [controlOutcome, setControlOutcome] = useState(() => restoredString(submission, 'controlOutcome'));
+  const [controlOutcome, setControlOutcome] = useState(() =>
+    restoredString(submission, 'controlOutcome')
+  );
   const [selectedExceptions, setSelectedExceptions] = useState<Set<string>>(
     () => restoredStringSet(submission, 'exceptionItemIds')
   );
@@ -93,7 +92,9 @@ export function ProcessControlTestTicket({
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function toggleException(id: string) {

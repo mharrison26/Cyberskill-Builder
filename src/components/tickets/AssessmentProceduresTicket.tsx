@@ -82,13 +82,19 @@ export function AssessmentProceduresTicket({
       ? initialState.prompt.trim()
       : 'Write SP 800-53A assessment procedures for the assigned control using Examine, Interview, and Test methods.';
 
-  const [examine, setExamine] = useState(() => restoredString(submission, 'examine'));
-  const [interview, setInterview] = useState(() => restoredString(submission, 'interview'));
+  const [examine, setExamine] = useState(() =>
+    restoredString(submission, 'examine')
+  );
+  const [interview, setInterview] = useState(() =>
+    restoredString(submission, 'interview')
+  );
   const [test, setTest] = useState(() => restoredString(submission, 'test'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -282,7 +288,10 @@ export function AssessmentProceduresTicket({
           </div>
         ) : null}
 
-        <Button type="submit" disabled={formReadOnly || isSubmitting || !controlId}>
+        <Button
+          type="submit"
+          disabled={formReadOnly || isSubmitting || !controlId}
+        >
           {isSubmitting ? 'Submitting…' : 'Submit procedures'}
         </Button>
       </form>

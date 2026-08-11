@@ -39,15 +39,13 @@ export function AuthorizationPackageTicket({
   readOnly = false,
   className,
 }: AuthorizationPackageTicketProps) {
-  const {
-    submission,
-    formReadOnly,
-    hideSubmit,
-    lastFeedback,
-  } = useTicketWorkbenchForm(readOnly);
+  const { submission, formReadOnly, hideSubmit, lastFeedback } =
+    useTicketWorkbenchForm(readOnly);
   const restored = asSubmissionRecord(submission);
   const { pkg, loading, loadError } = useCompiledPackage(ticket.id);
-  const [acknowledged, setAcknowledged] = useState(() => restored.acknowledged === true || restored.acknowledge === true);
+  const [acknowledged, setAcknowledged] = useState(
+    () => restored.acknowledged === true || restored.acknowledge === true
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
@@ -127,7 +125,9 @@ export function AuthorizationPackageTicket({
         {!hideSubmit ? (
           <Button
             type="button"
-            disabled={formReadOnly || !acknowledged || !pkg?.complete || isSubmitting}
+            disabled={
+              formReadOnly || !acknowledged || !pkg?.complete || isSubmitting
+            }
             onClick={() => void handleSubmit()}
           >
             {isSubmitting ? 'Submitting…' : 'Submit package review'}
@@ -139,7 +139,9 @@ export function AuthorizationPackageTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
+            feedbackTone === 'ok'
+              ? 'text-status-satisfied-foreground'
+              : 'text-destructive'
           )}
           role="status"
         >

@@ -97,16 +97,14 @@ export function AoReviewTicket({
   readOnly = false,
   className,
 }: AoReviewTicketProps) {
-  const {
-    submission,
-    formReadOnly,
-    hideSubmit,
-    lastFeedback,
-  } = useTicketWorkbenchForm(readOnly);
+  const { submission, formReadOnly, hideSubmit, lastFeedback } =
+    useTicketWorkbenchForm(readOnly);
   const restored = asSubmissionRecord(submission);
   const savedAnswers = restoredAnswerMap(restored);
   const [questions, setQuestions] = useState<AoQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>(() => savedAnswers);
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    () => savedAnswers
+  );
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [meta, setMeta] = useState<string | null>(null);
@@ -115,7 +113,9 @@ export function AoReviewTicket({
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
   const [defense, setDefense] = useState<MockDefenseRecording | null>(null);
   const [showWritten, setShowWritten] = useState(false);
-  const [reflection, setReflection] = useState(() => restoredString(submission, 'reflection'));
+  const [reflection, setReflection] = useState(() =>
+    restoredString(submission, 'reflection')
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -398,7 +398,9 @@ export function AoReviewTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
+            feedbackTone === 'ok'
+              ? 'text-status-satisfied-foreground'
+              : 'text-destructive'
           )}
           role="status"
         >

@@ -172,7 +172,9 @@ export function IncidentNotificationTicket({
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -463,7 +465,9 @@ export function IncidentNotificationTicket({
                           inputMode="decimal"
                           placeholder="e.g. 1"
                           value={row.deadlineHours}
-                          disabled={formReadOnly || isSubmitting || !row.selected}
+                          disabled={
+                            formReadOnly || isSubmitting || !row.selected
+                          }
                           onChange={(event) =>
                             updateRow(rule.recipientId, {
                               deadlineHours: event.target.value,

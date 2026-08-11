@@ -237,16 +237,30 @@ export function AuditWorkpaperTicket({
     [initialState]
   );
 
-  const [objective, setObjective] = useState(() => restoredString(submission, 'objective'));
-  const [procedurePerformed, setProcedurePerformed] = useState(() => restoredString(submission, 'procedurePerformed'));
-  const [evidenceObtained, setEvidenceObtained] = useState(() => restoredString(submission, 'evidenceObtained'));
-  const [conclusion, setConclusion] = useState(() => restoredString(submission, 'conclusion'));
-  const [preparer, setPreparer] = useState(() => restoredString(submission, 'preparer'));
-  const [reviewer, setReviewer] = useState(() => restoredString(submission, 'reviewer'));
+  const [objective, setObjective] = useState(() =>
+    restoredString(submission, 'objective')
+  );
+  const [procedurePerformed, setProcedurePerformed] = useState(() =>
+    restoredString(submission, 'procedurePerformed')
+  );
+  const [evidenceObtained, setEvidenceObtained] = useState(() =>
+    restoredString(submission, 'evidenceObtained')
+  );
+  const [conclusion, setConclusion] = useState(() =>
+    restoredString(submission, 'conclusion')
+  );
+  const [preparer, setPreparer] = useState(() =>
+    restoredString(submission, 'preparer')
+  );
+  const [reviewer, setReviewer] = useState(() =>
+    restoredString(submission, 'reviewer')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const narrativeValues: Record<NarrativeFieldKey, string> = {

@@ -204,7 +204,9 @@ export function ProgramMetricsBriefTicket({
   const [selected, setSelected] = useState<string[]>(() => {
     const raw = restored.selectedMetricIds;
     if (!Array.isArray(raw)) return [];
-    return raw.filter((id): id is string => typeof id === 'string' && id.length > 0);
+    return raw.filter(
+      (id): id is string => typeof id === 'string' && id.length > 0
+    );
   });
   const [calcInputs, setCalcInputs] = useState<Record<string, string>>(() => {
     const raw = restored.calculations;
@@ -219,11 +221,15 @@ export function ProgramMetricsBriefTicket({
     }
     return out;
   });
-  const [rationale, setRationale] = useState(() => restoredString(submission, 'rationale'));
+  const [rationale, setRationale] = useState(() =>
+    restoredString(submission, 'rationale')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

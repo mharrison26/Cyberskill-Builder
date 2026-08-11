@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react';
 import { TrainingFeedbackPanel } from '@/components/feedback/TrainingFeedbackPanel';
 import { Badge } from '@/components/ui/badge';
 import {
-  restoredString,
   restoredStringSet,
   useTicketWorkbenchForm,
 } from '@/hooks/useTicketWorkbenchForm';
@@ -93,7 +92,9 @@ export function SspGapReviewTicket({
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [trainingFeedback, setTrainingFeedback] =
     useState<TrainingFeedback | null>(() =>
       extractTrainingFeedback(lastStructuredResult)

@@ -90,12 +90,8 @@ export function SecurityAssessmentReportTicket({
   readOnly = false,
   className,
 }: SecurityAssessmentReportTicketProps) {
-  const {
-    submission,
-    formReadOnly,
-    hideSubmit,
-    lastFeedback,
-  } = useTicketWorkbenchForm(readOnly);
+  const { submission, formReadOnly, hideSubmit, lastFeedback } =
+    useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minSummaryLength = resolveMinLength(
@@ -116,7 +112,9 @@ export function SecurityAssessmentReportTicket({
   );
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [sarSummary, setSarSummary] = useState(() => restoredString(submission, 'sarSummary'));
+  const [sarSummary, setSarSummary] = useState(() =>
+    restoredString(submission, 'sarSummary')
+  );
   const [expanded, setExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
@@ -392,7 +390,9 @@ export function SecurityAssessmentReportTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
+            feedbackTone === 'ok'
+              ? 'text-status-satisfied-foreground'
+              : 'text-destructive'
           )}
           role="status"
         >

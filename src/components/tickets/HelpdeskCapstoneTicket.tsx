@@ -94,7 +94,9 @@ function emptySections(): Record<HelpdeskProcessDocSectionKey, string> {
   };
 }
 
-function restoredProcessDocument(submission: Record<string, unknown> | null | undefined): {
+function restoredProcessDocument(
+  submission: Record<string, unknown> | null | undefined
+): {
   title: string;
   sections: Record<HelpdeskProcessDocSectionKey, string>;
 } {
@@ -112,7 +114,11 @@ function restoredProcessDocument(submission: Record<string, unknown> | null | un
       ? record.title
       : 'Help Desk New-Hire Onboarding Checklist';
   const sectionsRaw = record.sections;
-  if (sectionsRaw && typeof sectionsRaw === 'object' && !Array.isArray(sectionsRaw)) {
+  if (
+    sectionsRaw &&
+    typeof sectionsRaw === 'object' &&
+    !Array.isArray(sectionsRaw)
+  ) {
     for (const key of HELPDESK_PROCESS_DOC_SECTION_KEYS) {
       const value = (sectionsRaw as Record<string, unknown>)[key];
       if (typeof value === 'string') sections[key] = value;
@@ -126,12 +132,8 @@ export function HelpdeskCapstoneTicket({
   readOnly = false,
   className,
 }: HelpdeskCapstoneTicketProps) {
-  const {
-    submission,
-    formReadOnly,
-    hideSubmit,
-    lastFeedback,
-  } = useTicketWorkbenchForm(readOnly);
+  const { submission, formReadOnly, hideSubmit, lastFeedback } =
+    useTicketWorkbenchForm(readOnly);
   const restored = asSubmissionRecord(submission);
   const restoredDoc = restoredProcessDocument(restored);
   const expectedState = asRecord(ticket.expected_state);
@@ -149,9 +151,12 @@ export function HelpdeskCapstoneTicket({
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [title, setTitle] = useState(restoredDoc.title);
-  const [sections, setSections] =
-    useState<Record<HelpdeskProcessDocSectionKey, string>>(restoredDoc.sections);
-  const [acknowledged, setAcknowledged] = useState(() => restored.acknowledged === true || restored.acknowledge === true);
+  const [sections, setSections] = useState<
+    Record<HelpdeskProcessDocSectionKey, string>
+  >(restoredDoc.sections);
+  const [acknowledged, setAcknowledged] = useState(
+    () => restored.acknowledged === true || restored.acknowledge === true
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
@@ -438,7 +443,9 @@ export function HelpdeskCapstoneTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
+            feedbackTone === 'ok'
+              ? 'text-status-satisfied-foreground'
+              : 'text-destructive'
           )}
           role="status"
         >

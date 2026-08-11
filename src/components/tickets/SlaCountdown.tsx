@@ -102,7 +102,11 @@ export function SlaCountdown({
         }
       >
         <StatusDot
-          className={met ? 'bg-status-satisfied-foreground' : 'bg-status-blocked-foreground'}
+          className={
+            met
+              ? 'bg-status-satisfied-foreground'
+              : 'bg-status-blocked-foreground'
+          }
         />
         <span>
           {met ? 'SLA met' : 'SLA breached'} ·{' '}
@@ -130,7 +134,9 @@ export function SlaCountdown({
       <span className="inline-flex items-center gap-1.5">
         <StatusDot
           className={
-            state.isOverdue ? 'bg-status-blocked-foreground' : 'bg-status-satisfied-foreground'
+            state.isOverdue
+              ? 'bg-status-blocked-foreground'
+              : 'bg-status-satisfied-foreground'
           }
           pulse={!state.isOverdue}
         />

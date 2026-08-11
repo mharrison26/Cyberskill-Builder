@@ -218,12 +218,18 @@ export function NetworkTopologyFaultTicket({
 
   const minJustificationLength = resolveMinJustificationLength(expectedState);
 
-  const [faultLocation, setFaultLocation] = useState(() => restoredString(submission, 'faultLocation'));
-  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
+  const [faultLocation, setFaultLocation] = useState(() =>
+    restoredString(submission, 'faultLocation')
+  );
+  const [justification, setJustification] = useState(() =>
+    restoredString(submission, 'justification')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

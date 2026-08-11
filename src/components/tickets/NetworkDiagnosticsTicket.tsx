@@ -197,12 +197,18 @@ export function NetworkDiagnosticsTicket({
   );
 
   const [step, setStep] = useState<1 | 2>(1);
-  const [faultType, setFaultType] = useState(() => restoredString(submission, 'faultType'));
-  const [nextDiagnosticStep, setNextDiagnosticStep] = useState(() => restoredString(submission, 'nextDiagnosticStep'));
+  const [faultType, setFaultType] = useState(() =>
+    restoredString(submission, 'faultType')
+  );
+  const [nextDiagnosticStep, setNextDiagnosticStep] = useState(() =>
+    restoredString(submission, 'nextDiagnosticStep')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {

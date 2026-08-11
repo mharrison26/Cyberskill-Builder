@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import {
   asSubmissionRecord,
-  restoredString,
   restoredStringSet,
   useTicketWorkbenchForm,
 } from '@/hooks/useTicketWorkbenchForm';
@@ -107,7 +106,9 @@ export function Soc2ChangeManagementTestTicket({
 
   const populationSize = changeTickets.length;
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => restoredStringSet(submission, 'exceptionIds'));
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() =>
+    restoredStringSet(submission, 'exceptionIds')
+  );
   const [exceptionCount, setExceptionCount] = useState(() => {
     const value = restored.exceptionCount;
     return typeof value === 'number' || typeof value === 'string'
@@ -123,7 +124,9 @@ export function Soc2ChangeManagementTestTicket({
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(
+    () => lastScoreStatus
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -389,7 +392,9 @@ export function Soc2ChangeManagementTestTicket({
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={formReadOnly || isSubmitting || selectedIds.size === 0}
+                disabled={
+                  formReadOnly || isSubmitting || selectedIds.size === 0
+                }
                 onClick={syncCountFromSelection}
               >
                 Fill count &amp; rate from selection ({selectedIds.size})

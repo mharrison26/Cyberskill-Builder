@@ -3,14 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getMockTicketsByTrack } from '@/lib/mock-data';
-import {
-  computeSlaDueAt,
-  wasResolvedWithinSla,
-} from '@/lib/tickets/sla';
-import {
-  isClosedTicketStatus,
-  isOpenTicketStatus,
-} from '@/lib/tickets/status';
+import { computeSlaDueAt, wasResolvedWithinSla } from '@/lib/tickets/sla';
+import { isClosedTicketStatus, isOpenTicketStatus } from '@/lib/tickets/status';
 import type { MockTrackTicket, TicketProgressStatus } from '@/types';
 
 export type UseTrackTicketsResult = {
