@@ -583,7 +583,7 @@ async function callClaudeConfigDiffFeedback(
   }
 
   const anthropic = new Anthropic({ apiKey });
-  const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';
+  const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-5';
 
   const response = await anthropic.messages.create({
     model,

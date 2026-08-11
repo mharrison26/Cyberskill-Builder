@@ -55,7 +55,7 @@ const gradingTool: Anthropic.Tool = {
 };
 
 function resolveAnthropicModel(): string {
-  return process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';
+  return process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-5';
 }
 
 export async function callClaudeGrading(
