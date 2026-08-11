@@ -9,7 +9,7 @@ import {
   getPostHogKey,
   isAnalyticsDebug,
   isAnalyticsEnabled,
-  usePostHogProxy,
+  isPostHogProxyEnabled,
 } from '@/lib/analytics/config';
 import { hasBrowserTrackingOptOut } from '@/lib/analytics/optOut';
 
@@ -25,7 +25,7 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
     const key = getPostHogKey();
     if (!key || posthog.__loaded) return;
 
-    const apiHost = usePostHogProxy() ? '/ingest' : getPostHogHost();
+    const apiHost = isPostHogProxyEnabled() ? '/ingest' : getPostHogHost();
 
     posthog.init(key, {
       api_host: apiHost,

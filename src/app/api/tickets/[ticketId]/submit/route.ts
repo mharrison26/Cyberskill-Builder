@@ -588,9 +588,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const withinSla = slaMet;
 
   const structured = scoreResult.structuredResult as
-    | Record<string, unknown>
-    | null
-    | undefined;
+    Record<string, unknown> | null | undefined;
   const rawScore = structured?.score;
   const scorePercent =
     typeof rawScore === 'number'

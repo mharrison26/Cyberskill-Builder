@@ -16,30 +16,25 @@ export type AdminAnalyticsMetrics = {
 export async function loadAdminAnalyticsMetrics(
   supabase: SupabaseClient
 ): Promise<AdminAnalyticsMetrics> {
-  const [
-    usersRes,
-    lessonsRes,
-    attemptsRes,
-    resolvedRes,
-    credentialsRes,
-  ] = await Promise.all([
-    supabase.from('users').select('id', { count: 'exact', head: true }),
-    supabase
-      .from('lesson_progress')
-      .select('id', { count: 'exact', head: true })
-      .neq('status', 'not_started'),
-    supabase
-      .from('ticket_attempts')
-      .select('id', { count: 'exact', head: true }),
-    supabase
-      .from('ticket_progress')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'resolved'),
-    supabase
-      .from('track_credentials')
-      .select('id', { count: 'exact', head: true })
-      .is('revoked_at', null),
-  ]);
+  const [usersRes, lessonsRes, attemptsRes, resolvedRes, credentialsRes] =
+    await Promise.all([
+      supabase.from('users').select('id', { count: 'exact', head: true }),
+      supabase
+        .from('lesson_progress')
+        .select('id', { count: 'exact', head: true })
+        .neq('status', 'not_started'),
+      supabase
+        .from('ticket_attempts')
+        .select('id', { count: 'exact', head: true }),
+      supabase
+        .from('ticket_progress')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'resolved'),
+      supabase
+        .from('track_credentials')
+        .select('id', { count: 'exact', head: true })
+        .is('revoked_at', null),
+    ]);
 
   return {
     signedUpUsers: usersRes.count ?? 0,

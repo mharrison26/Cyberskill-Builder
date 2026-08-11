@@ -13,7 +13,7 @@ export {
   getPostHogProjectUrl,
   isAnalyticsDebug,
   isAnalyticsEnabled,
-  usePostHogProxy,
+  isPostHogProxyEnabled,
   type FeatureFlagKey,
 } from './config';
 

@@ -28,7 +28,7 @@ export function getPostHogHost(): string {
 }
 
 /** When true, browser events go through same-origin `/ingest` rewrite. */
-export function usePostHogProxy(): boolean {
+export function isPostHogProxyEnabled(): boolean {
   return process.env.NEXT_PUBLIC_POSTHOG_PROXY === '1';
 }
 

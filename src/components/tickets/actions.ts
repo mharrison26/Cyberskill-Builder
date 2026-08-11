@@ -69,7 +69,8 @@ async function loadTicketForStudent(
     maxAttempts: (ticket.max_attempts as number | null) ?? null,
     ticketType: ticket.ticket_type as string,
     tier: ticket.tier as number | string,
-    initialState: (ticket.initial_state as Record<string, unknown> | null) ?? null,
+    initialState:
+      (ticket.initial_state as Record<string, unknown> | null) ?? null,
     expectedState:
       (ticket.expected_state as Record<string, unknown> | null) ?? null,
   };

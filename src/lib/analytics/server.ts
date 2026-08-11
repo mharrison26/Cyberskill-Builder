@@ -1,10 +1,6 @@
 import { PostHog } from 'posthog-node';
 
-import {
-  getPostHogHost,
-  getPostHogKey,
-  isAnalyticsEnabled,
-} from './config';
+import { getPostHogHost, getPostHogKey, isAnalyticsEnabled } from './config';
 
 let client: PostHog | null = null;
 
