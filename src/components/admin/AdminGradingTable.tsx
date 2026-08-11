@@ -59,16 +59,24 @@ const columns: DataTableColumn<AdminGradingRow>[] = [
   {
     key: 'lessonId',
     header: 'Actions',
-    render: (row) =>
-      row.rowKind === 'pending_submission' && row.lessonId && row.studentId ? (
+    render: (row) => {
+      // Pending free-text rows (queued / running / failed / submitted without
+      // finding) always expose Re-run in Actions.
+      const canRerun =
+        row.rowKind === 'pending_submission' &&
+        Boolean(row.lessonId) &&
+        Boolean(row.studentId);
+
+      return canRerun ? (
         <AdminRerunGradingButton
-          lessonId={row.lessonId}
-          studentId={row.studentId}
+          lessonId={row.lessonId!}
+          studentId={row.studentId!}
           progressId={row.progressId}
         />
       ) : (
         <span className="text-sm text-muted-foreground">—</span>
-      ),
+      );
+    },
   },
 ];
 

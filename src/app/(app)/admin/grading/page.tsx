@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { AdminGradingTable } from '@/components/admin/AdminGradingTable';
+import { shouldIncludePendingSubmission } from '@/lib/grading/adminPendingQueue';
 import { isConceptualSubmission } from '@/lib/lessons/conceptualValidation';
 import { createClient } from '@/lib/supabase/server';
 import type { AdminGradingRow } from '@/types';
@@ -192,7 +193,20 @@ export default async function AdminGradingPage() {
   });
 
   const pendingRows: AdminGradingRow[] = (pendingProgress ?? [])
-    .filter((row) => !findingKeys.has(`${row.student_id}:${row.lesson_id}`))
+    .filter((row) => {
+      const rowJob = row as typeof row & {
+        grading_job_status?: string | null;
+      };
+      return shouldIncludePendingSubmission({
+        studentId: row.student_id,
+        lessonId: row.lesson_id,
+        gradingJobStatus:
+          typeof rowJob.grading_job_status === 'string'
+            ? rowJob.grading_job_status
+            : null,
+        findingKeys,
+      });
+    })
     .map((row) => {
       const student = Array.isArray(row.student) ? row.student[0] : row.student;
       const lesson = Array.isArray(row.lesson) ? row.lesson[0] : row.lesson;
