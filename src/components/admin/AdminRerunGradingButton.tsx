@@ -57,7 +57,12 @@ export function AdminRerunGradingButton({
   }
 
   return (
-    <div className="space-y-2">
+    <div
+      className="space-y-2"
+      onClick={(event) => {
+        event.stopPropagation();
+      }}
+    >
       <Button
         type="button"
         variant="outline"

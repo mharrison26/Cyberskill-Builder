@@ -56,6 +56,21 @@ const columns: DataTableColumn<AdminGradingRow>[] = [
       </Badge>
     ),
   },
+  {
+    key: 'lessonId',
+    header: 'Actions',
+    render: (row) =>
+      row.rowKind === 'pending_submission' &&
+      row.lessonId &&
+      row.studentId ? (
+        <AdminRerunGradingButton
+          lessonId={row.lessonId}
+          studentId={row.studentId}
+        />
+      ) : (
+        <span className="text-sm text-muted-foreground">—</span>
+      ),
+  },
 ];
 
 type AdminGradingTableProps = {
@@ -125,15 +140,10 @@ export function AdminGradingTable({ rows }: AdminGradingTableProps) {
                     {row.gradingJobStatus
                       ? ` Job status: ${row.gradingJobStatus}.`
                       : ''}{' '}
-                    Re-run grading below, or ask the student to retry.
+                    Use <span className="font-medium">Re-run AI grading</span>{' '}
+                    in the Actions column, or ask the student to retry.
                   </p>
                 </div>
-                {row.lessonId && row.studentId ? (
-                  <AdminRerunGradingButton
-                    lessonId={row.lessonId}
-                    studentId={row.studentId}
-                  />
-                ) : null}
               </div>
             ) : (
               <>
