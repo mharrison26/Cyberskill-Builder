@@ -222,9 +222,10 @@ export default async function AdminGradingPage() {
           typeof lesson?.lesson_type === 'string'
             ? lesson.lesson_type
             : 'pending',
-        findingState: gradingError || gradingJobStatus === 'failed'
-          ? 'not_satisfied'
-          : 'submitted',
+        findingState:
+          gradingError || gradingJobStatus === 'failed'
+            ? 'not_satisfied'
+            : 'submitted',
         aiFeedback: feedback,
         aiFeedbackPreview: truncate(feedback),
         submissionPreview: truncate(submission),

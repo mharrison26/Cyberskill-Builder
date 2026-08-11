@@ -23,8 +23,13 @@ export type EnqueueGradingResult = {
 export async function enqueueGrading(
   input: EnqueueGradingInput
 ): Promise<EnqueueGradingResult> {
-  const { supabase, progressId, studentId, lessonId, resetAttempts = true } =
-    input;
+  const {
+    supabase,
+    progressId,
+    studentId,
+    lessonId,
+    resetAttempts = true,
+  } = input;
 
   console.info('[grading] Enqueue AI grading job', {
     progressId,
@@ -63,9 +68,7 @@ export async function kickGradingWorker(args?: {
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
 
   if (!origin) {
-    console.warn(
-      '[grading] No app origin available to kick grading worker'
-    );
+    console.warn('[grading] No app origin available to kick grading worker');
     return;
   }
 

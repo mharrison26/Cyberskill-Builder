@@ -1,8 +1,6 @@
 import { waitUntil } from '@vercel/functions';
 
-import {
-  kickGradingWorker,
-} from '@/lib/grading/enqueueGrading';
+import { kickGradingWorker } from '@/lib/grading/enqueueGrading';
 import { processGradingJobs } from '@/lib/grading/processGradingJobs';
 import { getAppOrigin } from '@/lib/auth/appUrl';
 import { createAdminClient } from '@/lib/supabase/admin';

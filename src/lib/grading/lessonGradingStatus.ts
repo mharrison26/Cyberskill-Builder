@@ -89,9 +89,7 @@ export function resolveDisplayedGradingError(args: {
   gradingError: string | null | undefined;
 }): string | null {
   if (args.phase !== 'failed') return args.gradingError?.trim() || null;
-  return (
-    args.gradingError?.trim() || GRADING_TIMEOUT_USER_MESSAGE
-  );
+  return args.gradingError?.trim() || GRADING_TIMEOUT_USER_MESSAGE;
 }
 
 export function extractMemoFromSubmission(submission: unknown): string | null {

@@ -37,9 +37,7 @@ export function AdminRerunGradingButton({
 
       if (!response.ok) {
         throw new Error(
-          payload.error ??
-            payload.grading?.error ??
-            'Failed to re-run grading'
+          payload.error ?? payload.grading?.error ?? 'Failed to re-run grading'
         );
       }
 

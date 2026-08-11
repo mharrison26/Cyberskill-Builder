@@ -184,7 +184,11 @@ async function alertStuckJobs(
         .limit(50),
     ]);
 
-  const stuck = [...(running ?? []), ...(terminalFailed ?? []), ...(longQueued ?? [])];
+  const stuck = [
+    ...(running ?? []),
+    ...(terminalFailed ?? []),
+    ...(longQueued ?? []),
+  ];
   const seen = new Set<string>();
   let alerted = 0;
 
@@ -267,27 +271,29 @@ async function claimNextJobs(
     return [];
   }
 
-  const [{ data: queued, error: queuedError }, { data: failed, error: failedError }] =
-    await Promise.all([
-      supabase
-        .from('lesson_progress')
-        .select(selectCols)
-        .eq('status', 'submitted')
-        .eq('grading_job_status', 'queued')
-        .is('graded_at', null)
-        .order('submitted_at', { ascending: true })
-        .limit(limit),
-      supabase
-        .from('lesson_progress')
-        .select(selectCols)
-        .eq('status', 'submitted')
-        .eq('grading_job_status', 'failed')
-        .is('graded_at', null)
-        .lt('grading_attempt_count', GRADING_MAX_ATTEMPTS)
-        .lte('grading_next_retry_at', now.toISOString())
-        .order('grading_next_retry_at', { ascending: true })
-        .limit(limit),
-    ]);
+  const [
+    { data: queued, error: queuedError },
+    { data: failed, error: failedError },
+  ] = await Promise.all([
+    supabase
+      .from('lesson_progress')
+      .select(selectCols)
+      .eq('status', 'submitted')
+      .eq('grading_job_status', 'queued')
+      .is('graded_at', null)
+      .order('submitted_at', { ascending: true })
+      .limit(limit),
+    supabase
+      .from('lesson_progress')
+      .select(selectCols)
+      .eq('status', 'submitted')
+      .eq('grading_job_status', 'failed')
+      .is('graded_at', null)
+      .lt('grading_attempt_count', GRADING_MAX_ATTEMPTS)
+      .lte('grading_next_retry_at', now.toISOString())
+      .order('grading_next_retry_at', { ascending: true })
+      .limit(limit),
+  ]);
 
   if (queuedError) {
     console.error('[grading] Failed to claim queued jobs:', queuedError);
@@ -340,12 +346,7 @@ export async function processGradingJobs(
   const timedOut = await expireTimedOutJobs(supabase, now);
   const alerted = await alertStuckJobs(supabase, now);
 
-  const jobs = await claimNextJobs(
-    supabase,
-    now,
-    limit,
-    options?.progressId
-  );
+  const jobs = await claimNextJobs(supabase, now, limit, options?.progressId);
 
   let processed = 0;
   let succeeded = 0;

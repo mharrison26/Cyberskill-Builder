@@ -87,7 +87,9 @@ function mockLearnerClient(options: { authUserId: string; isAdmin: boolean }) {
       };
     }
     if (table === 'track_enrollments') {
-      const eq3 = vi.fn().mockReturnValue({ maybeSingle: enrollmentMaybeSingle });
+      const eq3 = vi
+        .fn()
+        .mockReturnValue({ maybeSingle: enrollmentMaybeSingle });
       const eq2 = vi.fn().mockReturnValue({ eq: eq3 });
       const eq1 = vi.fn().mockReturnValue({ eq: eq2 });
       return {
@@ -125,9 +127,12 @@ describe('POST /api/lessons/[lessonId]/grade', () => {
   it('enqueues grading and schedules the worker for the learner', async () => {
     mockLearnerClient({ authUserId: 'user-1', isAdmin: false });
 
-    const response = await POST(new Request('http://localhost', { method: 'POST', body: '{}' }), {
-      params: { lessonId: 'lesson-1' },
-    });
+    const response = await POST(
+      new Request('http://localhost', { method: 'POST', body: '{}' }),
+      {
+        params: { lessonId: 'lesson-1' },
+      }
+    );
     const payload = await response.json();
 
     expect(response.status).toBe(202);
@@ -145,14 +150,19 @@ describe('POST /api/lessons/[lessonId]/grade', () => {
   it('rejects unauthenticated callers', async () => {
     createClientMock.mockResolvedValue({
       auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+        getUser: vi
+          .fn()
+          .mockResolvedValue({ data: { user: null }, error: null }),
       },
       from: vi.fn(),
     });
 
-    const response = await POST(new Request('http://localhost', { method: 'POST', body: '{}' }), {
-      params: { lessonId: 'lesson-1' },
-    });
+    const response = await POST(
+      new Request('http://localhost', { method: 'POST', body: '{}' }),
+      {
+        params: { lessonId: 'lesson-1' },
+      }
+    );
 
     expect(response.status).toBe(401);
     expect(enqueueGradingMock).not.toHaveBeenCalled();

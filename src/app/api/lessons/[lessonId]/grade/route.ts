@@ -164,8 +164,7 @@ export async function POST(request: Request, { params }: RouteContext) {
         return NextResponse.json(
           {
             error:
-              failedProgress?.grading_error ??
-              'Failed to grade submission',
+              failedProgress?.grading_error ?? 'Failed to grade submission',
             grading: {
               status: 'failed' as const,
               error: failedProgress?.grading_error ?? null,
