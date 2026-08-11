@@ -64,6 +64,7 @@ const columns: DataTableColumn<AdminGradingRow>[] = [
         <AdminRerunGradingButton
           lessonId={row.lessonId}
           studentId={row.studentId}
+          progressId={row.progressId}
         />
       ) : (
         <span className="text-sm text-muted-foreground">—</span>

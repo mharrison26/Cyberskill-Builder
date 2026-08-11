@@ -58,7 +58,8 @@ function isConceptualBody(
 async function persistThenEnqueue(
   context: SubmitLessonContext,
   lessonId: string,
-  submission: LessonSubmissionPayload
+  submission: LessonSubmissionPayload,
+  request: Request
 ) {
   const { data: progress, error: progressError } = await upsertLessonSubmission(
     context,
@@ -84,7 +85,7 @@ async function persistThenEnqueue(
     resetAttempts: true,
   });
 
-  await scheduleGradingWorker(progress.id);
+  await scheduleGradingWorker(progress.id, request);
 
   return NextResponse.json(
     {
@@ -139,7 +140,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: scanResult.error }, { status: 422 });
     }
 
-    return persistThenEnqueue(context, lessonId, validation.data);
+    return persistThenEnqueue(context, lessonId, validation.data, request);
   }
 
   if (isCatalogLabBody(body)) {
@@ -148,7 +149,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    return persistThenEnqueue(context, lessonId, validation.data);
+    return persistThenEnqueue(context, lessonId, validation.data, request);
   }
 
   if (isConceptualBody(body)) {
@@ -157,7 +158,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    return persistThenEnqueue(context, lessonId, validation.data);
+    return persistThenEnqueue(context, lessonId, validation.data, request);
   }
 
   const validation = validateCCCER(body);
@@ -165,5 +166,5 @@ export async function POST(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  return persistThenEnqueue(context, lessonId, validation.data);
+  return persistThenEnqueue(context, lessonId, validation.data, request);
 }

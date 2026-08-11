@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { normalizeAppOrigin, resolveAppOrigin } from '@/lib/auth/appUrl';
 import { markGradingQueued } from '@/lib/grading/triggerGrading';
 
 export type EnqueueGradingInput = {
@@ -52,33 +53,46 @@ export async function enqueueGrading(
  */
 export async function kickGradingWorker(args?: {
   origin?: string;
+  request?: Request;
   progressId?: string;
-}): Promise<void> {
+}): Promise<{ ok: boolean; error?: string }> {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
-    console.warn(
-      '[grading] CRON_SECRET not set — cannot kick worker; cron/local process must pick up jobs'
-    );
-    return;
+    const error =
+      'CRON_SECRET not set — cannot kick worker; cron/local process must pick up jobs';
+    console.warn(`[grading] ${error}`);
+    return { ok: false, error };
   }
 
   const origin =
-    args?.origin ??
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+    normalizeAppOrigin(args?.origin) ?? resolveAppOrigin(args?.request) ?? null;
 
   if (!origin) {
-    console.warn('[grading] No app origin available to kick grading worker');
-    return;
+    const error = 'No app origin available to kick grading worker';
+    console.warn(`[grading] ${error}`);
+    return { ok: false, error };
   }
 
-  const url = new URL('/api/cron/process-grading', origin);
+  let url: URL;
+  try {
+    url = new URL('/api/cron/process-grading', origin);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Invalid worker kick origin';
+    console.error('[grading] Invalid origin for worker kick', {
+      origin,
+      message,
+    });
+    return { ok: false, error: message };
+  }
+
   if (args?.progressId) {
     url.searchParams.set('progressId', args.progressId);
   }
 
   console.info('[grading] Kicking grading worker', {
     url: url.pathname + url.search,
+    origin,
     progressId: args?.progressId ?? null,
   });
 
@@ -94,18 +108,23 @@ export async function kickGradingWorker(args?: {
     });
     if (!response.ok) {
       const body = await response.text().catch(() => '');
+      const error = `Worker kick failed (${response.status}): ${body.slice(0, 300)}`;
       console.error('[grading] Worker kick failed', {
         status: response.status,
         body: body.slice(0, 300),
       });
-      return;
+      return { ok: false, error };
     }
     await response.text().catch(() => undefined);
     console.info('[grading] Worker kick accepted', {
       status: response.status,
       progressId: args?.progressId ?? null,
     });
+    return { ok: true };
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Worker kick request error';
     console.error('[grading] Worker kick request error', error);
+    return { ok: false, error: message };
   }
 }

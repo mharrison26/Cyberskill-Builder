@@ -2,7 +2,7 @@ import { waitUntil } from '@vercel/functions';
 
 import { kickGradingWorker } from '@/lib/grading/enqueueGrading';
 import { processGradingJobs } from '@/lib/grading/processGradingJobs';
-import { getAppOrigin } from '@/lib/auth/appUrl';
+import { resolveAppOrigin } from '@/lib/auth/appUrl';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
@@ -13,7 +13,10 @@ import { createAdminClient } from '@/lib/supabase/admin';
  * work is not bound to the short submit/grade caller. Falls back to
  * in-process processing when GRADING_PROCESS_INLINE=1 (local/dev).
  */
-export async function scheduleGradingWorker(progressId: string): Promise<void> {
+export async function scheduleGradingWorker(
+  progressId: string,
+  request?: Request
+): Promise<void> {
   if (process.env.GRADING_PROCESS_INLINE === '1') {
     try {
       const admin = createAdminClient();
@@ -24,11 +27,14 @@ export async function scheduleGradingWorker(progressId: string): Promise<void> {
     return;
   }
 
-  const origin = await getAppOrigin();
+  const origin = resolveAppOrigin(request) ?? undefined;
   waitUntil(
     (async () => {
       try {
-        await kickGradingWorker({ origin, progressId });
+        const kicked = await kickGradingWorker({ origin, request, progressId });
+        if (!kicked.ok) {
+          throw new Error(kicked.error ?? 'Worker kick failed');
+        }
       } catch (error) {
         console.error(
           '[grading] Worker kick failed after enqueue; trying in-process fallback:',

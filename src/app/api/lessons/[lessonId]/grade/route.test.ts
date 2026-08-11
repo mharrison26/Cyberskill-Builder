@@ -4,14 +4,22 @@ const {
   createClientMock,
   createAdminClientMock,
   enqueueGradingMock,
+  kickGradingWorkerMock,
   scheduleGradingWorkerMock,
   processGradingJobsMock,
 } = vi.hoisted(() => ({
   createClientMock: vi.fn(),
   createAdminClientMock: vi.fn(),
   enqueueGradingMock: vi.fn(),
+  kickGradingWorkerMock: vi.fn(),
   scheduleGradingWorkerMock: vi.fn(),
   processGradingJobsMock: vi.fn(),
+}));
+
+vi.mock('@vercel/functions', () => ({
+  waitUntil: vi.fn((promise: Promise<unknown>) => {
+    void promise;
+  }),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -24,6 +32,7 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 vi.mock('@/lib/grading/enqueueGrading', () => ({
   enqueueGrading: enqueueGradingMock,
+  kickGradingWorker: kickGradingWorkerMock,
 }));
 
 vi.mock('@/lib/grading/scheduleGradingWorker', () => ({
@@ -35,6 +44,11 @@ vi.mock('@/lib/grading/processGradingJobs', () => ({
 }));
 
 import { POST } from '@/app/api/lessons/[lessonId]/grade/route';
+
+const LESSON_ID = '11111111-1111-4111-8111-111111111111';
+const ADMIN_ID = '22222222-2222-4222-8222-222222222222';
+const STUDENT_ID = '33333333-3333-4333-8333-333333333333';
+const PROGRESS_ID = '44444444-4444-4444-8444-444444444444';
 
 function mockClients(options: {
   authUserId: string;
@@ -64,7 +78,7 @@ function mockClients(options: {
   });
 
   const lessonMaybeSingle = vi.fn().mockResolvedValue({
-    data: { id: 'lesson-1', track_id: 'track-1', dcwf_code: 'OV-LGA-001' },
+    data: { id: LESSON_ID, track_id: 'track-1', dcwf_code: 'OV-LGA-001' },
     error: null,
   });
 
@@ -75,9 +89,9 @@ function mockClients(options: {
 
   const progressMaybeSingle = vi.fn().mockResolvedValue({
     data: {
-      id: 'progress-1',
+      id: PROGRESS_ID,
       student_id: targetStudentId,
-      lesson_id: 'lesson-1',
+      lesson_id: LESSON_ID,
       status: 'submitted',
       submission: { type: 'conceptual', memo: 'x'.repeat(120) },
     },
@@ -85,11 +99,16 @@ function mockClients(options: {
   });
 
   function lessonProgressApi() {
-    const eq3 = vi.fn().mockReturnValue({ maybeSingle: progressMaybeSingle });
-    const eq2 = vi.fn().mockReturnValue({ eq: eq3 });
-    const eq1 = vi.fn().mockReturnValue({ eq: eq2 });
+    const chain: {
+      eq: ReturnType<typeof vi.fn>;
+      maybeSingle: typeof progressMaybeSingle;
+    } = {
+      eq: vi.fn(),
+      maybeSingle: progressMaybeSingle,
+    };
+    chain.eq.mockReturnValue(chain);
     return {
-      select: vi.fn().mockReturnValue({ eq: eq1 }),
+      select: vi.fn().mockReturnValue(chain),
       update: vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
       }),
@@ -100,22 +119,23 @@ function mockClients(options: {
   const from = vi.fn((table: string) => {
     if (table === 'users') {
       usersCalls += 1;
-      const maybeSingle =
-        usersCalls === 1 ? appUserMaybeSingle : targetUserMaybeSingle;
+      if (usersCalls === 1) {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({ maybeSingle: appUserMaybeSingle }),
+          }),
+        };
+      }
       return {
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            maybeSingle,
-          }),
+          eq: vi.fn().mockReturnValue({ maybeSingle: targetUserMaybeSingle }),
         }),
       };
     }
     if (table === 'lessons') {
       return {
         select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            maybeSingle: lessonMaybeSingle,
-          }),
+          eq: vi.fn().mockReturnValue({ maybeSingle: lessonMaybeSingle }),
         }),
       };
     }
@@ -151,8 +171,9 @@ describe('POST /api/lessons/[lessonId]/grade', () => {
     delete process.env.GRADING_PROCESS_INLINE;
     enqueueGradingMock.mockResolvedValue({
       status: 'queued',
-      progressId: 'progress-1',
+      progressId: PROGRESS_ID,
     });
+    kickGradingWorkerMock.mockResolvedValue({ ok: true });
     scheduleGradingWorkerMock.mockResolvedValue(undefined);
     processGradingJobsMock.mockResolvedValue({
       timedOut: 0,
@@ -166,34 +187,38 @@ describe('POST /api/lessons/[lessonId]/grade', () => {
   });
 
   it('enqueues grading and schedules the worker for the learner', async () => {
-    mockClients({ authUserId: 'user-1', isAdmin: false });
+    mockClients({ authUserId: STUDENT_ID, isAdmin: false });
 
-    const response = await POST(
-      new Request('http://localhost', { method: 'POST', body: '{}' }),
-      {
-        params: { lessonId: 'lesson-1' },
-      }
-    );
+    const request = new Request('http://localhost', {
+      method: 'POST',
+      body: '{}',
+    });
+    const response = await POST(request, {
+      params: { lessonId: LESSON_ID },
+    });
     const payload = await response.json();
 
     expect(response.status).toBe(202);
     expect(payload.grading?.status).toBe('queued');
     expect(enqueueGradingMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        progressId: 'progress-1',
-        studentId: 'user-1',
-        lessonId: 'lesson-1',
+        progressId: PROGRESS_ID,
+        studentId: STUDENT_ID,
+        lessonId: LESSON_ID,
       })
     );
-    expect(scheduleGradingWorkerMock).toHaveBeenCalledWith('progress-1');
+    expect(scheduleGradingWorkerMock).toHaveBeenCalledWith(
+      PROGRESS_ID,
+      request
+    );
     expect(processGradingJobsMock).not.toHaveBeenCalled();
   });
 
   it('runs grading inline for admin re-run with inline:true', async () => {
     mockClients({
-      authUserId: 'admin-1',
+      authUserId: ADMIN_ID,
       isAdmin: true,
-      targetStudentId: 'student-1',
+      targetStudentId: STUDENT_ID,
     });
     processGradingJobsMock.mockResolvedValue({
       timedOut: 0,
@@ -206,12 +231,12 @@ describe('POST /api/lessons/[lessonId]/grade', () => {
     });
 
     const response = await POST(
-      new Request('http://localhost', {
+      new Request('https://cyberskill-builder.vercel.app', {
         method: 'POST',
-        body: JSON.stringify({ studentId: 'student-1', inline: true }),
+        body: JSON.stringify({ studentId: STUDENT_ID, inline: true }),
       }),
       {
-        params: { lessonId: 'lesson-1' },
+        params: { lessonId: LESSON_ID },
       }
     );
     const payload = await response.json();
@@ -219,35 +244,78 @@ describe('POST /api/lessons/[lessonId]/grade', () => {
     expect(response.status).toBe(201);
     expect(payload.grading?.status).toBe('completed');
     expect(createAdminClientMock).toHaveBeenCalled();
+    expect(kickGradingWorkerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ progressId: PROGRESS_ID })
+    );
     expect(processGradingJobsMock).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ progressId: 'progress-1', limit: 1 })
+      expect.objectContaining({ progressId: PROGRESS_ID, limit: 1 })
     );
     expect(scheduleGradingWorkerMock).not.toHaveBeenCalled();
   });
 
-  it('returns an error when admin inline re-run does not process the job', async () => {
+  it('returns queued when inline misses but worker kick succeeds', async () => {
     mockClients({
-      authUserId: 'admin-1',
+      authUserId: ADMIN_ID,
       isAdmin: true,
-      targetStudentId: 'student-1',
+      targetStudentId: STUDENT_ID,
     });
 
     const response = await POST(
-      new Request('http://localhost', {
+      new Request('https://cyberskill-builder.vercel.app', {
         method: 'POST',
-        body: JSON.stringify({ studentId: 'student-1', inline: true }),
+        body: JSON.stringify({ studentId: STUDENT_ID, inline: true }),
       }),
       {
-        params: { lessonId: 'lesson-1' },
+        params: { lessonId: LESSON_ID },
+      }
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(202);
+    expect(payload.grading?.status).toBe('queued');
+    expect(payload.message).toMatch(/worker kicked/i);
+    expect(scheduleGradingWorkerMock).not.toHaveBeenCalled();
+  });
+
+  it('returns an error when admin inline re-run and kick both fail', async () => {
+    mockClients({
+      authUserId: ADMIN_ID,
+      isAdmin: true,
+      targetStudentId: STUDENT_ID,
+    });
+    kickGradingWorkerMock.mockResolvedValue({
+      ok: false,
+      error: 'No app origin available to kick grading worker',
+    });
+
+    const response = await POST(
+      new Request('https://cyberskill-builder.vercel.app', {
+        method: 'POST',
+        body: JSON.stringify({ studentId: STUDENT_ID, inline: true }),
+      }),
+      {
+        params: { lessonId: LESSON_ID },
       }
     );
     const payload = await response.json();
 
     expect(response.status).toBe(500);
     expect(payload.grading?.status).toBe('failed');
-    expect(payload.error).toMatch(/did not claim or process/i);
+    expect(payload.error).toMatch(/did not claim/i);
     expect(scheduleGradingWorkerMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid lesson ids before touching the database', async () => {
+    const response = await POST(
+      new Request('http://localhost', { method: 'POST', body: '{}' }),
+      {
+        params: { lessonId: 'not-a-uuid' },
+      }
+    );
+
+    expect(response.status).toBe(400);
+    expect(createClientMock).not.toHaveBeenCalled();
   });
 
   it('rejects unauthenticated callers', async () => {
@@ -263,7 +331,7 @@ describe('POST /api/lessons/[lessonId]/grade', () => {
     const response = await POST(
       new Request('http://localhost', { method: 'POST', body: '{}' }),
       {
-        params: { lessonId: 'lesson-1' },
+        params: { lessonId: LESSON_ID },
       }
     );
 
