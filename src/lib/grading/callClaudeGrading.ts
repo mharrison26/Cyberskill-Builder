@@ -67,7 +67,9 @@ function resolveAnthropicModel(): string {
   return process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-5';
 }
 
-function extractStringFromObject(value: Record<string, unknown>): string | null {
+function extractStringFromObject(
+  value: Record<string, unknown>
+): string | null {
   for (const key of [
     'text',
     'value',
@@ -120,7 +122,9 @@ export function coerceStringList(value: unknown): string[] | null {
 
   if (!Array.isArray(value)) {
     if (typeof value === 'object') {
-      const extracted = extractStringFromObject(value as Record<string, unknown>);
+      const extracted = extractStringFromObject(
+        value as Record<string, unknown>
+      );
       return extracted ? [extracted] : null;
     }
     return null;
@@ -141,7 +145,9 @@ export function coerceStringList(value: unknown): string[] | null {
       continue;
     }
     if (typeof item === 'object') {
-      const extracted = extractStringFromObject(item as Record<string, unknown>);
+      const extracted = extractStringFromObject(
+        item as Record<string, unknown>
+      );
       if (extracted) {
         items.push(extracted);
         continue;
