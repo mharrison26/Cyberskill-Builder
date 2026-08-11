@@ -3,7 +3,8 @@ import { StatusDot } from '@/components/ui/status-dot';
 import { cn } from '@/lib/utils';
 
 type PriorityBadgeProps = {
-  difficulty: string;
+  /** Lesson/training difficulty — never finding severity. Nullable-safe. */
+  difficulty: string | null | undefined;
   className?: string;
 };
 
@@ -19,8 +20,8 @@ function priorityTone(difficulty: string): {
     case 'p1':
       return {
         badge:
-          'border-status-blocked-foreground/20 bg-status-blocked text-status-blocked-foreground',
-        dot: 'bg-status-blocked-foreground',
+          'border-danger-soft-foreground/20 bg-danger-soft text-danger-soft-foreground',
+        dot: 'bg-danger-soft-foreground',
         pulse: true,
       };
     case 'medium':
@@ -28,8 +29,8 @@ function priorityTone(difficulty: string): {
     case 'p2':
       return {
         badge:
-          'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground',
-        dot: 'bg-status-insufficient-foreground',
+          'border-warning-soft-foreground/20 bg-warning-soft text-warning-soft-foreground',
+        dot: 'bg-warning-soft-foreground',
         pulse: false,
       };
     case 'low':
@@ -38,22 +39,22 @@ function priorityTone(difficulty: string): {
     default:
       return {
         badge:
-          'border-status-not-started-foreground/20 bg-status-not-started text-status-not-started-foreground',
-        dot: 'bg-status-not-started-foreground',
+          'border-neutral-soft-foreground/20 bg-neutral-soft text-neutral-soft-foreground',
+        dot: 'bg-neutral-soft-foreground',
         pulse: false,
       };
   }
 }
 
 export function PriorityBadge({ difficulty, className }: PriorityBadgeProps) {
-  const label = difficulty.trim() || 'Unknown';
+  const label = (difficulty ?? '').trim() || 'Unknown';
   const tone = priorityTone(label);
 
   return (
     <Badge
       variant="outline"
       className={cn(
-        'h-5 gap-1.5 rounded-md px-2 py-0 font-mono text-[10px] font-medium uppercase tracking-wider',
+        'h-5 gap-1.5 rounded-md px-2 py-0 font-mono text-overline uppercase',
         tone.badge,
         className
       )}

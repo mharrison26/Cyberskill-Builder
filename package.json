@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "tsx scripts/build-control-catalog.ts",
     "build": "next build",
+    "smoke:grc-tickets": "tsx scripts/smoke-grc-ticket-routes.ts",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -16,7 +18,8 @@
     "backfill:portfolio": "tsx scripts/backfill-portfolio-items.ts",
     "sandbox:cost-controls": "tsx scripts/sandbox-cost-controls.ts",
     "a11y-check": "bash scripts/a11y-check.sh",
-    "seed:grc-lesson-content": "tsx scripts/seed-grc-lesson-content.ts"
+    "seed:grc-lesson-content": "tsx scripts/seed-grc-lesson-content.ts",
+    "build:control-catalog": "tsx scripts/build-control-catalog.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

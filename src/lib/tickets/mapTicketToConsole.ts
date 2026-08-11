@@ -1,4 +1,6 @@
 import type { MockTrackTicket, Ticket, TicketProgressStatus } from '@/types';
+import { resolveTicketDisplayTitle } from '@/lib/tickets/displayTitle';
+import { resolveConsoleControlMeta } from '@/lib/tickets/resolveControlMeta';
 import { normalizeTicketStatus } from '@/lib/tickets/status';
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -26,9 +28,9 @@ function asSeverity(value: unknown): MockTrackTicket['severity'] | undefined {
 
 function inferQueueBucket(
   status: TicketProgressStatus,
-  difficulty: string
+  difficulty: string | null | undefined
 ): MockTrackTicket['queueBucket'] {
-  const d = difficulty.toLowerCase();
+  const d = (difficulty ?? '').toLowerCase();
   if (d === 'critical' || d === 'p1') return 'escalated';
   if (status === 'new') return 'unassigned';
   return 'my_queue';
@@ -50,21 +52,15 @@ export function mapTicketToConsoleTicket(args: {
   const { ticket, trackSlug } = args;
   const status = normalizeTicketStatus(args.status);
   const state = asRecord(ticket.initial_state);
-  const scenario = asRecord(state.scenario);
   const meta = asRecord(state.meta);
 
-  const title =
-    asString(state.title) ?? asString(scenario.title) ?? ticket.scenario_brief;
+  const title = resolveTicketDisplayTitle(ticket);
+  const scenarioBrief = ticket.scenario_brief?.trim() || undefined;
 
-  const controlId =
-    asString(state.control_id) ??
-    asString(state.controlId) ??
-    asString(meta.control_id);
-
-  const controlFamily =
-    asString(state.control_family) ??
-    asString(state.controlFamily) ??
-    asString(meta.control_family);
+  const { controlId, controlFamily } = resolveConsoleControlMeta({
+    ticketType: ticket.ticket_type,
+    initialState: state,
+  });
 
   const hostname =
     asString(state.hostname) ?? asString(state.host) ?? asString(meta.hostname);
@@ -89,14 +85,27 @@ export function mapTicketToConsoleTicket(args: {
     ? labelsRaw.filter((v): v is string => typeof v === 'string')
     : undefined;
 
+  const ticketType =
+    typeof ticket.ticket_type === 'string' && ticket.ticket_type.trim()
+      ? ticket.ticket_type
+      : 'ticket';
+  const difficulty =
+    typeof ticket.difficulty === 'string' && ticket.difficulty.trim()
+      ? ticket.difficulty
+      : 'medium';
+
   return {
     id: ticket.id,
     trackSlug,
     title,
-    subtitle: asString(state.subtitle) ?? ticket.ticket_type.replace(/_/g, ' '),
-    ticketType: ticket.ticket_type,
-    difficulty: ticket.difficulty,
-    slaMinutes: ticket.sla_minutes,
+    scenarioBrief,
+    subtitle: asString(state.subtitle) ?? ticketType.replace(/_/g, ' '),
+    ticketType,
+    difficulty,
+    slaMinutes:
+      typeof ticket.sla_minutes === 'number' && Number.isFinite(ticket.sla_minutes)
+        ? ticket.sla_minutes
+        : 45,
     startedAt: args.startedAt ?? null,
     resolvedAt: args.resolvedAt ?? null,
     slaDueAt: args.slaDueAt ?? null,
@@ -104,14 +113,16 @@ export function mapTicketToConsoleTicket(args: {
     status,
     controlFamily,
     controlId,
+    tier: typeof ticket.tier === 'number' ? ticket.tier : undefined,
     // Severity is finding risk only — never fall back to lesson difficulty
     // (easy/medium/hard), which is a separate training axis.
+    // Missing severity stays undefined → console "Unrated" (see openBySeverity).
     severity: asSeverity(state.severity) ?? asSeverity(meta.severity),
     poamDueAt: asString(state.poam_due_at) ?? asString(state.poamDueAt) ?? null,
     requester,
     queueBucket:
       (asString(state.queue_bucket) as MockTrackTicket['queueBucket']) ??
-      inferQueueBucket(status, ticket.difficulty),
+      inferQueueBucket(status, difficulty),
     hostname,
     engagementTitle,
     systemName,

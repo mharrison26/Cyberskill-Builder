@@ -10,10 +10,15 @@ import { cn } from '@/lib/utils';
 
 export type TicketRowData = {
   id: string;
-  /** Primary line — subject, finding title, or scenario brief. */
+  /** Primary line — short display title (not the full scenario brief). */
   title: string;
   /** Optional secondary line (requester, control family, hostname, etc.). */
   subtitle?: string | null;
+  /**
+   * Native tooltip / title attribute. Prefer the full scenario brief when the
+   * visible title is clamped.
+   */
+  titleTooltip?: string | null;
   difficulty: string;
   slaMinutes: number;
   startedAt: string | null;
@@ -34,6 +39,11 @@ type TicketRowProps = {
    * Difficulty in its own column, separate from finding Severity).
    */
   showPriority?: boolean;
+  /**
+   * Title line clamp. Use 2 in dense tables so long labels ellipsize cleanly
+   * instead of expanding the cell.
+   */
+  titleLineClamp?: 1 | 2;
   /** Extra trailing slot (status control, open chevron, etc.). */
   trailing?: React.ReactNode;
   onClick?: () => void;
@@ -46,6 +56,8 @@ export function toTicketRowData(
     id: string;
     title: string;
     subtitle?: string | null;
+    scenarioBrief?: string | null;
+    titleTooltip?: string | null;
     difficulty: string;
     slaMinutes: number;
     startedAt: string | null;
@@ -60,6 +72,8 @@ export function toTicketRowData(
     id: ticket.id,
     title: ticket.title,
     subtitle: ticket.subtitle ?? null,
+    titleTooltip:
+      ticket.titleTooltip ?? ticket.scenarioBrief ?? ticket.title ?? null,
     difficulty: ticket.difficulty,
     slaMinutes: ticket.slaMinutes,
     startedAt: ticket.startedAt,
@@ -80,6 +94,7 @@ export function TicketRow({
   nowMs,
   className,
   showPriority = true,
+  titleLineClamp = 1,
   trailing,
   onClick,
   onKeyDown,
@@ -92,11 +107,12 @@ export function TicketRow({
   });
   const interactive = Boolean(onClick);
   const showOverdue = sla.isOverdue && !sla.isFrozen && !closed;
+  const tooltip = ticket.titleTooltip?.trim() || ticket.title;
 
   return (
     <div
       className={cn(
-        'flex min-w-0 items-center gap-3',
+        'flex min-w-0 items-center gap-3 transition-hover',
         interactive && 'cursor-pointer',
         showOverdue && 'text-status-blocked-foreground',
         className
@@ -115,11 +131,20 @@ export function TicketRow({
         <PriorityBadge difficulty={ticket.difficulty} className="shrink-0" />
       ) : null}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">
+        <p
+          className={cn(
+            'text-body font-emphasis break-words text-foreground',
+            titleLineClamp === 2 ? 'line-clamp-2' : 'truncate'
+          )}
+          title={tooltip}
+        >
           {ticket.title}
         </p>
         {ticket.subtitle ? (
-          <p className="truncate text-xs text-muted-foreground">
+          <p
+            className="truncate text-small text-muted-foreground"
+            title={ticket.subtitle}
+          >
             {ticket.subtitle}
           </p>
         ) : null}

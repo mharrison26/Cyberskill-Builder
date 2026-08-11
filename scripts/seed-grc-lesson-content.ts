@@ -54,6 +54,11 @@ const LESSON_META: Record<
   },
 };
 
+/**
+ * Finding severity (critical/high/medium/low) is separate from lesson
+ * `difficulty` (easy/medium/hard). After the column split, severity must be
+ * authored explicitly — never inferred from difficulty.
+ */
 const TICKET_META: Record<
   string,
   {
@@ -61,6 +66,10 @@ const TICKET_META: Record<
     tier: number;
     sort_order: number;
     difficulty: string;
+    /** Finding severity for console stats (not lesson difficulty). */
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    /** ISO date for POA&M due card when the scenario tracks remediation. */
+    poam_due_at?: string;
     sla: number;
     dcwf: string;
   }
@@ -70,6 +79,7 @@ const TICKET_META: Record<
     tier: 2,
     sort_order: 27,
     difficulty: 'medium',
+    severity: 'medium',
     sla: 45,
     dcwf: '722',
   },
@@ -78,6 +88,7 @@ const TICKET_META: Record<
     tier: 2,
     sort_order: 20,
     difficulty: 'medium',
+    severity: 'medium',
     sla: 45,
     dcwf: '612',
   },
@@ -86,6 +97,7 @@ const TICKET_META: Record<
     tier: 2,
     sort_order: 22,
     difficulty: 'medium',
+    severity: 'medium',
     sla: 60,
     dcwf: '612',
   },
@@ -94,6 +106,8 @@ const TICKET_META: Record<
     tier: 2,
     sort_order: 25,
     difficulty: 'medium',
+    severity: 'medium',
+    poam_due_at: '2026-08-20',
     sla: 45,
     dcwf: '612',
   },
@@ -102,6 +116,7 @@ const TICKET_META: Record<
     tier: 2,
     sort_order: 26,
     difficulty: 'medium',
+    severity: 'medium',
     sla: 45,
     dcwf: '612',
   },
@@ -110,6 +125,8 @@ const TICKET_META: Record<
     tier: 3,
     sort_order: 30,
     difficulty: 'hard',
+    severity: 'medium',
+    poam_due_at: '2026-08-18',
     sla: 60,
     dcwf: '722',
   },
@@ -118,6 +135,8 @@ const TICKET_META: Record<
     tier: 3,
     sort_order: 32,
     difficulty: 'hard',
+    severity: 'high',
+    poam_due_at: '2026-08-15',
     sla: 60,
     dcwf: '722',
   },
@@ -126,6 +145,7 @@ const TICKET_META: Record<
     tier: 3,
     sort_order: 31,
     difficulty: 'hard',
+    severity: 'high',
     sla: 45,
     dcwf: '722',
   },
@@ -134,6 +154,7 @@ const TICKET_META: Record<
     tier: 3,
     sort_order: 90,
     difficulty: 'hard',
+    severity: 'medium',
     sla: 90,
     dcwf: '621',
   },
@@ -142,6 +163,7 @@ const TICKET_META: Record<
     tier: 3,
     sort_order: 95,
     difficulty: 'hard',
+    severity: 'medium',
     sla: 90,
     dcwf: '722',
   },
@@ -289,14 +311,23 @@ function contentPayload(row: SheetRow) {
 
 function ticketInitialMerge(row: SheetRow): Record<string, unknown> {
   const scenario = row['Ticket / Scenario (Student-Facing)'];
+  const meta = TICKET_META[row._id];
   const merge: Record<string, unknown> = {
     sheetId: row._id,
     ticketCode: row._id,
     title: row._title,
+    // Short list/header label (top-level so shallow jsonb || merge is safe).
+    // Long narrative stays in tickets.scenario_brief.
+    displayTitle: row._title,
     prompt: scenario,
     scenarioBrief: scenario,
     keyArtifact: row['Key Artifact / Data'],
     learningObjective: row['Learning Objective'],
+    // Finding severity (console stats) — distinct from tickets.difficulty.
+    ...(meta?.severity ? { severity: meta.severity } : {}),
+    ...(meta?.poam_due_at
+      ? { poam_due_at: meta.poam_due_at, poamDueAt: meta.poam_due_at }
+      : {}),
   };
 
   if (row._id === 'GRC-01') {

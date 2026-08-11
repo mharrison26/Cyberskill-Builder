@@ -24,6 +24,20 @@ function makeTicket(overrides: Partial<Ticket> = {}): Ticket {
 }
 
 describe('mapTicketToConsoleTicket', () => {
+  it('defaults nullish difficulty without inventing severity', () => {
+    const mapped = mapTicketToConsoleTicket({
+      ticket: makeTicket({
+        // @ts-expect-error intentional null regression coverage
+        difficulty: null,
+        initial_state: { title: 'Unrated finding' },
+      }),
+      trackSlug: 'grc',
+    });
+
+    expect(mapped.difficulty).toBe('medium');
+    expect(mapped.severity).toBeUndefined();
+  });
+
   it('does not treat lesson difficulty as finding severity', () => {
     const mapped = mapTicketToConsoleTicket({
       ticket: makeTicket({
@@ -80,5 +94,70 @@ describe('mapTicketToConsoleTicket', () => {
     expect(mapped.resolvedAt).toBe('2026-01-01T00:12:00.000Z');
     expect(mapped.slaDueAt).toBe('2026-01-01T00:45:00.000Z');
     expect(mapped.slaMet).toBe(true);
+  });
+
+  it('uses scenario.displayTitle and keeps scenario_brief separate', () => {
+    const brief =
+      'Northwind needs a written control mapping for AC-2 across SOC 2 and ISO 27001 with partial-overlap analysis.';
+    const mapped = mapTicketToConsoleTicket({
+      ticket: makeTicket({
+        ticket_type: 'control_mapping',
+        scenario_brief: brief,
+        initial_state: {
+          scenario: { displayTitle: 'Cross-framework control mapping' },
+        },
+      }),
+      trackSlug: 'grc',
+    });
+
+    expect(mapped.title).toBe('Cross-framework control mapping');
+    expect(mapped.scenarioBrief).toBe(brief);
+  });
+
+  it('does not fall back to a long scenario_brief for the console title', () => {
+    const brief =
+      'HarborNet CMS shipped an AC-2 implementation statement for the draft SSP. Judge whether the statement is adequate.';
+    const mapped = mapTicketToConsoleTicket({
+      ticket: makeTicket({
+        ticket_type: 'control_implementation_adequacy',
+        scenario_brief: brief,
+        initial_state: {},
+      }),
+      trackSlug: 'grc',
+    });
+
+    expect(mapped.title).toBe('Control Implementation Adequacy');
+    expect(mapped.scenarioBrief).toBe(brief);
+    expect(mapped.title).not.toBe(brief);
+  });
+
+  it('derives control family from controlId and maps tier', () => {
+    const mapped = mapTicketToConsoleTicket({
+      ticket: makeTicket({
+        tier: 2,
+        ticket_type: 'assessment_procedures',
+        initial_state: {
+          title: 'SP 800-53A assessment procedure lab',
+          controlId: 'ia-5.1',
+        },
+      }),
+      trackSlug: 'grc',
+    });
+
+    expect(mapped.controlId).toBe('ia-5.1');
+    expect(mapped.controlFamily).toBe('Identification & Authentication');
+    expect(mapped.tier).toBe(2);
+  });
+
+  it('uses ticket-type family defaults when control fields are absent', () => {
+    const mapped = mapTicketToConsoleTicket({
+      ticket: makeTicket({
+        ticket_type: 'tool_walkthrough',
+        initial_state: { title: 'SP 800-30 risk assessment via SimpleRisk' },
+      }),
+      trackSlug: 'grc',
+    });
+
+    expect(mapped.controlFamily).toBe('Risk Assessment');
   });
 });

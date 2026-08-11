@@ -172,6 +172,11 @@ Organizations must establish a ConMon strategy that includes vulnerability scann
   },
 ];
 
+/**
+ * Small NIST SP 800-53 excerpt for GRC console quick-reference only.
+ * The full catalog is the processed OSCAL index at data/oscal/control-catalog.json
+ * (see /catalog and scripts/build-control-catalog.ts).
+ */
 export const MOCK_CONTROLS: MockControl[] = [
   {
     id: 'AC-1',

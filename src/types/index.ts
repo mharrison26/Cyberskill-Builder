@@ -253,6 +253,8 @@ export interface MockTrackTicket {
   trackSlug: string;
   title: string;
   subtitle?: string;
+  /** Full scenario brief for detail panes; workbench reads DB scenario_brief. */
+  scenarioBrief?: string;
   ticketType: string;
   difficulty: string;
   slaMinutes: number;
@@ -265,6 +267,8 @@ export interface MockTrackTicket {
   /** GRC / ISSO / ISSM: control family or engagement label. */
   controlFamily?: string;
   controlId?: string;
+  /** Ticket training tier (1 | 2 | 3) when mapped from live tickets. */
+  tier?: number;
   /** Severity for compliance findings (critical/high/medium/low). */
   severity?: 'critical' | 'high' | 'medium' | 'low';
   /** POA&M due date (ISO date) when applicable. */

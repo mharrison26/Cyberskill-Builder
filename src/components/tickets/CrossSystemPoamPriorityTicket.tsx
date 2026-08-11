@@ -3,12 +3,14 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
+import { SeverityBadge } from '@/components/tickets/SeverityBadge';
 import { Badge } from '@/components/ui/badge';
 import {
   restoredStringArray,
   useTicketWorkbenchForm,
 } from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
+import { StatusDot } from '@/components/ui/status-dot';
 import {
   Card,
   CardContent,
@@ -21,7 +23,6 @@ import {
   parseCrossSystemPoamSystems,
   type CrossSystemPoamItem,
   type CrossSystemPoamSystem,
-  type PoamItemSeverity,
 } from '@/lib/scoring/crossSystemPoamPriority';
 import {
   FIPS_199_IMPACT_LEVEL_LABELS,
@@ -60,27 +61,36 @@ function readString(
   return fallback;
 }
 
-function impactTone(level: Fips199ImpactLevel): string {
-  if (level === 'high') {
-    return 'border-destructive/30 bg-destructive/10 text-destructive';
-  }
-  if (level === 'moderate') {
-    return 'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground';
-  }
-  return 'border-border bg-muted/40 text-muted-foreground';
-}
+function ImpactBadge({ level }: { level: Fips199ImpactLevel }) {
+  const tone =
+    level === 'high'
+      ? {
+          badge: 'border-destructive/30 bg-destructive/10 text-destructive',
+          dot: 'bg-destructive',
+        }
+      : level === 'moderate'
+        ? {
+            badge:
+              'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground',
+            dot: 'bg-status-insufficient-foreground',
+          }
+        : {
+            badge: 'border-border bg-muted/40 text-muted-foreground',
+            dot: 'bg-muted-foreground',
+          };
 
-function severityTone(severity: PoamItemSeverity): string {
-  if (severity === 'critical') {
-    return 'border-destructive/40 bg-destructive/15 text-destructive';
-  }
-  if (severity === 'high') {
-    return 'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground';
-  }
-  if (severity === 'moderate') {
-    return 'border-border bg-muted/50 text-foreground';
-  }
-  return 'border-border bg-muted/30 text-muted-foreground';
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        'h-5 gap-1.5 rounded-md px-2 py-0 font-mono text-overline uppercase',
+        tone.badge
+      )}
+    >
+      <StatusDot className={tone.dot} />
+      <span>{FIPS_199_IMPACT_LEVEL_LABELS[level]} impact</span>
+    </Badge>
+  );
 }
 
 export function CrossSystemPoamPriorityTicket({
@@ -312,19 +322,8 @@ export function CrossSystemPoamPriorityTicket({
                         <p className="font-medium text-foreground">
                           {item.title}
                         </p>
-                        <Badge
-                          variant="outline"
-                          className={cn(severityTone(item.severity))}
-                        >
-                          {item.severity}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className={cn(impactTone(item.impactLevel))}
-                        >
-                          {FIPS_199_IMPACT_LEVEL_LABELS[item.impactLevel]}{' '}
-                          impact
-                        </Badge>
+                        <SeverityBadge severity={item.severity} />
+                        <ImpactBadge level={item.impactLevel} />
                       </div>
                       <p className="text-sm text-muted-foreground">
                         <span className="font-medium text-foreground">
@@ -396,12 +395,7 @@ function SystemPoamCard({ system }: { system: CrossSystemPoamSystem }) {
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center gap-2">
           <CardTitle className="text-base">{system.name}</CardTitle>
-          <Badge
-            variant="outline"
-            className={cn(impactTone(system.impactLevel))}
-          >
-            FIPS 199 {FIPS_199_IMPACT_LEVEL_LABELS[system.impactLevel]}
-          </Badge>
+          <ImpactBadge level={system.impactLevel} />
           <Badge variant="outline" className="font-mono text-xs">
             {system.id}
           </Badge>
@@ -444,12 +438,7 @@ function SystemPoamCard({ system }: { system: CrossSystemPoamSystem }) {
                       ) : null}
                     </td>
                     <td className="py-2 pr-3">
-                      <Badge
-                        variant="outline"
-                        className={cn(severityTone(item.severity))}
-                      >
-                        {item.severity}
-                      </Badge>
+                      <SeverityBadge severity={item.severity} />
                     </td>
                     <td className="py-2 text-muted-foreground">
                       {item.dueDate ?? '—'}

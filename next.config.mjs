@@ -5,6 +5,15 @@ const nextConfig = {
   // Required for src/instrumentation.ts on Next.js 14
   experimental: {
     instrumentationHook: true,
+    // Ticket workbench + catalog load data/oscal/control-catalog.json via fs.
+    // Without tracing includes, Vercel omits the file and RSC crashes.
+    outputFileTracingIncludes: {
+      '/tracks/*/tickets/*': ['./data/oscal/control-catalog.json'],
+      '/catalog': ['./data/oscal/control-catalog.json'],
+      '/catalog/*': ['./data/oscal/control-catalog.json'],
+      '/tracks/grc/catalog': ['./data/oscal/control-catalog.json'],
+      '/api/search': ['./data/oscal/control-catalog.json'],
+    },
   },
   /**
    * Cross-origin isolation for WebContainers (SharedArrayBuffer).
