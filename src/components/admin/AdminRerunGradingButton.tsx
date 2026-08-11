@@ -43,8 +43,12 @@ export function AdminRerunGradingButton({
 
       if (payload.grading?.status === 'completed') {
         setMessage('Grading completed.');
+      } else if (payload.grading?.status === 'failed') {
+        setError(payload.grading.error ?? 'Grading failed');
       } else if (payload.grading?.status === 'queued') {
-        setMessage('Grading re-queued. Refresh shortly for results.');
+        setMessage(
+          'Grading re-queued — worker kicked. Refresh shortly for results.'
+        );
       } else {
         setMessage('Grading request accepted.');
       }

@@ -83,8 +83,8 @@ export async function kickGradingWorker(args?: {
   });
 
   try {
-    // fetch() resolves when response headers arrive. Cancel the body so this
-    // kick does not wait for the LLM call — the worker invocation continues.
+    // Worker route ACKs quickly (202) and continues via waitUntil. Await the
+    // small ack body — do not cancel the stream (cancel can abort the worker).
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
@@ -100,7 +100,11 @@ export async function kickGradingWorker(args?: {
       });
       return;
     }
-    await response.body?.cancel().catch(() => undefined);
+    await response.text().catch(() => undefined);
+    console.info('[grading] Worker kick accepted', {
+      status: response.status,
+      progressId: args?.progressId ?? null,
+    });
   } catch (error) {
     console.error('[grading] Worker kick request error', error);
   }

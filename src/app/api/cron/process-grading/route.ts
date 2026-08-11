@@ -1,3 +1,4 @@
+import { waitUntil } from '@vercel/functions';
 import { NextResponse } from 'next/server';
 
 import { processGradingJobs } from '@/lib/grading/processGradingJobs';
@@ -11,9 +12,12 @@ export const maxDuration = 60;
  * AI grading worker (Vercel Cron + manual kick after enqueue).
  *
  * Auth: Authorization: Bearer $CRON_SECRET (or ?secret=)
- * Schedule: vercel.json every minute
+ * Schedule: vercel.json daily on Hobby (`0 0 * * *`) — submit/grade routes
+ * must kick this worker (or admin inline) so jobs do not wait for midnight.
  *
- * Optional query: ?progressId=… to process a specific lesson_progress row.
+ * Optional query:
+ * - `progressId` — process a specific lesson_progress row
+ * - `sync=1` — await processing before responding (debug / one-off)
  */
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -35,20 +39,42 @@ export async function GET(request: Request) {
   const progressId = url.searchParams.get('progressId') ?? undefined;
   const limitParam = url.searchParams.get('limit');
   const limit = limitParam ? Number.parseInt(limitParam, 10) : undefined;
+  const sync = url.searchParams.get('sync') === '1';
 
   console.info('[grading] Cron/worker pickup', {
     progressId: progressId ?? null,
     limit: limit ?? null,
+    sync,
   });
 
   try {
     const admin = createAdminClient();
-    const result = await processGradingJobs(admin, {
+    const options = {
       progressId,
       limit:
         typeof limit === 'number' && Number.isFinite(limit) ? limit : undefined,
-    });
+    };
 
+    // Default: acknowledge immediately so submit/grade waitUntil kicks are not
+    // pinned to the LLM call (and killed when the caller hits maxDuration).
+    // Processing continues via waitUntil up to this route's maxDuration.
+    if (!sync) {
+      waitUntil(
+        processGradingJobs(admin, options)
+          .then((result) => {
+            console.info('[grading] Cron/worker waitUntil complete', result);
+          })
+          .catch((error) => {
+            console.error('[grading] Cron/worker waitUntil failed:', error);
+          })
+      );
+      return NextResponse.json(
+        { ok: true, accepted: true, progressId: progressId ?? null },
+        { status: 202 }
+      );
+    }
+
+    const result = await processGradingJobs(admin, options);
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     const message =

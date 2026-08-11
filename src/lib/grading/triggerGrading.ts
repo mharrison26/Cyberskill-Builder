@@ -64,6 +64,9 @@ async function persistJobUpdate(
       progressId,
       values,
     });
+    throw new Error(
+      `Failed to persist grading job update for ${progressId}: ${error.message}`
+    );
   }
 }
 

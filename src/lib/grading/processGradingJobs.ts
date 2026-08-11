@@ -360,14 +360,54 @@ export async function processGradingJobs(
       console.error('[grading] Skipping job with missing submission', {
         progressId: job.id,
       });
-      skipped += 1;
+      // Targeted admin/manual kicks must not leave attempt_count at 0.
+      if (options?.progressId) {
+        await supabase
+          .from('lesson_progress')
+          .update({
+            grading_job_status: 'failed',
+            grading_error:
+              'Grading failed: submission payload missing from lesson progress.',
+            grading_attempt_count: Math.max(job.grading_attempt_count ?? 0, 1),
+            grading_started_at: new Date().toISOString(),
+            grading_next_retry_at: null,
+          })
+          .eq('id', job.id);
+        failed += 1;
+        processed += 1;
+      } else {
+        skipped += 1;
+      }
       continue;
     }
 
     const lesson = await loadLessonMeta(supabase, job.lesson_id);
     const tenantId = await loadTenantId(supabase, job.student_id);
     if (!lesson || !tenantId) {
-      skipped += 1;
+      console.error('[grading] Skipping job with missing lesson/tenant', {
+        progressId: job.id,
+        lessonId: job.lesson_id,
+        studentId: job.student_id,
+        hasLesson: Boolean(lesson),
+        hasTenant: Boolean(tenantId),
+      });
+      if (options?.progressId) {
+        await supabase
+          .from('lesson_progress')
+          .update({
+            grading_job_status: 'failed',
+            grading_error:
+              'Grading failed: could not load lesson or student tenant for AI grading.',
+            grading_attempt_count: Math.max(job.grading_attempt_count ?? 0, 1),
+            grading_started_at: new Date().toISOString(),
+            grading_next_retry_at: null,
+          })
+          .eq('id', job.id);
+        failed += 1;
+        processed += 1;
+      } else {
+        skipped += 1;
+      }
       continue;
     }
 

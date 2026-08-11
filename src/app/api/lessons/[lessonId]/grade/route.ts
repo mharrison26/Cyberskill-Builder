@@ -7,10 +7,11 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 /**
- * Re-queue AI grading for a submitted lesson. The worker performs the LLM
- * call so this route does not block on model latency.
+ * Re-queue AI grading for a submitted lesson.
+ * Learner retries enqueue + kick the background worker.
+ * Admin re-runs (`inline: true` or grading another student) grade in-request.
  */
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 type RouteContext = {
   params: { lessonId: string };
@@ -127,21 +128,50 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  const grading = await enqueueGrading({
-    supabase,
+  // Admin re-run: always grade inline so Hobby's daily cron cannot leave jobs queued.
+  const isAdminRerun =
+    appUser.is_admin === true &&
+    (body.inline === true || targetStudentId !== appUser.id);
+
+  const runInline =
+    process.env.GRADING_PROCESS_INLINE === '1' || isAdminRerun;
+
+  let enqueueClient = supabase;
+  if (isAdminRerun) {
+    try {
+      enqueueClient = createAdminClient();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Admin grading client is not configured';
+      return NextResponse.json(
+        {
+          error: message,
+          grading: { status: 'failed' as const, error: message },
+        },
+        { status: 500 }
+      );
+    }
+  }
+
+  await enqueueGrading({
+    supabase: enqueueClient,
     progressId: progress.id,
     studentId: targetStudentId,
     lessonId,
     resetAttempts: true,
   });
 
-  const runInline =
-    process.env.GRADING_PROCESS_INLINE === '1' ||
-    (body.inline === true && appUser.is_admin === true);
-
   if (runInline) {
     try {
-      const admin = createAdminClient();
+      const admin = isAdminRerun ? enqueueClient : createAdminClient();
+      console.info('[grading] Admin/inline re-run starting', {
+        progressId: progress.id,
+        studentId: targetStudentId,
+        lessonId,
+        isAdminRerun,
+      });
       const result = await processGradingJobs(admin, {
         progressId: progress.id,
         limit: 1,
@@ -156,7 +186,7 @@ export async function POST(request: Request, { params }: RouteContext) {
         );
       }
       if (result.failed > 0) {
-        const { data: failedProgress } = await supabase
+        const { data: failedProgress } = await admin
           .from('lesson_progress')
           .select('grading_error')
           .eq('id', progress.id)
@@ -174,9 +204,32 @@ export async function POST(request: Request, { params }: RouteContext) {
           { status: 500 }
         );
       }
+
+      // Never report "queued" after an inline/admin attempt that did nothing —
+      // that left stuck jobs at attempt_count=0 with no worker claim.
+      const message =
+        result.skipped > 0
+          ? 'Grading worker skipped this job (missing lesson, tenant, or submission).'
+          : 'Grading worker did not claim or process this job.';
+      console.error('[grading] Inline re-run produced no result', {
+        progressId: progress.id,
+        result,
+      });
+      return NextResponse.json(
+        {
+          error: message,
+          grading: { status: 'failed' as const, error: message },
+          worker: result,
+        },
+        { status: 500 }
+      );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to grade submission';
+      console.error('[grading] Inline re-run crashed', {
+        progressId: progress.id,
+        message,
+      });
       return NextResponse.json(
         {
           error: message,
@@ -185,16 +238,16 @@ export async function POST(request: Request, { params }: RouteContext) {
         { status: 500 }
       );
     }
-  } else {
-    await scheduleGradingWorker(progress.id);
   }
+
+  await scheduleGradingWorker(progress.id);
 
   return NextResponse.json(
     {
       success: true,
       progressId: progress.id,
       grading: {
-        status: grading.status,
+        status: 'queued' as const,
         error: null,
       },
     },
