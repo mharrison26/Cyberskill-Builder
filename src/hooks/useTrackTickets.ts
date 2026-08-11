@@ -3,6 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getMockTicketsByTrack } from '@/lib/mock-data';
+import {
+  computeSlaDueAt,
+  wasResolvedWithinSla,
+} from '@/lib/tickets/sla';
+import {
+  isClosedTicketStatus,
+  isOpenTicketStatus,
+} from '@/lib/tickets/status';
 import type { MockTrackTicket, TicketProgressStatus } from '@/types';
 
 export type UseTrackTicketsResult = {
@@ -26,6 +34,41 @@ function withMockDefaults(tickets: MockTrackTicket[]): MockTrackTicket[] {
     source: ticket.source ?? 'mock',
     workbenchHref: ticket.workbenchHref ?? null,
   }));
+}
+
+function withStatusTransition(
+  ticket: MockTrackTicket,
+  status: TicketProgressStatus
+): MockTrackTicket {
+  if (status === ticket.status) return ticket;
+
+  if (isClosedTicketStatus(status)) {
+    const resolvedAt = ticket.resolvedAt ?? new Date().toISOString();
+    const slaDueAt =
+      ticket.slaDueAt ?? computeSlaDueAt(ticket.startedAt, ticket.slaMinutes);
+    const slaMet =
+      typeof ticket.slaMet === 'boolean'
+        ? ticket.slaMet
+        : wasResolvedWithinSla(ticket.startedAt, resolvedAt, ticket.slaMinutes);
+    return {
+      ...ticket,
+      status,
+      resolvedAt,
+      slaDueAt,
+      slaMet,
+    };
+  }
+
+  if (isOpenTicketStatus(status) && isClosedTicketStatus(ticket.status)) {
+    return {
+      ...ticket,
+      status,
+      resolvedAt: null,
+      slaMet: null,
+    };
+  }
+
+  return { ...ticket, status };
 }
 
 /**
@@ -100,10 +143,11 @@ export function useTrackTickets(
 
   const merged = useMemo(
     () =>
-      tickets.map((ticket) => ({
-        ...ticket,
-        status: overrides[ticket.id] ?? ticket.status,
-      })),
+      tickets.map((ticket) => {
+        const status = overrides[ticket.id];
+        if (!status) return ticket;
+        return withStatusTransition(ticket, status);
+      }),
     [tickets, overrides]
   );
 

@@ -4,6 +4,11 @@ import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -74,7 +79,7 @@ function residualTone(rating: RiskRating): string {
     return 'border-destructive/30 bg-destructive/10 text-destructive';
   }
   if (rating === 'high') {
-    return 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
+    return 'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground';
   }
   if (rating === 'medium') {
     return 'border-border bg-muted/50 text-foreground';
@@ -113,11 +118,42 @@ function formatOrgProfile(initialState: Record<string, unknown>): {
   return { name, lines };
 }
 
+function restoredPlanRows(
+  submission: Record<string, unknown> | null | undefined,
+  capacity: number
+): PlanRow[] {
+  const raw = submission?.planEntries;
+  const rows: PlanRow[] = [];
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (!entry || typeof entry !== 'object') continue;
+      const record = entry as Record<string, unknown>;
+      rows.push({
+        areaId: typeof record.areaId === 'string' ? record.areaId : '',
+        justification:
+          typeof record.justification === 'string' ? record.justification : '',
+      });
+    }
+  }
+  while (rows.length < capacity) {
+    rows.push({ areaId: '', justification: '' });
+  }
+  return rows.slice(0, capacity);
+}
+
 export function RiskBasedAuditPlanTicket({
   ticket,
   readOnly = false,
   className,
 }: RiskBasedAuditPlanTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -160,16 +196,15 @@ export function RiskBasedAuditPlanTicket({
   }, [riskRegister]);
 
   const [planRows, setPlanRows] = useState<PlanRow[]>(() =>
-    Array.from({ length: auditCapacity }, () => ({
-      areaId: '',
-      justification: '',
-    }))
+    restoredPlanRows(restored, auditCapacity)
   );
-  const [capacityNotes, setCapacityNotes] = useState('');
+  const [capacityNotes, setCapacityNotes] = useState(() =>
+    restoredString(submission, 'capacityNotes')
+  );
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedIds = planRows.map((row) => row.areaId).filter(Boolean);
@@ -182,7 +217,7 @@ export function RiskBasedAuditPlanTicket({
   }
 
   function updateRow(index: number, patch: Partial<PlanRow>) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setPlanRows((prev) =>
       prev.map((row, i) => (i === index ? { ...row, ...patch } : row))
@@ -190,7 +225,7 @@ export function RiskBasedAuditPlanTicket({
   }
 
   function moveRow(index: number, direction: -1 | 1) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     const nextIndex = index + direction;
     if (nextIndex < 0 || nextIndex >= planRows.length) return;
     clearOutcome();
@@ -251,7 +286,7 @@ export function RiskBasedAuditPlanTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -428,7 +463,7 @@ export function RiskBasedAuditPlanTicket({
                       type="button"
                       size="icon"
                       variant="ghost"
-                      disabled={readOnly || index === 0}
+                      disabled={formReadOnly || index === 0}
                       onClick={() => moveRow(index, -1)}
                       aria-label={`Move priority ${index + 1} up`}
                     >
@@ -438,7 +473,7 @@ export function RiskBasedAuditPlanTicket({
                       type="button"
                       size="icon"
                       variant="ghost"
-                      disabled={readOnly || index === planRows.length - 1}
+                      disabled={formReadOnly || index === planRows.length - 1}
                       onClick={() => moveRow(index, 1)}
                       aria-label={`Move priority ${index + 1} down`}
                     >
@@ -452,7 +487,7 @@ export function RiskBasedAuditPlanTicket({
                   <select
                     id={`area-${index}`}
                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={readOnly}
+                    disabled={formReadOnly}
                     value={row.areaId}
                     onChange={(event) =>
                       updateRow(index, { areaId: event.target.value })
@@ -473,7 +508,7 @@ export function RiskBasedAuditPlanTicket({
                   </Label>
                   <Textarea
                     id={`why-${index}`}
-                    disabled={readOnly}
+                    disabled={formReadOnly}
                     rows={3}
                     placeholder="Cite residual risk, last audit date, materiality, and known issues…"
                     value={row.justification}
@@ -495,7 +530,7 @@ export function RiskBasedAuditPlanTicket({
           <Label htmlFor="capacity-notes">Capacity / deferral notes</Label>
           <Textarea
             id="capacity-notes"
-            disabled={readOnly}
+            disabled={formReadOnly}
             rows={4}
             placeholder="Which areas did you defer and why? What would accelerate them?"
             value={capacityNotes}
@@ -524,7 +559,7 @@ export function RiskBasedAuditPlanTicket({
             className={cn(
               'rounded-md border px-3 py-2 text-sm',
               scoreStatus === 'resolved'
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-foreground'
+                ? 'border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground'
                 : 'border-border bg-muted/40 text-foreground'
             )}
             role="status"
@@ -538,7 +573,7 @@ export function RiskBasedAuditPlanTicket({
           </div>
         ) : null}
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit annual audit plan'}
           </Button>

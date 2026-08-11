@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -128,11 +132,43 @@ function emptyAssignments(
   return next;
 }
 
+function restoredAssignments(
+  submission: Record<string, unknown> | null | undefined,
+  activityIds: string[],
+  roleIds: string[]
+): AssignmentsState {
+  const base = emptyAssignments(activityIds, roleIds);
+  const raw = submission?.assignments;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return base;
+
+  for (const activityId of activityIds) {
+    const activityRecord = (raw as Record<string, unknown>)[activityId];
+    if (!activityRecord || typeof activityRecord !== 'object' || Array.isArray(activityRecord)) {
+      continue;
+    }
+    for (const roleId of roleIds) {
+      const cell = (activityRecord as Record<string, unknown>)[roleId];
+      if (cell === 'R' || cell === 'A' || cell === 'C' || cell === 'I' || cell === '') {
+        base[activityId]![roleId] = cell;
+      }
+    }
+  }
+  return base;
+}
+
 export function RaciMatrixTicket({
   ticket,
   readOnly = false,
   className,
 }: RaciMatrixTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
 
   const orgUnits = useMemo(
@@ -164,15 +200,16 @@ export function RaciMatrixTicket({
   );
 
   const [assignments, setAssignments] = useState<AssignmentsState>(() =>
-    emptyAssignments(
+    restoredAssignments(
+      restored,
       activities.map((a) => a.id),
       roles.map((r) => r.id)
     )
   );
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -183,7 +220,7 @@ export function RaciMatrixTicket({
   }
 
   function setCell(activityId: string, roleId: string, value: RaciCellValue) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setAssignments((prev) => ({
       ...prev,
@@ -230,7 +267,7 @@ export function RaciMatrixTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -455,7 +492,7 @@ export function RaciMatrixTicket({
                                 id={selectId}
                                 className="h-9 w-full min-w-[4.5rem] rounded-md border border-input bg-background px-2 text-sm"
                                 value={value}
-                                disabled={readOnly}
+                                disabled={formReadOnly}
                                 onChange={(event) => {
                                   const next = event.target.value;
                                   const cell: RaciCellValue =
@@ -489,9 +526,11 @@ export function RaciMatrixTicket({
         </Card>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={readOnly || isSubmitting}>
-            {isSubmitting ? 'Submitting…' : 'Submit RACI matrix'}
-          </Button>
+          {!hideSubmit ? (
+            <Button type="submit" disabled={formReadOnly || isSubmitting}>
+              {isSubmitting ? 'Submitting…' : 'Submit RACI matrix'}
+            </Button>
+          ) : null}
           {scoreStatus ? (
             <Badge variant={scoreStatus === 'resolved' ? 'default' : 'outline'}>
               {scoreStatus.replace(/_/g, ' ')}
@@ -514,7 +553,7 @@ export function RaciMatrixTicket({
             className={cn(
               'rounded-md border px-3 py-2 text-sm',
               scoreStatus === 'resolved'
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-foreground'
+                ? 'border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground'
                 : 'border-border bg-muted/40 text-muted-foreground'
             )}
             role="status"

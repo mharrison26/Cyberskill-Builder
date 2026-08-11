@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -147,6 +151,13 @@ export function SamplingMethodologyTicket({
   readOnly = false,
   className,
 }: SamplingMethodologyTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const sampleSize = resolveSampleSize(initialState, expectedState);
@@ -192,12 +203,12 @@ export function SamplingMethodologyTicket({
     return counts;
   }, [transactions]);
 
-  const [sampleSelection, setSampleSelection] = useState('');
-  const [riskBasedAdditions, setRiskBasedAdditions] = useState('');
+  const [sampleSelection, setSampleSelection] = useState(() => restoredString(submission, 'sampleSelection'));
+  const [riskBasedAdditions, setRiskBasedAdditions] = useState(() => restoredString(submission, 'riskBasedAdditions'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -221,7 +232,7 @@ export function SamplingMethodologyTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setSubmitError(null);
     setFeedback(null);
@@ -349,7 +360,7 @@ export function SamplingMethodologyTicket({
             rows={5}
             value={sampleSelection}
             onChange={(event) => setSampleSelection(event.target.value)}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             aria-invalid={errors.sampleSelection ? true : undefined}
             placeholder={`Describe statistical / random selection of size ${sampleSize} from the population…`}
           />
@@ -372,7 +383,7 @@ export function SamplingMethodologyTicket({
             rows={5}
             value={riskBasedAdditions}
             onChange={(event) => setRiskBasedAdditions(event.target.value)}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             aria-invalid={errors.riskBasedAdditions ? true : undefined}
             placeholder="Identify which high-risk attributes you would add judgmentally and why…"
           />
@@ -411,7 +422,7 @@ export function SamplingMethodologyTicket({
           </div>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
+        <Button type="submit" disabled={formReadOnly || isSubmitting}>
           {isSubmitting ? 'Submitting…' : 'Submit methodology'}
         </Button>
       </form>

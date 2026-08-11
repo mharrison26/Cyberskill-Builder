@@ -6,13 +6,18 @@ import { X } from 'lucide-react';
 
 import { ConsoleSandboxSurface } from '@/components/consoles/ConsoleSandboxSurface';
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
-import { TicketRow } from '@/components/tickets/TicketRow';
+import {
+  TicketRow,
+  toTicketRowData,
+} from '@/components/tickets/TicketRow';
 import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSharedSlaClock } from '@/hooks/useTicketSlaCountdown';
 import { useTrackTickets } from '@/hooks/useTrackTickets';
 import { MOCK_NOC_SYSTEMS } from '@/lib/mock-data';
+import { needsLiveSlaCountdown } from '@/lib/tickets/sla';
+import { isClosedTicketStatus } from '@/lib/tickets/status';
 import type { MockTrackTicket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +52,15 @@ export function SysadminNocConsole({
     initialSource,
   });
   const [incidentId, setIncidentId] = useState<string | null>(null);
-  const nowMs = useSharedSlaClock(tickets.some((t) => t.startedAt));
+  const nowMs = useSharedSlaClock(
+    tickets.some((t) =>
+      needsLiveSlaCountdown(t.startedAt, {
+        resolvedAt: t.resolvedAt,
+        slaMet: t.slaMet,
+        closed: isClosedTicketStatus(t.status),
+      })
+    )
+  );
   const incident = tickets.find((t) => t.id === incidentId) ?? null;
 
   if (incident) {
@@ -159,15 +172,7 @@ export function SysadminNocConsole({
                   {ticket.hostname}
                 </p>
                 <TicketRow
-                  ticket={{
-                    id: ticket.id,
-                    title: ticket.title,
-                    subtitle: ticket.subtitle,
-                    difficulty: ticket.difficulty,
-                    slaMinutes: ticket.slaMinutes,
-                    startedAt: ticket.startedAt,
-                    status: ticket.status,
-                  }}
+                  ticket={toTicketRowData(ticket)}
                   nowMs={nowMs}
                   className="pointer-events-none"
                 />

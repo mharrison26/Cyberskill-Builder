@@ -114,6 +114,26 @@ export function formatSlaCountdown(remainingMs: number): string {
   return remainingMs < 0 ? `-${core}` : core;
 }
 
+/**
+ * Whether a ticket row should keep a live SLA interval ticking.
+ * Resolved tickets (resolvedAt / slaMet / closed status) stay frozen.
+ */
+export function needsLiveSlaCountdown(
+  startedAt: string | null | undefined,
+  options: {
+    resolvedAt?: string | null;
+    slaMet?: boolean | null;
+    /** True when status is resolved/reviewed. */
+    closed?: boolean;
+  } = {}
+): boolean {
+  if (!startedAt) return false;
+  if (options.closed) return false;
+  if (options.resolvedAt) return false;
+  if (typeof options.slaMet === 'boolean') return false;
+  return true;
+}
+
 export type SlaResolutionInput = {
   startedAt: string | null | undefined;
   resolvedAt: string | null | undefined;

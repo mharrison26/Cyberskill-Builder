@@ -4,6 +4,7 @@ import {
   computeSlaCompliancePercent,
   formatSlaCountdown,
   getSlaState,
+  needsLiveSlaCountdown,
   wasResolvedWithinSla,
 } from '@/lib/tickets/sla';
 
@@ -46,6 +47,35 @@ describe('getSlaState', () => {
     expect(state.remainingMs).toBe(20 * 60_000);
     expect(state.slaMet).toBe(true);
     expect(state.isOverdue).toBe(false);
+  });
+
+  it('uses slaDueAt when provided', () => {
+    const started = '2026-01-01T00:00:00.000Z';
+    const due = '2026-01-01T00:45:00.000Z';
+    const now = new Date('2026-01-01T00:15:00.000Z').getTime();
+    const state = getSlaState(30, started, now, { slaDueAt: due });
+    expect(state.remainingMs).toBe(30 * 60_000);
+  });
+});
+
+describe('needsLiveSlaCountdown', () => {
+  it('ticks only for started open tickets', () => {
+    expect(needsLiveSlaCountdown(null)).toBe(false);
+    expect(needsLiveSlaCountdown('2026-01-01T00:00:00.000Z')).toBe(true);
+  });
+
+  it('does not tick when resolved or closed', () => {
+    expect(
+      needsLiveSlaCountdown('2026-01-01T00:00:00.000Z', {
+        resolvedAt: '2026-01-01T00:10:00.000Z',
+      })
+    ).toBe(false);
+    expect(
+      needsLiveSlaCountdown('2026-01-01T00:00:00.000Z', { slaMet: true })
+    ).toBe(false);
+    expect(
+      needsLiveSlaCountdown('2026-01-01T00:00:00.000Z', { closed: true })
+    ).toBe(false);
   });
 });
 

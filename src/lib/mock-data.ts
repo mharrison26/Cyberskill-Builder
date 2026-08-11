@@ -1,3 +1,7 @@
+import {
+  computeSlaDueAt,
+  wasResolvedWithinSla,
+} from '@/lib/tickets/sla';
 import type {
   MockControl,
   MockDefenseRecording,
@@ -327,6 +331,25 @@ function startedMinutesAgo(minutes: number): string {
   return new Date(Date.now() - minutes * 60_000).toISOString();
 }
 
+/** Closed-ticket SLA fields so console countdown widgets stay frozen. */
+function closedSlaFields(
+  startedMinutes: number,
+  resolvedAfterMinutes: number,
+  slaMinutes: number
+): Pick<
+  MockTrackTicket,
+  'startedAt' | 'resolvedAt' | 'slaDueAt' | 'slaMet'
+> {
+  const startedAt = startedMinutesAgo(startedMinutes);
+  const resolvedAt = startedMinutesAgo(startedMinutes - resolvedAfterMinutes);
+  return {
+    startedAt,
+    resolvedAt,
+    slaDueAt: computeSlaDueAt(startedAt, slaMinutes),
+    slaMet: wasResolvedWithinSla(startedAt, resolvedAt, slaMinutes),
+  };
+}
+
 /**
  * Placeholder track tickets for console UIs.
  * useTrackTickets returns these until the RLS Supabase query is wired.
@@ -408,7 +431,7 @@ export const MOCK_TRACK_TICKETS: MockTrackTicket[] = [
     ticketType: 'ao_review',
     difficulty: 'medium',
     slaMinutes: 720,
-    startedAt: startedMinutesAgo(600),
+    ...closedSlaFields(600, 90, 720),
     status: 'resolved',
     controlFamily: 'Risk Assessment',
     controlId: 'RA-5',
@@ -425,7 +448,7 @@ export const MOCK_TRACK_TICKETS: MockTrackTicket[] = [
     ticketType: 'conmon_strategy',
     difficulty: 'low',
     slaMinutes: 1440,
-    startedAt: startedMinutesAgo(200),
+    ...closedSlaFields(200, 45, 1440),
     status: 'reviewed',
     controlFamily: 'System and Communications Protection',
     controlId: 'SC-7',
@@ -536,7 +559,7 @@ export const MOCK_TRACK_TICKETS: MockTrackTicket[] = [
     ticketType: 'hardware',
     difficulty: 'low',
     slaMinutes: 480,
-    startedAt: startedMinutesAgo(90),
+    ...closedSlaFields(90, 35, 480),
     status: 'resolved',
     requester: 'Admin Support',
     queueBucket: 'my_queue',
@@ -673,7 +696,7 @@ export const MOCK_TRACK_TICKETS: MockTrackTicket[] = [
     ticketType: 'audit_workpaper',
     difficulty: 'medium',
     slaMinutes: 2880,
-    startedAt: startedMinutesAgo(400),
+    ...closedSlaFields(400, 120, 2880),
     status: 'resolved',
     engagementTitle: 'FY26 External Assurance Readiness',
     controlFamily: 'System and Services Acquisition',
@@ -889,7 +912,7 @@ export const MOCK_TRACK_TICKETS: MockTrackTicket[] = [
     ticketType: 'ao_review',
     difficulty: 'high',
     slaMinutes: 720,
-    startedAt: startedMinutesAgo(900),
+    ...closedSlaFields(900, 800, 720),
     status: 'reviewed',
     systemName: 'TRAINING-LMS',
     packageStage: 'Authorized',

@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -200,6 +204,13 @@ export function BackupDrPlanTicket({
   readOnly = false,
   className,
 }: BackupDrPlanTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minFieldLength = resolveMinFieldLength(expectedState);
@@ -208,18 +219,18 @@ export function BackupDrPlanTicket({
     [initialState]
   );
 
-  const [fields, setFields] = useState<Record<FieldKey, string>>({
-    backupFrequency: '',
-    retention: '',
-    rpoTargets: '',
-    rtoTargets: '',
-    restoreTestingCadence: '',
-    planNotes: '',
-  });
+  const [fields, setFields] = useState<Record<FieldKey, string>>(() => ({
+    backupFrequency: restoredString(submission, 'backupFrequency'),
+    retention: restoredString(submission, 'retention'),
+    rpoTargets: restoredString(submission, 'rpoTargets'),
+    rtoTargets: restoredString(submission, 'rtoTargets'),
+    restoreTestingCadence: restoredString(submission, 'restoreTestingCadence'),
+    planNotes: restoredString(submission, 'planNotes'),
+  }));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateField(key: FieldKey, value: string) {
@@ -252,7 +263,7 @@ export function BackupDrPlanTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setSubmitError(null);
     setFeedback(null);
@@ -356,7 +367,7 @@ export function BackupDrPlanTicket({
                 rows={meta.rows}
                 placeholder={meta.placeholder}
                 aria-invalid={errors[meta.key] ? true : undefined}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
               />
               <p className="text-xs text-muted-foreground">
                 Minimum {minFieldLength} characters.
@@ -388,7 +399,7 @@ export function BackupDrPlanTicket({
               onChange={(event) => updateField('planNotes', event.target.value)}
               rows={4}
               placeholder="e.g. One backup copy lives in a separate cloud account; Finance owns restore sign-off…"
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
             />
           </CardContent>
         </Card>
@@ -421,9 +432,11 @@ export function BackupDrPlanTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit backup / DR plan'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit backup / DR plan'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

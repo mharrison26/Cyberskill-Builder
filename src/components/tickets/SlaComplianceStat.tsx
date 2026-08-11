@@ -13,8 +13,8 @@ type SlaComplianceStatProps = {
 };
 
 function slaDotClass(percent: number): string {
-  if (percent >= 90) return 'bg-emerald-700';
-  if (percent >= 70) return 'bg-amber-700';
+  if (percent >= 90) return 'bg-status-satisfied-foreground';
+  if (percent >= 70) return 'bg-status-insufficient-foreground';
   return 'bg-status-blocked-foreground';
 }
 

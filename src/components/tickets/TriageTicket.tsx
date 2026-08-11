@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -83,11 +87,27 @@ function categoryLabel(category: string): string {
   return category.replace(/_/g, ' ');
 }
 
+function restoredPriority(
+  submission: Record<string, unknown> | null | undefined
+): TriagePriority | '' {
+  const value = restoredString(submission, 'priority');
+  return (TRIAGE_PRIORITIES as readonly string[]).includes(value)
+    ? (value as TriagePriority)
+    : '';
+}
+
 export function TriageTicket({
   ticket,
   readOnly = false,
   className,
 }: TriageTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -130,12 +150,14 @@ export function TriageTicket({
     [initialState, expectedState]
   );
 
-  const [priority, setPriority] = useState<TriagePriority | ''>('');
-  const [category, setCategory] = useState('');
+  const [priority, setPriority] = useState<TriagePriority | ''>(() =>
+    restoredPriority(submission)
+  );
+  const [category, setCategory] = useState(() => restoredString(submission, 'category'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -158,7 +180,7 @@ export function TriageTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate() || !priority || !category) return;
@@ -266,7 +288,7 @@ export function TriageTicket({
                 id="triage-priority"
                 name="priority"
                 value={priority}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={errors.priority ? true : undefined}
                 aria-describedby={
                   errors.priority ? 'triage-priority-error' : undefined
@@ -311,7 +333,7 @@ export function TriageTicket({
                 id="triage-category"
                 name="category"
                 value={category}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={errors.category ? true : undefined}
                 aria-describedby={
                   errors.category ? 'triage-category-error' : undefined
@@ -380,9 +402,11 @@ export function TriageTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit triage'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit triage'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

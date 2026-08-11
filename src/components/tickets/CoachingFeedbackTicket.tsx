@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -139,6 +143,13 @@ export function CoachingFeedbackTicket({
   readOnly = false,
   className,
 }: CoachingFeedbackTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minFieldLength = resolveMinFieldLength(expectedState);
@@ -174,16 +185,16 @@ export function CoachingFeedbackTicket({
     };
   }, [initialState]);
 
-  const [fields, setFields] = useState<Record<FieldKey, string>>({
-    strengths: '',
-    gaps: '',
-    actionItems: '',
-    delivery: '',
-  });
+  const [fields, setFields] = useState<Record<FieldKey, string>>(() => ({
+    strengths: restoredString(submission, 'strengths'),
+    gaps: restoredString(submission, 'gaps'),
+    actionItems: restoredString(submission, 'actionItems'),
+    delivery: restoredString(submission, 'delivery'),
+  }));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -211,7 +222,7 @@ export function CoachingFeedbackTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -328,7 +339,7 @@ export function CoachingFeedbackTicket({
               rows={meta.rows}
               placeholder={meta.placeholder}
               aria-invalid={errors[meta.key] ? true : undefined}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
             />
             <p className="text-xs text-muted-foreground">
               Minimum {minFieldLength} characters.
@@ -369,9 +380,11 @@ export function CoachingFeedbackTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit coaching feedback'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit coaching feedback'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

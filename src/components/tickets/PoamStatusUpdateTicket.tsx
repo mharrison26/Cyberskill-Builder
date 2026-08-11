@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  restoredStringSet,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -52,6 +57,13 @@ export function PoamStatusUpdateTicket({
   readOnly = false,
   className,
 }: PoamStatusUpdateTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -80,15 +92,15 @@ export function PoamStatusUpdateTicket({
 
   const asOfDate = readString(initialState, ['asOfDate', 'as_of_date'], '');
 
-  const [status, setStatus] = useState<PoamStatusUpdateStatus | ''>('');
-  const [justification, setJustification] = useState('');
-  const [citedEvidenceIds, setCitedEvidenceIds] = useState<Set<string>>(
-    () => new Set()
+  const [status, setStatus] = useState(() => restoredString(submission, 'status'));
+  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
+  const [citedEvidenceIds, setCitedEvidenceIds] = useState<Set<string>>(() =>
+    restoredStringSet(submission, 'citedEvidenceIds')
   );
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function toggleEvidence(id: string) {
@@ -105,7 +117,7 @@ export function PoamStatusUpdateTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     setFormError(null);
     setSubmitError(null);
     setFeedback(null);
@@ -284,7 +296,7 @@ export function PoamStatusUpdateTicket({
                       type="checkbox"
                       className="mt-1"
                       checked={selected}
-                      disabled={readOnly}
+                      disabled={formReadOnly}
                       onChange={() => toggleEvidence(item.id)}
                     />
                     <span className="min-w-0 flex-1">
@@ -312,7 +324,7 @@ export function PoamStatusUpdateTicket({
       ) : null}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <fieldset disabled={readOnly || isSubmitting} className="space-y-3">
+        <fieldset disabled={formReadOnly || isSubmitting} className="space-y-3">
           <legend className="text-sm font-medium">Updated status</legend>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {POAM_STATUS_UPDATE_STATUSES.map((option) => (
@@ -350,7 +362,7 @@ export function PoamStatusUpdateTicket({
           <Textarea
             id="poam-status-justification"
             value={justification}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             onChange={(event) => {
               setJustification(event.target.value);
               setFeedback(null);
@@ -377,8 +389,8 @@ export function PoamStatusUpdateTicket({
             className={cn(
               'text-sm',
               scoreStatus === 'resolved'
-                ? 'text-emerald-700 dark:text-emerald-400'
-                : 'text-amber-800 dark:text-amber-300'
+                ? 'text-status-satisfied-foreground'
+                : 'text-status-insufficient-foreground'
             )}
             role="status"
           >
@@ -386,7 +398,7 @@ export function PoamStatusUpdateTicket({
           </p>
         ) : null}
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit status update'}
           </Button>

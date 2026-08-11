@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { OverdueBadge } from '@/components/tickets/OverdueBadge';
 import { StatusDot } from '@/components/ui/status-dot';
@@ -14,6 +14,11 @@ type SlaCountdownProps = {
   resolvedAt?: string | null;
   slaDueAt?: string | null;
   slaMet?: boolean | null;
+  /**
+   * Force a frozen display (e.g. resolved/reviewed status) even when
+   * resolvedAt has not been hydrated yet.
+   */
+  frozen?: boolean;
   /** Optional controlled clock (e.g. shared queue tick). */
   nowMs?: number;
   className?: string;
@@ -31,22 +36,35 @@ export function SlaCountdown({
   resolvedAt = null,
   slaDueAt = null,
   slaMet = null,
+  frozen = false,
   nowMs: controlledNowMs,
   className,
 }: SlaCountdownProps) {
   const [localNowMs, setLocalNowMs] = useState(() => Date.now());
   const isControlled = controlledNowMs !== undefined;
   const nowMs = isControlled ? controlledNowMs : localNowMs;
-  const isFrozen = Boolean(resolvedAt);
+  const shouldFreeze =
+    frozen || Boolean(resolvedAt) || typeof slaMet === 'boolean';
+  const fallbackResolvedAtRef = useRef<string | null>(null);
+
+  if (shouldFreeze) {
+    if (!resolvedAt && !fallbackResolvedAtRef.current) {
+      fallbackResolvedAtRef.current = new Date(nowMs).toISOString();
+    }
+  } else {
+    fallbackResolvedAtRef.current = null;
+  }
+
+  const effectiveResolvedAt = resolvedAt ?? fallbackResolvedAtRef.current;
 
   useEffect(() => {
-    if (isControlled || !startedAt || isFrozen) return;
+    if (isControlled || !startedAt || shouldFreeze) return;
     const id = window.setInterval(() => setLocalNowMs(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [isControlled, startedAt, isFrozen]);
+  }, [isControlled, startedAt, shouldFreeze]);
 
   const state = getSlaState(slaMinutes, startedAt, nowMs, {
-    resolvedAt,
+    resolvedAt: effectiveResolvedAt,
     slaDueAt,
     slaMet,
   });
@@ -84,7 +102,7 @@ export function SlaCountdown({
         }
       >
         <StatusDot
-          className={met ? 'bg-emerald-700' : 'bg-status-blocked-foreground'}
+          className={met ? 'bg-status-satisfied-foreground' : 'bg-status-blocked-foreground'}
         />
         <span>
           {met ? 'SLA met' : 'SLA breached'} ·{' '}
@@ -112,7 +130,7 @@ export function SlaCountdown({
       <span className="inline-flex items-center gap-1.5">
         <StatusDot
           className={
-            state.isOverdue ? 'bg-status-blocked-foreground' : 'bg-emerald-700'
+            state.isOverdue ? 'bg-status-blocked-foreground' : 'bg-status-satisfied-foreground'
           }
           pulse={!state.isOverdue}
         />

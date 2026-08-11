@@ -43,6 +43,9 @@ export function mapTicketToConsoleTicket(args: {
   trackSlug: string;
   status?: string | null;
   startedAt?: string | null;
+  resolvedAt?: string | null;
+  slaDueAt?: string | null;
+  slaMet?: boolean | null;
 }): MockTrackTicket {
   const { ticket, trackSlug } = args;
   const status = normalizeTicketStatus(args.status);
@@ -95,6 +98,9 @@ export function mapTicketToConsoleTicket(args: {
     difficulty: ticket.difficulty,
     slaMinutes: ticket.sla_minutes,
     startedAt: args.startedAt ?? null,
+    resolvedAt: args.resolvedAt ?? null,
+    slaDueAt: args.slaDueAt ?? null,
+    slaMet: typeof args.slaMet === 'boolean' ? args.slaMet : null,
     status,
     controlFamily,
     controlId,

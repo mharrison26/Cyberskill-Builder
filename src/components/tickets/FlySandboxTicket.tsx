@@ -3,12 +3,17 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FitAddon } from '@xterm/addon-fit';
 import type { Terminal } from '@xterm/xterm';
+import { useTheme } from 'next-themes';
 
 import { Button } from '@/components/ui/button';
+import {
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import {
   parseCisHardeningChecklist,
   type CisHardeningChecklistItem,
 } from '@/lib/scoring/ticketUi';
+import { readTerminalTheme } from '@/lib/terminalTheme';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -57,6 +62,12 @@ export function FlySandboxTicket({
   readOnly = false,
   className,
 }: FlySandboxTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+  } = useTicketWorkbenchForm(readOnly);
+  const { resolvedTheme } = useTheme();
   const checklist = checklistFromTicket(ticket);
   const prompt = promptFromTicket(ticket);
 
@@ -71,7 +82,7 @@ export function FlySandboxTicket({
   const [isStopping, setIsStopping] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(() => Boolean(submission));
   const [terminalReady, setTerminalReady] = useState(false);
 
   useEffect(() => {
@@ -95,11 +106,7 @@ export function FlySandboxTicket({
         cursorBlink: true,
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
         fontSize: 13,
-        theme: {
-          background: '#0f172a',
-          foreground: '#e2e8f0',
-          cursor: '#94a3b8',
-        },
+        theme: readTerminalTheme(),
       });
       const fitAddon = new Fit();
       terminal.loadAddon(fitAddon);
@@ -164,7 +171,14 @@ export function FlySandboxTicket({
   }, [session?.websocketUrl]);
 
   useEffect(() => {
-    if (readOnly) return;
+    const terminal = terminalRef.current;
+    if (!terminal) return;
+    terminal.options.theme = readTerminalTheme();
+    terminal.refresh(0, terminal.rows - 1);
+  }, [resolvedTheme]);
+
+  useEffect(() => {
+    if (formReadOnly || hideSubmit) return;
     let cancelled = false;
 
     async function hydrateExisting() {
@@ -251,7 +265,7 @@ export function FlySandboxTicket({
   }
 
   async function handleSubmit() {
-    if (readOnly || isSubmitting || !session) return;
+    if (formReadOnly || hideSubmit || isSubmitting || !session) return;
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitSuccess(false);
@@ -324,7 +338,7 @@ export function FlySandboxTicket({
           <Button
             type="button"
             size="sm"
-            disabled={readOnly || isLaunching || Boolean(session)}
+            disabled={formReadOnly || isLaunching || Boolean(session)}
             onClick={() => void handleLaunch()}
           >
             {isLaunching
@@ -337,19 +351,21 @@ export function FlySandboxTicket({
             type="button"
             variant="outline"
             size="sm"
-            disabled={readOnly || !session || isStopping}
+            disabled={formReadOnly || !session || isStopping}
             onClick={() => void handleStop()}
           >
             {isStopping ? 'Stopping…' : 'Stop'}
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            disabled={readOnly || !session || isSubmitting}
-            onClick={() => void handleSubmit()}
-          >
-            {isSubmitting ? 'Submitting…' : 'Submit hardening'}
-          </Button>
+          {!hideSubmit ? (
+            <Button
+              type="button"
+              size="sm"
+              disabled={formReadOnly || !session || isSubmitting}
+              onClick={() => void handleSubmit()}
+            >
+              {isSubmitting ? 'Submitting…' : 'Submit hardening'}
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -370,7 +386,7 @@ export function FlySandboxTicket({
         </p>
       ) : null}
       {submitSuccess ? (
-        <p className="border-b border-border px-4 py-2 text-sm text-emerald-700 dark:text-emerald-400">
+        <p className="border-b border-border px-4 py-2 text-sm text-status-satisfied-foreground">
           Submission scored. Review progress feedback for checklist results.
         </p>
       ) : null}

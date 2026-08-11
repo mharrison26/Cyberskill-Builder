@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -127,6 +132,14 @@ export function ProgramMetricsBriefTicket({
   readOnly = false,
   className,
 }: ProgramMetricsBriefTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -188,13 +201,29 @@ export function ProgramMetricsBriefTicket({
     return Object.values(poamByAge).reduce((sum, n) => sum + n, 0);
   }, [poamByAge]);
 
-  const [selected, setSelected] = useState<string[]>([]);
-  const [calcInputs, setCalcInputs] = useState<Record<string, string>>({});
-  const [rationale, setRationale] = useState('');
+  const [selected, setSelected] = useState<string[]>(() => {
+    const raw = restored.selectedMetricIds;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((id): id is string => typeof id === 'string' && id.length > 0);
+  });
+  const [calcInputs, setCalcInputs] = useState<Record<string, string>>(() => {
+    const raw = restored.calculations;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    const out: Record<string, string> = {};
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+      if (typeof value === 'number' && Number.isFinite(value)) {
+        out[key] = String(value);
+      } else if (typeof value === 'string') {
+        out[key] = value;
+      }
+    }
+    return out;
+  });
+  const [rationale, setRationale] = useState(() => restoredString(submission, 'rationale'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -238,7 +267,7 @@ export function ProgramMetricsBriefTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -473,7 +502,7 @@ export function ProgramMetricsBriefTicket({
                           type="checkbox"
                           className="mt-1 size-4 accent-primary"
                           checked={checked}
-                          disabled={readOnly || disabledAdd}
+                          disabled={formReadOnly || disabledAdd}
                           onChange={() => toggleMetric(metric.id)}
                         />
                         <span className="space-y-0.5">
@@ -533,7 +562,7 @@ export function ProgramMetricsBriefTicket({
                           [id]: e.target.value,
                         }));
                       }}
-                      disabled={readOnly}
+                      disabled={formReadOnly}
                       placeholder="e.g. 0.84 or 84"
                       aria-invalid={Boolean(errors.calculations)}
                     />
@@ -568,7 +597,7 @@ export function ProgramMetricsBriefTicket({
               clearOutcome();
               setRationale(e.target.value);
             }}
-            disabled={readOnly}
+            disabled={formReadOnly}
             rows={6}
             placeholder="Explain why each selected metric matters to the AO / ISSM / CISO — what decision or oversight question it answers…"
             aria-invalid={Boolean(errors.rationale)}
@@ -584,7 +613,7 @@ export function ProgramMetricsBriefTicket({
           )}
         </div>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit program metrics brief'}
           </Button>

@@ -101,13 +101,19 @@ export async function getTrackConsoleTickets(
 
   const progressByTicketId = new Map<
     string,
-    { status: string; started_at: string | null }
+    {
+      status: string;
+      started_at: string | null;
+      resolved_at: string | null;
+      sla_due_at: string | null;
+      sla_met: boolean | null;
+    }
   >();
 
   if (studentId && ticketIds.length > 0) {
     const { data: progressRows } = await supabase
       .from('ticket_progress')
-      .select('ticket_id, status, started_at')
+      .select('ticket_id, status, started_at, resolved_at, sla_due_at, sla_met')
       .eq('student_id', studentId)
       .in('ticket_id', ticketIds);
 
@@ -115,6 +121,9 @@ export async function getTrackConsoleTickets(
       progressByTicketId.set(row.ticket_id as string, {
         status: normalizeTicketStatus(row.status as string),
         started_at: (row.started_at as string | null) ?? null,
+        resolved_at: (row.resolved_at as string | null) ?? null,
+        sla_due_at: (row.sla_due_at as string | null) ?? null,
+        sla_met: typeof row.sla_met === 'boolean' ? row.sla_met : null,
       });
     }
   }
@@ -126,6 +135,9 @@ export async function getTrackConsoleTickets(
       trackSlug: track.slug,
       status: progress?.status,
       startedAt: progress?.started_at,
+      resolvedAt: progress?.resolved_at,
+      slaDueAt: progress?.sla_due_at,
+      slaMet: progress?.sla_met,
     });
   });
 

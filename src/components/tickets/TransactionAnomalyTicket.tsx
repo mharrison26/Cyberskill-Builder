@@ -4,6 +4,11 @@ import { useMemo, useState } from 'react';
 
 import { CodeSandbox } from '@/components/CodeSandbox';
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  restoredStringArray,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -180,6 +185,13 @@ export function TransactionAnomalyTicket({
   readOnly = false,
   className,
 }: TransactionAnomalyTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
 
   const transactions = useMemo(
@@ -247,11 +259,13 @@ export function TransactionAnomalyTicket({
   );
 
   const [mode, setMode] = useState<WorkMode>('select');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(() =>
+    restoredStringArray(submission, 'anomalyTransactionIds')
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -263,7 +277,7 @@ export function TransactionAnomalyTicket({
   }
 
   function toggleId(id: string) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setError(null);
     setSelectedIds((prev) =>
@@ -283,7 +297,7 @@ export function TransactionAnomalyTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (selectedIds.length === 0) {
@@ -419,7 +433,7 @@ export function TransactionAnomalyTicket({
               size="sm"
               variant={mode === 'select' ? 'default' : 'ghost'}
               onClick={() => setMode('select')}
-              disabled={readOnly}
+              disabled={formReadOnly}
             >
               Spreadsheet / select
             </Button>
@@ -428,7 +442,7 @@ export function TransactionAnomalyTicket({
               size="sm"
               variant={mode === 'sandbox' ? 'default' : 'ghost'}
               onClick={() => setMode('sandbox')}
-              disabled={readOnly}
+              disabled={formReadOnly}
             >
               WebContainer sandbox
             </Button>
@@ -477,7 +491,7 @@ export function TransactionAnomalyTicket({
             type="button"
             variant="ghost"
             size="sm"
-            disabled={readOnly || selectedIds.length === 0}
+            disabled={formReadOnly || selectedIds.length === 0}
             onClick={() => {
               clearOutcome();
               setSelectedIds([]);
@@ -485,7 +499,7 @@ export function TransactionAnomalyTicket({
           >
             Clear selection
           </Button>
-          <Button type="submit" disabled={readOnly || isSubmitting}>
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit anomalies'}
           </Button>
         </div>
@@ -504,8 +518,8 @@ export function TransactionAnomalyTicket({
             className={cn(
               'text-sm',
               scoreStatus === 'resolved'
-                ? 'text-emerald-700 dark:text-emerald-400'
-                : 'text-amber-800 dark:text-amber-300'
+                ? 'text-status-satisfied-foreground'
+                : 'text-status-insufficient-foreground'
             )}
             role="status"
           >

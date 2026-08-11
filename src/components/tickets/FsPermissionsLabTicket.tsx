@@ -4,6 +4,10 @@ import { useMemo, useState } from 'react';
 
 import { CodeSandbox } from '@/components/CodeSandbox';
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -89,6 +93,14 @@ export function FsPermissionsLabTicket({
   readOnly = false,
   className,
 }: FsPermissionsLabTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
 
   const files = useMemo(
@@ -111,14 +123,22 @@ export function FsPermissionsLabTicket({
 
   const [answers, setAnswers] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
-    for (const q of questions) init[q.id] = '';
+    const saved = restored.answers;
+    const savedRecord =
+      saved && typeof saved === 'object' && !Array.isArray(saved)
+        ? (saved as Record<string, unknown>)
+        : {};
+    for (const q of questions) {
+      const value = savedRecord[q.id];
+      init[q.id] = typeof value === 'string' ? value : '';
+    }
     return init;
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
 
   function setAnswer(id: string, value: string) {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -135,7 +155,7 @@ export function FsPermissionsLabTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     const errors: Record<string, string> = {};
     for (const q of questions) {
@@ -234,7 +254,7 @@ export function FsPermissionsLabTicket({
                   index={index}
                   value={answers[question.id] ?? ''}
                   error={fieldErrors[question.id]}
-                  disabled={readOnly || isSubmitting}
+                  disabled={formReadOnly || isSubmitting}
                   onChange={(value) => setAnswer(question.id, value)}
                 />
               ))
@@ -243,12 +263,14 @@ export function FsPermissionsLabTicket({
         </Card>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button
-            type="submit"
-            disabled={readOnly || isSubmitting || questions.length === 0}
-          >
-            {isSubmitting ? 'Submitting…' : 'Submit answers'}
-          </Button>
+          {!hideSubmit ? (
+            <Button
+              type="submit"
+              disabled={formReadOnly || isSubmitting || questions.length === 0}
+            >
+              {isSubmitting ? 'Submitting…' : 'Submit answers'}
+            </Button>
+          ) : null}
           {scoreStatus ? (
             <Badge
               variant={scoreStatus === 'resolved' ? 'default' : 'secondary'}

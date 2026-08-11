@@ -73,9 +73,9 @@ export function useCompiledPackage(ticketId: string): {
 
 function statusTone(status: string): string {
   if (status === 'present')
-    return 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30';
+    return 'bg-status-satisfied text-status-satisfied-foreground border-status-satisfied-foreground/20';
   if (status === 'incomplete')
-    return 'bg-amber-500/15 text-amber-900 border-amber-500/30';
+    return 'bg-status-insufficient text-status-insufficient-foreground border-status-insufficient-foreground/20';
   return 'bg-muted text-muted-foreground';
 }
 

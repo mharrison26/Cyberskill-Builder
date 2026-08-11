@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -183,6 +187,13 @@ export function ToolWalkthroughTicket({
   readOnly = false,
   className,
 }: ToolWalkthroughTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const steps = useMemo(() => parseSteps(initialState), [initialState]);
@@ -211,12 +222,12 @@ export function ToolWalkthroughTicket({
       ? initialState.toolHint.trim()
       : 'Use your self-hosted SimpleRisk instance to log the risk described in the scenario brief.';
 
-  const [riskRegisterId, setRiskRegisterId] = useState('');
-  const [justification, setJustification] = useState('');
+  const [riskRegisterId, setRiskRegisterId] = useState(() => restoredString(submission, 'riskRegisterId'));
+  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -239,7 +250,7 @@ export function ToolWalkthroughTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setSubmitError(null);
     setFeedback(null);
@@ -439,7 +450,7 @@ export function ToolWalkthroughTicket({
                   ? 'ticket-risk-register-id-error'
                   : undefined
               }
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
             />
             {errors.riskRegisterId ? (
               <p
@@ -490,7 +501,7 @@ export function ToolWalkthroughTicket({
                   ? 'ticket-risk-justification-error'
                   : 'ticket-risk-justification-hint'
               }
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
             />
             <p
               id="ticket-risk-justification-hint"
@@ -539,7 +550,7 @@ export function ToolWalkthroughTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
+        <Button type="submit" disabled={formReadOnly || isSubmitting}>
           {isSubmitting ? 'Submitting…' : 'Submit walkthrough'}
         </Button>
       </form>

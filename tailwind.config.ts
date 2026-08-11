@@ -76,6 +76,7 @@ const config: Config = {
           foreground: 'var(--terminal-foreground)',
           muted: 'var(--terminal-muted)',
           accent: 'var(--terminal-accent)',
+          selection: 'var(--terminal-selection)',
         },
       },
       borderRadius: {

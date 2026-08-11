@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -123,11 +128,45 @@ const SCORE_LABELS: Record<CmmcPracticeScoreValue, string> = {
   not_met: 'Not met',
 };
 
+function restoredPracticeScores(
+  submission: Record<string, unknown> | null | undefined,
+  practiceIds: string[]
+): Record<string, CmmcPracticeScoreValue | ''> {
+  const base = Object.fromEntries(practiceIds.map((id) => [id, ''])) as Record<
+    string,
+    CmmcPracticeScoreValue | ''
+  >;
+  const raw = submission?.practiceScores;
+  if (!Array.isArray(raw)) return base;
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const record = entry as Record<string, unknown>;
+    const practiceId =
+      typeof record.practiceId === 'string' ? record.practiceId : '';
+    const score = record.score;
+    if (
+      practiceId &&
+      (score === 'met' || score === 'partial' || score === 'not_met')
+    ) {
+      base[practiceId] = score;
+    }
+  }
+  return base;
+}
+
 export function CmmcGapAnalysisTicket({
   ticket,
   readOnly = false,
   className,
 }: CmmcGapAnalysisTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const practices = useMemo(
@@ -164,13 +203,18 @@ export function CmmcGapAnalysisTicket({
 
   const [scores, setScores] = useState<
     Record<string, CmmcPracticeScoreValue | ''>
-  >(() => Object.fromEntries(practices.map((practice) => [practice.id, ''])));
-  const [readinessPercent, setReadinessPercent] = useState('');
-  const [gapAnalysis, setGapAnalysis] = useState('');
+  >(() =>
+    restoredPracticeScores(
+      restored,
+      practices.map((practice) => practice.id)
+    )
+  );
+  const [readinessPercent, setReadinessPercent] = useState(() => restoredString(submission, 'readinessPercent'));
+  const [gapAnalysis, setGapAnalysis] = useState(() => restoredString(submission, 'gapAnalysis'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -212,7 +256,7 @@ export function CmmcGapAnalysisTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setSubmitError(null);
     setFeedback(null);
@@ -354,7 +398,7 @@ export function CmmcGapAnalysisTicket({
                             name={`score-${practice.id}`}
                             value={value}
                             checked={scores[practice.id] === value}
-                            disabled={readOnly || isSubmitting}
+                            disabled={formReadOnly || isSubmitting}
                             onChange={() => {
                               setScores((prev) => ({
                                 ...prev,
@@ -426,7 +470,7 @@ export function CmmcGapAnalysisTicket({
                   ? 'cmmc-readiness-percent-error'
                   : undefined
               }
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               className="max-w-[12rem]"
             />
             {errors.readinessPercent ? (
@@ -476,7 +520,7 @@ export function CmmcGapAnalysisTicket({
                   ? 'cmmc-gap-analysis-error'
                   : 'cmmc-gap-analysis-hint'
               }
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
             />
             <p
               id="cmmc-gap-analysis-hint"
@@ -525,9 +569,11 @@ export function CmmcGapAnalysisTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit gap analysis'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit gap analysis'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

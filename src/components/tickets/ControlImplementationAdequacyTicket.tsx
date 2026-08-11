@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -69,6 +73,13 @@ export function ControlImplementationAdequacyTicket({
   readOnly = false,
   className,
 }: ControlImplementationAdequacyTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minJustificationLength = resolveMinJustificationLength(expectedState);
@@ -108,14 +119,12 @@ export function ControlImplementationAdequacyTicket({
     };
   }, [expectedState, initialState]);
 
-  const [judgment, setJudgment] = useState<
-    ControlImplementationAdequacyJudgment | ''
-  >('');
-  const [justification, setJustification] = useState('');
+  const [judgment, setJudgment] = useState(() => restoredString(submission, 'judgment'));
+  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -145,7 +154,7 @@ export function ControlImplementationAdequacyTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate() || !judgment) return;
@@ -271,7 +280,7 @@ export function ControlImplementationAdequacyTicket({
                       name="adequacy-judgment"
                       value={option}
                       checked={judgment === option}
-                      disabled={readOnly || isSubmitting}
+                      disabled={formReadOnly || isSubmitting}
                       onChange={() => {
                         clearOutcome();
                         setJudgment(option);
@@ -295,7 +304,7 @@ export function ControlImplementationAdequacyTicket({
               <Textarea
                 id="cia-justification"
                 value={justification}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={(event) => {
                   clearOutcome();
                   setJustification(event.target.value);
@@ -316,7 +325,7 @@ export function ControlImplementationAdequacyTicket({
           </CardContent>
         </Card>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Submit judgment'}

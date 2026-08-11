@@ -5,11 +5,16 @@ import { useMemo, useState } from 'react';
 import { CheckSquare, Folder, Square } from 'lucide-react';
 
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
-import { TicketRow } from '@/components/tickets/TicketRow';
+import {
+  TicketRow,
+  toTicketRowData,
+} from '@/components/tickets/TicketRow';
 import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
 import { Button } from '@/components/ui/button';
 import { useSharedSlaClock } from '@/hooks/useTicketSlaCountdown';
 import { useTrackTickets } from '@/hooks/useTrackTickets';
+import { needsLiveSlaCountdown } from '@/lib/tickets/sla';
+import { isClosedTicketStatus } from '@/lib/tickets/status';
 import type { MockTrackTicket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +52,15 @@ export function AuditorConsole({
   const [activeId, setActiveId] = useState<string | null>(
     () => tickets[0]?.id ?? null
   );
-  const nowMs = useSharedSlaClock(tickets.some((t) => t.startedAt));
+  const nowMs = useSharedSlaClock(
+    tickets.some((t) =>
+      needsLiveSlaCountdown(t.startedAt, {
+        resolvedAt: t.resolvedAt,
+        slaMet: t.slaMet,
+        closed: isClosedTicketStatus(t.status),
+      })
+    )
+  );
   const engagements = useMemo(() => groupByEngagement(tickets), [tickets]);
   const active = tickets.find((t) => t.id === activeId) ?? null;
 
@@ -127,15 +140,7 @@ export function AuditorConsole({
                           onClick={() => setActiveId(ticket.id)}
                         >
                           <TicketRow
-                            ticket={{
-                              id: ticket.id,
-                              title: ticket.title,
-                              subtitle: ticket.subtitle,
-                              difficulty: ticket.difficulty,
-                              slaMinutes: ticket.slaMinutes,
-                              startedAt: ticket.startedAt,
-                              status: ticket.status,
-                            }}
+                            ticket={toTicketRowData(ticket)}
                             nowMs={nowMs}
                             className="pointer-events-none"
                           />

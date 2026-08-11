@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import {
+  asSubmissionRecord,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -80,12 +84,53 @@ function draftsFromFindings(
   return initial;
 }
 
+function draftsFromSubmission(
+  submission: Record<string, unknown>,
+  findings: PoamPriorFinding[]
+): Record<string, EntryDraft> {
+  const initial = draftsFromFindings(findings);
+  const entries = submission.entries;
+  if (!Array.isArray(entries)) return initial;
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object') continue;
+    const record = entry as Record<string, unknown>;
+    const findingId =
+      typeof record.findingId === 'string' ? record.findingId : '';
+    if (!findingId) continue;
+    initial[findingId] = {
+      weaknessDescription:
+        typeof record.weaknessDescription === 'string'
+          ? record.weaknessDescription
+          : '',
+      milestone: typeof record.milestone === 'string' ? record.milestone : '',
+      scheduledCompletionDate:
+        typeof record.scheduledCompletionDate === 'string'
+          ? record.scheduledCompletionDate
+          : '',
+      status:
+        typeof record.status === 'string' &&
+        (POAM_STATUSES as readonly string[]).includes(record.status)
+          ? (record.status as PoamStatus)
+          : 'open',
+    };
+  }
+  return initial;
+}
+
 export function PoamTicketWork({
   ticketId,
   initialState,
   readOnly = false,
   className,
 }: PoamTicketWorkProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const usesStudentHistory = usesStudentPoamSourceFindings(initialState);
   const seedFindings = useMemo(
     () => parsePriorFindings(initialState),
@@ -96,7 +141,7 @@ export function PoamTicketWork({
     usesStudentHistory ? [] : seedFindings
   );
   const [drafts, setDrafts] = useState<Record<string, EntryDraft>>(() =>
-    draftsFromFindings(usesStudentHistory ? [] : seedFindings)
+    draftsFromSubmission(restored, usesStudentHistory ? [] : seedFindings)
   );
   const [loading, setLoading] = useState(usesStudentHistory);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -108,8 +153,8 @@ export function PoamTicketWork({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
 
   useEffect(() => {
     if (!usesStudentHistory) return;
@@ -134,7 +179,7 @@ export function PoamTicketWork({
           ? data.priorFindings
           : [];
         setPriorFindings(findings);
-        setDrafts(draftsFromFindings(findings));
+        setDrafts(draftsFromSubmission(restored, findings));
         setGaps(Array.isArray(data.gaps) ? data.gaps : []);
         setGapsMessage(
           typeof data.gapsMessage === 'string'
@@ -182,7 +227,7 @@ export function PoamTicketWork({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly || isSubmitting || priorFindings.length === 0) return;
+    if (formReadOnly || hideSubmit || isSubmitting || priorFindings.length === 0) return;
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -374,7 +419,7 @@ export function PoamTicketWork({
                       event.target.value
                     )
                   }
-                  disabled={readOnly || isSubmitting}
+                  disabled={formReadOnly || isSubmitting}
                   rows={3}
                   required
                 />
@@ -390,7 +435,7 @@ export function PoamTicketWork({
                   onChange={(event) =>
                     updateDraft(finding.id, 'milestone', event.target.value)
                   }
-                  disabled={readOnly || isSubmitting}
+                  disabled={formReadOnly || isSubmitting}
                   rows={3}
                   required
                   placeholder="Specific, verifiable corrective action…"
@@ -413,7 +458,7 @@ export function PoamTicketWork({
                         event.target.value
                       )
                     }
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                     required
                   />
                 </div>
@@ -431,7 +476,7 @@ export function PoamTicketWork({
                         event.target.value as PoamStatus
                       )
                     }
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                     required
                   >
                     {POAM_STATUSES.map((status) => (
@@ -447,9 +492,11 @@ export function PoamTicketWork({
         })}
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={readOnly || isSubmitting}>
-            {isSubmitting ? 'Submitting…' : 'Submit POA&M'}
-          </Button>
+          {!hideSubmit ? (
+            <Button type="submit" disabled={formReadOnly || isSubmitting}>
+              {isSubmitting ? 'Submitting…' : 'Submit POA&M'}
+            </Button>
+          ) : null}
           {readOnly ? (
             <p className="text-sm text-muted-foreground">
               Preview mode — submissions disabled.

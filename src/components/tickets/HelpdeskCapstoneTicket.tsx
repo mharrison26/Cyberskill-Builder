@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,9 +77,9 @@ function resolveMinLength(value: unknown, fallback: number): number {
 
 function statusTone(status: string): string {
   if (status === 'present')
-    return 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30';
+    return 'bg-status-satisfied text-status-satisfied-foreground border-status-satisfied-foreground/20';
   if (status === 'incomplete')
-    return 'bg-amber-500/15 text-amber-900 border-amber-500/30';
+    return 'bg-status-insufficient text-status-insufficient-foreground border-status-insufficient-foreground/20';
   return 'bg-muted text-muted-foreground';
 }
 
@@ -90,11 +94,46 @@ function emptySections(): Record<HelpdeskProcessDocSectionKey, string> {
   };
 }
 
+function restoredProcessDocument(submission: Record<string, unknown> | null | undefined): {
+  title: string;
+  sections: Record<HelpdeskProcessDocSectionKey, string>;
+} {
+  const doc = submission?.processDocument;
+  const sections = emptySections();
+  if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+    return {
+      title: 'Help Desk New-Hire Onboarding Checklist',
+      sections,
+    };
+  }
+  const record = doc as Record<string, unknown>;
+  const title =
+    typeof record.title === 'string' && record.title.trim()
+      ? record.title
+      : 'Help Desk New-Hire Onboarding Checklist';
+  const sectionsRaw = record.sections;
+  if (sectionsRaw && typeof sectionsRaw === 'object' && !Array.isArray(sectionsRaw)) {
+    for (const key of HELPDESK_PROCESS_DOC_SECTION_KEYS) {
+      const value = (sectionsRaw as Record<string, unknown>)[key];
+      if (typeof value === 'string') sections[key] = value;
+    }
+  }
+  return { title, sections };
+}
+
 export function HelpdeskCapstoneTicket({
   ticket,
   readOnly = false,
   className,
 }: HelpdeskCapstoneTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
+  const restoredDoc = restoredProcessDocument(restored);
   const expectedState = asRecord(ticket.expected_state);
   const minSectionLength = resolveMinLength(
     expectedState.minSectionLength,
@@ -109,12 +148,12 @@ export function HelpdeskCapstoneTicket({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [title, setTitle] = useState('Help Desk New-Hire Onboarding Checklist');
+  const [title, setTitle] = useState(restoredDoc.title);
   const [sections, setSections] =
-    useState<Record<HelpdeskProcessDocSectionKey, string>>(emptySections);
-  const [acknowledged, setAcknowledged] = useState(false);
+    useState<Record<HelpdeskProcessDocSectionKey, string>>(restoredDoc.sections);
+  const [acknowledged, setAcknowledged] = useState(() => restored.acknowledged === true || restored.acknowledge === true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
   const [isFlagship, setIsFlagship] = useState(false);
 
@@ -171,7 +210,7 @@ export function HelpdeskCapstoneTicket({
   ]);
 
   async function handleSubmit() {
-    if (readOnly || isSubmitting || !canSubmit) return;
+    if (formReadOnly || hideSubmit || isSubmitting || !canSubmit) return;
     setIsSubmitting(true);
     setFeedback(null);
     setFeedbackTone(null);
@@ -344,7 +383,7 @@ export function HelpdeskCapstoneTicket({
             id="process-doc-title"
             type="text"
             value={title}
-            disabled={readOnly}
+            disabled={formReadOnly}
             onChange={(event) => setTitle(event.target.value)}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           />
@@ -358,7 +397,7 @@ export function HelpdeskCapstoneTicket({
             <Textarea
               id={`process-section-${key}`}
               value={sections[key]}
-              disabled={readOnly}
+              disabled={formReadOnly}
               rows={4}
               onChange={(event) =>
                 setSections((prev) => ({
@@ -379,25 +418,27 @@ export function HelpdeskCapstoneTicket({
           <input
             type="checkbox"
             checked={acknowledged}
-            disabled={readOnly || !kb?.complete}
+            disabled={formReadOnly || !kb?.complete}
             onChange={(event) => setAcknowledged(event.target.checked)}
           />
           I have reviewed my compiled mini knowledge base
         </label>
-        <Button
-          type="button"
-          disabled={readOnly || !canSubmit || isSubmitting}
-          onClick={() => void handleSubmit()}
-        >
-          {isSubmitting ? 'Submitting…' : 'Submit helpdesk capstone'}
-        </Button>
+        {!hideSubmit ? (
+          <Button
+            type="button"
+            disabled={formReadOnly || !canSubmit || isSubmitting}
+            onClick={() => void handleSubmit()}
+          >
+            {isSubmitting ? 'Submitting…' : 'Submit helpdesk capstone'}
+          </Button>
+        ) : null}
       </div>
 
       {feedback ? (
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-emerald-800' : 'text-destructive'
+            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
           )}
           role="status"
         >

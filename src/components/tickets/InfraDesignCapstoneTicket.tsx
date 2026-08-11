@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -66,11 +71,72 @@ function resolveMinLength(value: unknown, fallback: number): number {
   return fallback;
 }
 
+function restoredAnswerMap(
+  submission: Record<string, unknown> | null | undefined
+): Record<string, string> {
+  const raw = submission?.answers;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof value === 'string') out[key] = value;
+  }
+  return out;
+}
+
+function parseStoredInfraQuestions(raw: unknown): InfraQuestion[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+    .map((item) => ({
+      id: typeof item.id === 'string' ? item.id : '',
+      prompt: typeof item.prompt === 'string' ? item.prompt : '',
+      focus: typeof item.focus === 'string' ? item.focus : undefined,
+    }))
+    .filter((item) => item.id && item.prompt);
+}
+
+function restoredDesignDoc(submission: Record<string, unknown> | null | undefined): {
+  title: string;
+  body: string;
+  topologyChoice: string;
+} {
+  const doc = submission?.designDoc;
+  if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+    return {
+      title: 'Harbor Dental backup topology ADR',
+      body: restoredString(submission, ['body']),
+      topologyChoice: restoredString(submission, 'topologyChoice'),
+    };
+  }
+  const record = doc as Record<string, unknown>;
+  return {
+    title:
+      typeof record.title === 'string' && record.title.trim()
+        ? record.title
+        : 'Harbor Dental backup topology ADR',
+    body: typeof record.body === 'string' ? record.body : restoredString(submission, 'body'),
+    topologyChoice:
+      typeof record.topologyChoice === 'string'
+        ? record.topologyChoice
+        : restoredString(submission, 'topologyChoice'),
+  };
+}
+
 export function InfraDesignCapstoneTicket({
   ticket,
   readOnly = false,
   className,
 }: InfraDesignCapstoneTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
+  const savedAnswers = restoredAnswerMap(restored);
+  const storedQuestions = parseStoredInfraQuestions(restored.questions);
+  const savedDesignDoc = restoredDesignDoc(restored);
   const expectedState = asRecord(ticket.expected_state);
   const initialState = asRecord(ticket.initial_state);
   const minBodyLength = resolveMinLength(
@@ -91,18 +157,20 @@ export function InfraDesignCapstoneTicket({
       ? initialState.prompt
       : 'Document a backup topology decision for Harbor Dental, then answer tradeoff follow-ups generated from your design.';
 
-  const [phase, setPhase] = useState<'design' | 'questions'>('design');
-  const [title, setTitle] = useState('Harbor Dental backup topology ADR');
-  const [topologyChoice, setTopologyChoice] = useState('');
-  const [body, setBody] = useState('');
-  const [questions, setQuestions] = useState<InfraQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [phase, setPhase] = useState<'design' | 'questions'>(() =>
+    storedQuestions.length > 0 ? 'questions' : 'design'
+  );
+  const [title, setTitle] = useState(savedDesignDoc.title);
+  const [topologyChoice, setTopologyChoice] = useState(savedDesignDoc.topologyChoice);
+  const [body, setBody] = useState(savedDesignDoc.body);
+  const [questions, setQuestions] = useState<InfraQuestion[]>(() => storedQuestions);
+  const [answers, setAnswers] = useState<Record<string, string>>(() => savedAnswers);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [meta, setMeta] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
   const [isFlagship, setIsFlagship] = useState(false);
 
@@ -133,7 +201,7 @@ export function InfraDesignCapstoneTicket({
           setPhase('questions');
           setQuestions(data.questions ?? []);
           setAnswers((prev) => {
-            const next = { ...prev };
+            const next = { ...savedAnswers, ...prev };
             for (const q of data.questions ?? []) {
               if (next[q.id] === undefined) next[q.id] = '';
             }
@@ -232,7 +300,7 @@ export function InfraDesignCapstoneTicket({
   }
 
   async function handleSubmit() {
-    if (readOnly || isSubmitting) return;
+    if (formReadOnly || hideSubmit || isSubmitting) return;
     setIsSubmitting(true);
     setFeedback(null);
     setFeedbackTone(null);
@@ -316,7 +384,7 @@ export function InfraDesignCapstoneTicket({
           <Input
             id="infra-design-title"
             value={title}
-            disabled={readOnly || phase === 'questions'}
+            disabled={formReadOnly || phase === 'questions'}
             onChange={(event) => setTitle(event.target.value)}
           />
           <p className="text-xs text-muted-foreground">
@@ -330,7 +398,7 @@ export function InfraDesignCapstoneTicket({
           <Input
             id="infra-design-topology"
             value={topologyChoice}
-            disabled={readOnly || phase === 'questions'}
+            disabled={formReadOnly || phase === 'questions'}
             placeholder="e.g. 3-2-1 NAS + immutable cloud"
             onChange={(event) => setTopologyChoice(event.target.value)}
           />
@@ -340,7 +408,7 @@ export function InfraDesignCapstoneTicket({
           <Textarea
             id="infra-design-body"
             value={body}
-            disabled={readOnly || phase === 'questions'}
+            disabled={formReadOnly || phase === 'questions'}
             rows={12}
             placeholder="State the backup topology you chose, constraints you honored, alternatives you rejected, explicit tradeoffs, failure modes, and who operates restores…"
             onChange={(event) => setBody(event.target.value)}
@@ -386,7 +454,7 @@ export function InfraDesignCapstoneTicket({
                 <Textarea
                   id={`infra-${question.id}`}
                   value={answers[question.id] ?? ''}
-                  disabled={readOnly}
+                  disabled={formReadOnly}
                   rows={4}
                   placeholder={`Write a substantiated answer (min ${minAnswerLength} characters)…`}
                   onChange={(event) =>
@@ -419,7 +487,7 @@ export function InfraDesignCapstoneTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-emerald-800' : 'text-destructive'
+            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
           )}
           role="status"
         >

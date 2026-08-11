@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -63,9 +67,9 @@ function resolveMinLength(value: unknown, fallback: number): number {
 
 function statusTone(status: string): string {
   if (status === 'present')
-    return 'bg-emerald-500/15 text-emerald-800 border-emerald-500/30';
+    return 'bg-status-satisfied text-status-satisfied-foreground border-status-satisfied-foreground/20';
   if (status === 'incomplete' || status === 'seed')
-    return 'bg-amber-500/15 text-amber-900 border-amber-500/30';
+    return 'bg-status-insufficient text-status-insufficient-foreground border-status-insufficient-foreground/20';
   return 'bg-muted text-muted-foreground';
 }
 
@@ -86,6 +90,12 @@ export function SecurityAssessmentReportTicket({
   readOnly = false,
   className,
 }: SecurityAssessmentReportTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minSummaryLength = resolveMinLength(
@@ -106,10 +116,10 @@ export function SecurityAssessmentReportTicket({
   );
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [sarSummary, setSarSummary] = useState('');
+  const [sarSummary, setSarSummary] = useState(() => restoredString(submission, 'sarSummary'));
   const [expanded, setExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
 
   useEffect(() => {
@@ -190,7 +200,7 @@ export function SecurityAssessmentReportTicket({
   }, [ticket.id]);
 
   async function handleSubmit() {
-    if (readOnly || isSubmitting) return;
+    if (formReadOnly || hideSubmit || isSubmitting) return;
     setIsSubmitting(true);
     setFeedback(null);
     setFeedbackTone(null);
@@ -351,7 +361,7 @@ export function SecurityAssessmentReportTicket({
         <Textarea
           id="sar-summary"
           value={sarSummary}
-          disabled={readOnly}
+          disabled={formReadOnly}
           onChange={(event) => setSarSummary(event.target.value)}
           rows={8}
           placeholder="Describe assessment scope, system context from the SSP, and each finding tracked in the POA&M (include finding ids)."
@@ -382,7 +392,7 @@ export function SecurityAssessmentReportTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-emerald-800' : 'text-destructive'
+            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
           )}
           role="status"
         >

@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -108,6 +112,13 @@ export function IssmEscalationTicket({
   readOnly = false,
   className,
 }: IssmEscalationTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minMemoLength = resolveMinMemoLength(expectedState);
@@ -157,12 +168,12 @@ export function IssmEscalationTicket({
     };
   }, [initialState]);
 
-  const [decision, setDecision] = useState<IssmEscalationDecision | ''>('');
-  const [memo, setMemo] = useState('');
+  const [decision, setDecision] = useState(() => restoredString(submission, 'decision'));
+  const [memo, setMemo] = useState(() => restoredString(submission, 'memo'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -192,7 +203,7 @@ export function IssmEscalationTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate() || !decision) return;
@@ -384,7 +395,7 @@ export function IssmEscalationTicket({
                       name="issm-decision"
                       value={option}
                       checked={decision === option}
-                      disabled={readOnly || isSubmitting}
+                      disabled={formReadOnly || isSubmitting}
                       onChange={() => {
                         clearOutcome();
                         setDecision(option);
@@ -406,7 +417,7 @@ export function IssmEscalationTicket({
               <Textarea
                 id="issm-memo"
                 value={memo}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={(event) => {
                   clearOutcome();
                   setMemo(event.target.value);
@@ -426,7 +437,7 @@ export function IssmEscalationTicket({
           </CardContent>
         </Card>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Submit decision'}

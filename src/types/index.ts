@@ -257,6 +257,10 @@ export interface MockTrackTicket {
   difficulty: string;
   slaMinutes: number;
   startedAt: string | null;
+  /** When set, console SLA widgets freeze at this instant. */
+  resolvedAt?: string | null;
+  slaDueAt?: string | null;
+  slaMet?: boolean | null;
   status: TicketProgressStatus;
   /** GRC / ISSO / ISSM: control family or engagement label. */
   controlFamily?: string;

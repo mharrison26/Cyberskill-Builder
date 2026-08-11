@@ -5,7 +5,10 @@ import { Fragment, useMemo, useState } from 'react';
 import { BookOpen, Radio } from 'lucide-react';
 
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
-import { TicketRow } from '@/components/tickets/TicketRow';
+import {
+  TicketRow,
+  toTicketRowData,
+} from '@/components/tickets/TicketRow';
 import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,7 +30,11 @@ import {
   isFindingSeverity,
   type FindingSeverity,
 } from '@/lib/tickets/openBySeverity';
-import { isOpenTicketStatus } from '@/lib/tickets/status';
+import { needsLiveSlaCountdown } from '@/lib/tickets/sla';
+import {
+  isClosedTicketStatus,
+  isOpenTicketStatus,
+} from '@/lib/tickets/status';
 import type { MockTrackTicket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -132,7 +139,13 @@ export function GrcComplianceConsole({
   const [selectedId, setSelectedId] = useState<string | null>(
     () => tickets[0]?.id ?? null
   );
-  const needsTick = tickets.some((t) => t.startedAt);
+  const needsTick = tickets.some((t) =>
+    needsLiveSlaCountdown(t.startedAt, {
+      resolvedAt: t.resolvedAt,
+      slaMet: t.slaMet,
+      closed: isClosedTicketStatus(t.status),
+    })
+  );
   const nowMs = useSharedSlaClock(needsTick);
 
   /** Single source of truth for table rows + header count (post-dedupe). */
@@ -324,15 +337,7 @@ export function GrcComplianceConsole({
                           </TableCell>
                           <TableCell className="align-top py-2">
                             <TicketRow
-                              ticket={{
-                                id: ticket.id,
-                                title: ticket.title,
-                                subtitle: ticket.subtitle,
-                                difficulty: ticket.difficulty,
-                                slaMinutes: ticket.slaMinutes,
-                                startedAt: ticket.startedAt,
-                                status: ticket.status,
-                              }}
+                              ticket={toTicketRowData(ticket)}
                               nowMs={nowMs}
                               showPriority={false}
                             />

@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -88,11 +93,46 @@ function formatDiscoveredAt(value: string): string {
   return date.toISOString().replace('.000Z', 'Z');
 }
 
+function restoredNotificationRows(
+  submission: Record<string, unknown> | null | undefined,
+  rules: ReturnType<typeof parseIncidentNotificationPolicyRules>
+): Record<string, RowState> {
+  const rows = initialRowState(rules);
+  const raw = submission?.notifications;
+  if (!Array.isArray(raw)) return rows;
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const record = entry as Record<string, unknown>;
+    const recipientId =
+      typeof record.recipientId === 'string' ? record.recipientId : '';
+    if (!recipientId || !rows[recipientId]) continue;
+    const hours = record.deadlineHours;
+    rows[recipientId] = {
+      selected: true,
+      deadlineHours:
+        typeof hours === 'number'
+          ? String(hours)
+          : typeof hours === 'string'
+            ? hours
+            : '',
+    };
+  }
+  return rows;
+}
+
 export function IncidentNotificationTicket({
   ticket,
   readOnly = false,
   className,
 }: IncidentNotificationTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minDraftLength = resolveMinDraftLength(expectedState);
@@ -126,13 +166,13 @@ export function IncidentNotificationTicket({
   );
 
   const [rows, setRows] = useState<Record<string, RowState>>(() =>
-    initialRowState(policyRules)
+    restoredNotificationRows(restored, policyRules)
   );
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(() => restoredString(submission, 'draft'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -205,7 +245,7 @@ export function IncidentNotificationTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -392,7 +432,7 @@ export function IncidentNotificationTicket({
                           type="checkbox"
                           className="h-4 w-4 accent-foreground"
                           checked={row.selected}
-                          disabled={readOnly || isSubmitting}
+                          disabled={formReadOnly || isSubmitting}
                           aria-label={`Notify ${rule.recipientLabel}`}
                           onChange={(event) =>
                             updateRow(rule.recipientId, {
@@ -423,7 +463,7 @@ export function IncidentNotificationTicket({
                           inputMode="decimal"
                           placeholder="e.g. 1"
                           value={row.deadlineHours}
-                          disabled={readOnly || isSubmitting || !row.selected}
+                          disabled={formReadOnly || isSubmitting || !row.selected}
                           onChange={(event) =>
                             updateRow(rule.recipientId, {
                               deadlineHours: event.target.value,
@@ -458,7 +498,7 @@ export function IncidentNotificationTicket({
             <Textarea
               id="incident-notification-draft"
               value={draft}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               onChange={(event) => {
                 clearOutcome();
                 setDraft(event.target.value);
@@ -477,7 +517,7 @@ export function IncidentNotificationTicket({
           </CardContent>
         </Card>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Submit notification plan'}

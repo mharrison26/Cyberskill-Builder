@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -106,6 +110,13 @@ export function KbWriteupTicket({
   readOnly = false,
   className,
 }: KbWriteupTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minFieldLength = resolveMinFieldLength(expectedState);
@@ -157,16 +168,16 @@ export function KbWriteupTicket({
     };
   }, [initialState]);
 
-  const [fields, setFields] = useState<Record<FieldKey, string>>({
-    problem: '',
-    rootCause: '',
-    resolutionSteps: '',
-    preventionTip: '',
-  });
+  const [fields, setFields] = useState<Record<FieldKey, string>>(() => ({
+    problem: restoredString(submission, 'problem'),
+    rootCause: restoredString(submission, 'rootCause'),
+    resolutionSteps: restoredString(submission, 'resolutionSteps'),
+    preventionTip: restoredString(submission, 'preventionTip'),
+  }));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -194,7 +205,7 @@ export function KbWriteupTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -329,7 +340,7 @@ export function KbWriteupTicket({
               rows={meta.rows}
               placeholder={meta.placeholder}
               aria-invalid={errors[meta.key] ? true : undefined}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
             />
             <p className="text-xs text-muted-foreground">
               Minimum {minFieldLength} characters.
@@ -370,9 +381,11 @@ export function KbWriteupTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit KB write-up'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit KB write-up'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

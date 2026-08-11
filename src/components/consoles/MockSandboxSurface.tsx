@@ -39,7 +39,7 @@ export function MockSandboxSurface({
 
       {layout === 'editor' ? (
         <div className="grid min-h-0 flex-1 md:grid-cols-[9rem_minmax(0,1fr)]">
-          <aside className="border-r border-terminal-foreground/10 bg-black/30 p-2 text-terminal-muted">
+          <aside className="border-r border-terminal-foreground/10 bg-terminal-foreground/[0.06] p-2 text-terminal-muted">
             <p className="mb-2 text-[10px] uppercase tracking-wide">Files</p>
             <ul className="space-y-1">
               <li className="text-primary">main.py</li>
@@ -56,7 +56,7 @@ export function MockSandboxSurface({
 # TODO: handle timezone-aware started_at
 `}
             </pre>
-            <div className="border-t border-terminal-foreground/10 bg-black/40 p-3 text-terminal-foreground/80">
+            <div className="border-t border-terminal-foreground/10 bg-terminal-foreground/[0.08] p-3 text-terminal-foreground/80">
               <p>$ pytest -q</p>
               <p className="text-status-satisfied-foreground">
                 ..... 5 passed in 0.12s

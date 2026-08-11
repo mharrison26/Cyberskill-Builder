@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -82,6 +86,13 @@ export function ConfigFaultDiagnosisTicket({
   readOnly = false,
   className,
 }: ConfigFaultDiagnosisTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minImpactLength = resolveMinImpactLength(expectedState);
@@ -136,12 +147,12 @@ export function ConfigFaultDiagnosisTicket({
       .join('\n');
   }, [numberedLines]);
 
-  const [faultLineNumber, setFaultLineNumber] = useState('');
-  const [impactExplanation, setImpactExplanation] = useState('');
+  const [faultLineNumber, setFaultLineNumber] = useState(() => restoredString(submission, 'faultLineNumber'));
+  const [impactExplanation, setImpactExplanation] = useState(() => restoredString(submission, 'impactExplanation'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -172,7 +183,7 @@ export function ConfigFaultDiagnosisTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -310,7 +321,7 @@ export function ConfigFaultDiagnosisTicket({
                 id="config-fault-impact"
                 name="impactExplanation"
                 value={impactExplanation}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={errors.impactExplanation ? true : undefined}
                 aria-describedby={
                   errors.impactExplanation
@@ -349,7 +360,7 @@ export function ConfigFaultDiagnosisTicket({
               ) : null}
             </div>
 
-            {!readOnly ? (
+            {!hideSubmit ? (
               <div className="pt-1">
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Submitting…' : 'Submit diagnosis'}

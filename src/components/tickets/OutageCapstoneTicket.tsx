@@ -3,8 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FitAddon } from '@xterm/addon-fit';
 import type { Terminal } from '@xterm/xterm';
+import { useTheme } from 'next-themes';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +18,7 @@ import {
   parseOutageDiagnosisChecklist,
   type OutageDiagnosisChecklistItem,
 } from '@/lib/scoring/ticketUi';
+import { readTerminalTheme } from '@/lib/terminalTheme';
 import type { Ticket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -106,6 +112,15 @@ export function OutageCapstoneTicket({
   readOnly = false,
   className,
 }: OutageCapstoneTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
+  const { resolvedTheme } = useTheme();
   const checklist = checklistFromTicket(ticket);
   const prompt = promptFromTicket(ticket);
   const minLength = minReportLength(ticket);
@@ -121,17 +136,31 @@ export function OutageCapstoneTicket({
   const [isStopping, setIsStopping] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [terminalReady, setTerminalReady] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<keyof IncidentReportFields, string>>
   >({});
-  const [report, setReport] = useState<IncidentReportFields>({
-    timeline: '',
-    rootCause: '',
-    remediation: '',
-    prevention: '',
+  const [report, setReport] = useState<IncidentReportFields>(() => {
+    const saved = restored.report;
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      const record = saved as Record<string, unknown>;
+      return {
+        timeline: typeof record.timeline === 'string' ? record.timeline : '',
+        rootCause: typeof record.rootCause === 'string' ? record.rootCause : '',
+        remediation:
+          typeof record.remediation === 'string' ? record.remediation : '',
+        prevention:
+          typeof record.prevention === 'string' ? record.prevention : '',
+      };
+    }
+    return {
+      timeline: '',
+      rootCause: '',
+      remediation: '',
+      prevention: '',
+    };
   });
 
   useEffect(() => {
@@ -155,11 +184,7 @@ export function OutageCapstoneTicket({
         cursorBlink: true,
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
         fontSize: 13,
-        theme: {
-          background: '#0f172a',
-          foreground: '#e2e8f0',
-          cursor: '#94a3b8',
-        },
+        theme: readTerminalTheme(),
       });
       const fitAddon = new Fit();
       terminal.loadAddon(fitAddon);
@@ -224,7 +249,14 @@ export function OutageCapstoneTicket({
   }, [session?.websocketUrl]);
 
   useEffect(() => {
-    if (readOnly) return;
+    const terminal = terminalRef.current;
+    if (!terminal) return;
+    terminal.options.theme = readTerminalTheme();
+    terminal.refresh(0, terminal.rows - 1);
+  }, [resolvedTheme]);
+
+  useEffect(() => {
+    if (formReadOnly || hideSubmit) return;
     let cancelled = false;
 
     async function hydrateExisting() {
@@ -326,7 +358,7 @@ export function OutageCapstoneTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly || isSubmitting) return;
+    if (formReadOnly || hideSubmit || isSubmitting) return;
 
     const errors: Partial<Record<keyof IncidentReportFields, string>> = {};
     for (const field of REPORT_FIELDS) {
@@ -442,7 +474,7 @@ export function OutageCapstoneTicket({
             <Button
               type="button"
               size="sm"
-              disabled={readOnly || isLaunching || Boolean(session)}
+              disabled={formReadOnly || isLaunching || Boolean(session)}
               onClick={() => void handleLaunch()}
             >
               {isLaunching
@@ -455,7 +487,7 @@ export function OutageCapstoneTicket({
               type="button"
               variant="outline"
               size="sm"
-              disabled={readOnly || !session || isStopping}
+              disabled={formReadOnly || !session || isStopping}
               onClick={() => void handleStop()}
             >
               {isStopping ? 'Stopping…' : 'Stop'}
@@ -559,7 +591,7 @@ export function OutageCapstoneTicket({
                 setReportField(field.key, event.target.value)
               }
               placeholder={field.placeholder}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               rows={4}
               className="min-h-[6rem]"
             />
@@ -585,7 +617,7 @@ export function OutageCapstoneTicket({
             className={cn(
               'rounded-md border px-3 py-2 text-sm whitespace-pre-wrap',
               scoreStatus === 'resolved'
-                ? 'border-emerald-500/40 text-emerald-800 dark:text-emerald-300'
+                ? 'border-status-satisfied-foreground/20 text-status-satisfied-foreground'
                 : 'border-border text-foreground'
             )}
           >
@@ -598,9 +630,11 @@ export function OutageCapstoneTicket({
           </div>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting || !session}>
-          {isSubmitting ? 'Submitting…' : 'Submit remediation + report'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting || !session}>
+            {isSubmitting ? 'Submitting…' : 'Submit remediation + report'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

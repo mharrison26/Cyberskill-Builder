@@ -4,6 +4,11 @@ import { useMemo, useState } from 'react';
 
 import { CodeSandbox } from '@/components/CodeSandbox';
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -138,6 +143,14 @@ export function KpiReportTicket({
   readOnly = false,
   className,
 }: KpiReportTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minReportLength = resolveMinReportLength(expectedState);
@@ -193,24 +206,32 @@ export function KpiReportTicket({
     [initialState]
   );
 
-  const [mode, setMode] = useState<WorkMode>('manual');
-  const [averageResolutionHours, setAverageResolutionHours] = useState('');
-  const [slaCompliancePercent, setSlaCompliancePercent] = useState('');
-  const [medianResolutionHours, setMedianResolutionHours] = useState('');
-  const [volumeByCategory, setVolumeByCategory] = useState(
-    preview.categories.length > 0
-      ? JSON.stringify(
-          Object.fromEntries(preview.categories.map((c) => [c, 0])),
-          null,
-          2
-        )
-      : '{\n  "access": 0\n}'
-  );
-  const [report, setReport] = useState('');
+  const [mode, setMode] = useState<WorkMode>(() => {
+    const value = restoredString(submission, 'mode');
+    return value === 'script' || value === 'manual' ? value : 'manual';
+  });
+  const [averageResolutionHours, setAverageResolutionHours] = useState(() => restoredString(submission, 'averageResolutionHours'));
+  const [slaCompliancePercent, setSlaCompliancePercent] = useState(() => restoredString(submission, 'slaCompliancePercent'));
+  const [medianResolutionHours, setMedianResolutionHours] = useState(() => restoredString(submission, 'medianResolutionHours'));
+  const [volumeByCategory, setVolumeByCategory] = useState(() => {
+    const raw = restored.volumeByCategory;
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      return JSON.stringify(raw, null, 2);
+    }
+    if (preview.categories.length > 0) {
+      return JSON.stringify(
+        Object.fromEntries(preview.categories.map((c) => [c, 0])),
+        null,
+        2
+      );
+    }
+    return '{\n  "access": 0\n}';
+  });
+  const [report, setReport] = useState(() => restoredString(submission, 'report'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -252,7 +273,7 @@ export function KpiReportTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -399,7 +420,7 @@ export function KpiReportTicket({
           size="sm"
           variant={mode === 'manual' ? 'default' : 'ghost'}
           onClick={() => setMode('manual')}
-          disabled={readOnly}
+          disabled={formReadOnly}
         >
           Manual
         </Button>
@@ -408,7 +429,7 @@ export function KpiReportTicket({
           size="sm"
           variant={mode === 'script' ? 'default' : 'ghost'}
           onClick={() => setMode('script')}
-          disabled={readOnly}
+          disabled={formReadOnly}
         >
           Script (Node)
         </Button>
@@ -443,7 +464,7 @@ export function KpiReportTicket({
                 clearOutcome();
                 setAverageResolutionHours(e.target.value);
               }}
-              disabled={readOnly}
+              disabled={formReadOnly}
               placeholder="e.g. 7.27"
               aria-invalid={Boolean(errors.averageResolutionHours)}
             />
@@ -463,7 +484,7 @@ export function KpiReportTicket({
                 clearOutcome();
                 setSlaCompliancePercent(e.target.value);
               }}
-              disabled={readOnly}
+              disabled={formReadOnly}
               placeholder="e.g. 83"
               aria-invalid={Boolean(errors.slaCompliancePercent)}
             />
@@ -483,7 +504,7 @@ export function KpiReportTicket({
                 clearOutcome();
                 setMedianResolutionHours(e.target.value);
               }}
-              disabled={readOnly}
+              disabled={formReadOnly}
               placeholder="e.g. 3.5"
               aria-invalid={Boolean(errors.medianResolutionHours)}
             />
@@ -504,7 +525,7 @@ export function KpiReportTicket({
               clearOutcome();
               setVolumeByCategory(e.target.value);
             }}
-            disabled={readOnly}
+            disabled={formReadOnly}
             rows={6}
             className="font-mono text-xs"
             aria-invalid={Boolean(errors.volumeByCategory)}
@@ -530,7 +551,7 @@ export function KpiReportTicket({
               clearOutcome();
               setReport(e.target.value);
             }}
-            disabled={readOnly}
+            disabled={formReadOnly}
             rows={6}
             placeholder="Summarize average resolution, SLA compliance, category volume, and what the median suggests about the distribution…"
             aria-invalid={Boolean(errors.report)}
@@ -545,7 +566,7 @@ export function KpiReportTicket({
           )}
         </div>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit KPI report'}
           </Button>

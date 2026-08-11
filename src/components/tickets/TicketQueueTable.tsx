@@ -14,7 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getSlaState } from '@/lib/tickets/sla';
+import { getSlaState, needsLiveSlaCountdown } from '@/lib/tickets/sla';
+import { isClosedTicketStatus } from '@/lib/tickets/status';
 import type { TicketProgressStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,9 @@ export type TicketQueueRow = {
   difficulty: string;
   slaMinutes: number;
   startedAt: string | null;
+  resolvedAt?: string | null;
+  slaDueAt?: string | null;
+  slaMet?: boolean | null;
   status: TicketProgressStatus;
   href: string;
 };
@@ -42,7 +46,13 @@ export function TicketQueueTable({
 }: TicketQueueTableProps) {
   const router = useRouter();
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const needsTick = rows.some((row) => row.startedAt);
+  const needsTick = rows.some((row) =>
+    needsLiveSlaCountdown(row.startedAt, {
+      resolvedAt: row.resolvedAt,
+      slaMet: row.slaMet,
+      closed: isClosedTicketStatus(row.status),
+    })
+  );
 
   useEffect(() => {
     if (!needsTick) return;
@@ -82,18 +92,24 @@ export function TicketQueueTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
-            const sla = getSlaState(row.slaMinutes, row.startedAt, nowMs);
+            const closed = isClosedTicketStatus(row.status);
+            const sla = getSlaState(row.slaMinutes, row.startedAt, nowMs, {
+              resolvedAt: row.resolvedAt,
+              slaDueAt: row.slaDueAt,
+              slaMet: row.slaMet,
+            });
+            const showOverdue = sla.isOverdue && !sla.isFrozen && !closed;
             return (
               <TableRow
                 key={row.id}
                 tabIndex={0}
                 role="link"
                 aria-label={`Open ticket: ${row.scenarioBrief}${
-                  sla.isOverdue ? ' (overdue)' : ''
+                  showOverdue ? ' (overdue)' : ''
                 }`}
                 className={cn(
                   'cursor-pointer',
-                  sla.isOverdue &&
+                  showOverdue &&
                     'bg-status-blocked/50 hover:bg-status-blocked/70'
                 )}
                 onClick={() => router.push(row.href)}
@@ -117,6 +133,10 @@ export function TicketQueueTable({
                   <SlaCountdown
                     slaMinutes={row.slaMinutes}
                     startedAt={row.startedAt}
+                    resolvedAt={row.resolvedAt}
+                    slaDueAt={row.slaDueAt}
+                    slaMet={row.slaMet}
+                    frozen={closed}
                     nowMs={nowMs}
                   />
                 </TableCell>

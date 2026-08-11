@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -123,6 +127,13 @@ export function BoardFindingsSummaryTicket({
   readOnly = false,
   className,
 }: BoardFindingsSummaryTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -167,13 +178,20 @@ export function BoardFindingsSummaryTicket({
       ? org.context.trim()
       : null;
 
-  const [summary, setSummary] = useState('');
-  const [askType, setAskType] = useState<BoardFindingsAskType | ''>('');
-  const [askStatement, setAskStatement] = useState('');
+  const [summary, setSummary] = useState(() => restoredString(submission, 'summary'));
+  const [askType, setAskType] = useState<BoardFindingsAskType | ''>(() => {
+    const value = restoredString(submission, 'askType');
+    return (BOARD_FINDINGS_ASK_TYPES as readonly string[]).includes(value)
+      ? (value as BoardFindingsAskType)
+      : '';
+  });
+  const [askStatement, setAskStatement] = useState(() =>
+    restoredString(submission, 'askStatement')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -192,7 +210,7 @@ export function BoardFindingsSummaryTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     setSubmitError(null);
     setFeedback(null);
     setScoreStatus(null);
@@ -303,7 +321,7 @@ export function BoardFindingsSummaryTicket({
             id="board-ask-type"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={askType}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             aria-invalid={errors.askType ? true : undefined}
             onChange={(event) => {
               setAskType(event.target.value as BoardFindingsAskType | '');
@@ -338,7 +356,7 @@ export function BoardFindingsSummaryTicket({
           <Input
             id="board-ask-statement"
             value={askStatement}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             placeholder="One-line ask the board will remember…"
             onChange={(event) => setAskStatement(event.target.value)}
           />
@@ -349,7 +367,7 @@ export function BoardFindingsSummaryTicket({
           <Textarea
             id="board-summary"
             value={summary}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             rows={14}
             placeholder="Open with why the board is briefed, translate each finding into plain language with business impact, and close with your ask…"
             aria-invalid={errors.summary ? true : undefined}
@@ -372,9 +390,11 @@ export function BoardFindingsSummaryTicket({
           ) : null}
         </div>
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit board summary'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit board summary'}
+          </Button>
+        ) : null}
       </form>
 
       {submitError ? (
@@ -387,7 +407,7 @@ export function BoardFindingsSummaryTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            scoreStatus === 'resolved' ? 'text-emerald-800' : 'text-destructive'
+            scoreStatus === 'resolved' ? 'text-status-satisfied-foreground' : 'text-destructive'
           )}
           role="status"
         >

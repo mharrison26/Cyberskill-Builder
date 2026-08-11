@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -80,10 +85,10 @@ function formatUsd(amount: number): string {
 function categoryTone(category: string): string {
   const c = category.toLowerCase();
   if (c === 'staffing') {
-    return 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400';
+    return 'border-status-not-started-foreground/20 bg-status-not-started text-status-not-started-foreground';
   }
   if (c === 'training') {
-    return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+    return 'border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground';
   }
   return 'border-border bg-muted/50 text-foreground';
 }
@@ -120,6 +125,14 @@ export function SecurityBudgetAllocationTicket({
   readOnly = false,
   className,
 }: SecurityBudgetAllocationTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -155,16 +168,27 @@ export function SecurityBudgetAllocationTicket({
 
   const [allocations, setAllocations] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
+    const saved = restored.allocations;
+    const savedRecord =
+      saved && typeof saved === 'object' && !Array.isArray(saved)
+        ? (saved as Record<string, unknown>)
+        : {};
     for (const req of requests) {
-      initial[req.id] = '0';
+      const value = savedRecord[req.id];
+      initial[req.id] =
+        typeof value === 'number' && Number.isFinite(value)
+          ? String(value)
+          : typeof value === 'string'
+            ? value
+            : '0';
     }
     return initial;
   });
-  const [justification, setJustification] = useState('');
+  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const parsedAllocations = useMemo(() => {
@@ -198,7 +222,7 @@ export function SecurityBudgetAllocationTicket({
   }
 
   function updateAllocation(id: string, value: string) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setAllocations((prev) => ({ ...prev, [id]: value }));
   }
@@ -250,7 +274,7 @@ export function SecurityBudgetAllocationTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -378,7 +402,7 @@ export function SecurityBudgetAllocationTicket({
                           </Badge>
                         </div>
                       </div>
-                      {!readOnly ? (
+                      {!hideSubmit ? (
                         <div className="flex gap-2">
                           <Button
                             type="button"
@@ -414,7 +438,7 @@ export function SecurityBudgetAllocationTicket({
                         onChange={(event) =>
                           updateAllocation(req.id, event.target.value)
                         }
-                        disabled={readOnly}
+                        disabled={formReadOnly}
                         aria-invalid={overLine || undefined}
                         className={cn(overLine && 'border-destructive')}
                       />
@@ -446,7 +470,7 @@ export function SecurityBudgetAllocationTicket({
               clearOutcome();
               setJustification(event.target.value);
             }}
-            disabled={readOnly}
+            disabled={formReadOnly}
             rows={8}
             placeholder="Example: Full EDR closes unmanaged endpoint detection gaps driving ransomware dwell time; zero vanity dashboard because it is cosmetic relative to ConMon backlog…"
           />
@@ -470,7 +494,7 @@ export function SecurityBudgetAllocationTicket({
             className={cn(
               'rounded-md border px-3 py-2 text-sm',
               scoreStatus === 'resolved'
-                ? 'border-emerald-500/30 bg-emerald-500/10'
+                ? 'border-status-satisfied-foreground/20 bg-status-satisfied'
                 : 'border-border bg-muted/40'
             )}
             role="status"
@@ -484,7 +508,7 @@ export function SecurityBudgetAllocationTicket({
           </div>
         ) : null}
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting || overBudget}>
             {isSubmitting ? 'Submitting…' : 'Submit allocation'}
           </Button>

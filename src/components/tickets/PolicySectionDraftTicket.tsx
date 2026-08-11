@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -99,6 +103,13 @@ export function PolicySectionDraftTicket({
   readOnly = false,
   className,
 }: PolicySectionDraftTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const organization = useMemo(
@@ -123,11 +134,11 @@ export function PolicySectionDraftTicket({
     `Draft the ${sectionTitle} policy section. Cover clear scope, enforceable requirements, and a defined exceptions process.`
   );
 
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(() => restoredString(submission, 'draft'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -150,7 +161,7 @@ export function PolicySectionDraftTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -291,7 +302,7 @@ export function PolicySectionDraftTicket({
                   clearOutcome();
                   setDraft(event.target.value);
                 }}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 rows={14}
                 placeholder={`1. Scope\nThis policy applies to…\n\n2. Requirements\nUsers must…\n\n3. Exceptions\nException requests must…`}
                 aria-invalid={Boolean(errors.draft)}
@@ -306,7 +317,7 @@ export function PolicySectionDraftTicket({
               </div>
             </div>
 
-            {!readOnly ? (
+            {!hideSubmit ? (
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Submitting…' : 'Submit draft'}
               </Button>
@@ -327,8 +338,8 @@ export function PolicySectionDraftTicket({
                 className={cn(
                   'rounded-md border px-3 py-2 text-sm',
                   scoreStatus === 'resolved'
-                    ? 'border-emerald-500/40 bg-emerald-500/10'
-                    : 'border-amber-500/40 bg-amber-500/10'
+                    ? 'border-status-satisfied-foreground/20 bg-status-satisfied'
+                    : 'border-status-insufficient-foreground/20 bg-status-insufficient'
                 )}
                 role="status"
               >

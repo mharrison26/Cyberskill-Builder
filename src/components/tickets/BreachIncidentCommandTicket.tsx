@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -67,11 +71,62 @@ function emptyDecisionState(): DecisionState {
   };
 }
 
+function restoredDecisions(
+  submission: Record<string, unknown> | null | undefined,
+  decisionPoints: Array<{ id: string; type: string }>
+): Record<string, DecisionState> {
+  const initial: Record<string, DecisionState> = {};
+  const raw = submission?.decisions;
+  const saved =
+    raw && typeof raw === 'object' && !Array.isArray(raw)
+      ? (raw as Record<string, unknown>)
+      : {};
+
+  for (const dp of decisionPoints) {
+    const state = saved[dp.id];
+    if (!state || typeof state !== 'object' || Array.isArray(state)) {
+      initial[dp.id] = emptyDecisionState();
+      continue;
+    }
+    const record = state as Record<string, unknown>;
+    if (dp.type === 'multi_select') {
+      const ids = record.selectedOptionIds;
+      initial[dp.id] = {
+        selectedOptionIds: Array.isArray(ids)
+          ? ids.filter((id): id is string => typeof id === 'string')
+          : [],
+        selectedOptionId: '',
+        justification:
+          typeof record.justification === 'string' ? record.justification : '',
+      };
+    } else {
+      initial[dp.id] = {
+        selectedOptionIds: [],
+        selectedOptionId:
+          typeof record.selectedOptionId === 'string'
+            ? record.selectedOptionId
+            : '',
+        justification:
+          typeof record.justification === 'string' ? record.justification : '',
+      };
+    }
+  }
+  return initial;
+}
+
 export function BreachIncidentCommandTicket({
   ticket,
   readOnly = false,
   className,
 }: BreachIncidentCommandTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -108,18 +163,12 @@ export function BreachIncidentCommandTicket({
 
   const [activeStageIndex, setActiveStageIndex] = useState(0);
   const [decisions, setDecisions] = useState<Record<string, DecisionState>>(
-    () => {
-      const initial: Record<string, DecisionState> = {};
-      for (const dp of stages.flatMap((s) => s.decisionPoints)) {
-        initial[dp.id] = emptyDecisionState();
-      }
-      return initial;
-    }
+    () => restoredDecisions(restored, allDecisionPoints)
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [scoreFeedback, setScoreFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [scoreFeedback, setScoreFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activeStage = stages[activeStageIndex] ?? null;
@@ -222,7 +271,7 @@ export function BreachIncidentCommandTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -402,7 +451,7 @@ export function BreachIncidentCommandTicket({
                                 }
                                 className="mt-1"
                                 checked={checked}
-                                disabled={readOnly || isSubmitting}
+                                disabled={formReadOnly || isSubmitting}
                                 onChange={() => {
                                   if (dp.type === 'multi_select') {
                                     toggleMultiOption(dp.id, option.id);
@@ -436,7 +485,7 @@ export function BreachIncidentCommandTicket({
                       <Textarea
                         id={`justification-${dp.id}`}
                         value={state.justification}
-                        disabled={readOnly || isSubmitting}
+                        disabled={formReadOnly || isSubmitting}
                         rows={3}
                         placeholder="Briefly justify this incident-command decision…"
                         onChange={(event) =>
@@ -483,7 +532,7 @@ export function BreachIncidentCommandTicket({
             Next stage
           </Button>
 
-          {!readOnly ? (
+          {!hideSubmit ? (
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting
                 ? 'Submitting…'

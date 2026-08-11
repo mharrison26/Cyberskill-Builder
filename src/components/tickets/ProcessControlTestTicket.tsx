@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  restoredStringSet,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,6 +40,13 @@ export function ProcessControlTestTicket({
   readOnly = false,
   className,
 }: ProcessControlTestTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -73,17 +85,15 @@ export function ProcessControlTestTicket({
     return Array.from(keys);
   }, [sampleItems]);
 
-  const [controlOutcome, setControlOutcome] = useState<
-    ProcessControlOutcome | ''
-  >('');
+  const [controlOutcome, setControlOutcome] = useState(() => restoredString(submission, 'controlOutcome'));
   const [selectedExceptions, setSelectedExceptions] = useState<Set<string>>(
-    () => new Set()
+    () => restoredStringSet(submission, 'exceptionItemIds')
   );
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(() => restoredString(submission, 'notes'));
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function toggleException(id: string) {
@@ -97,7 +107,7 @@ export function ProcessControlTestTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     setFormError(null);
     setSubmitError(null);
     setFeedback(null);
@@ -197,7 +207,7 @@ export function ProcessControlTestTicket({
                     type="checkbox"
                     checked={selectedExceptions.has(item.id)}
                     onChange={() => toggleException(item.id)}
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                     aria-label={`Mark ${item.id} as exception`}
                   />
                 </td>
@@ -246,7 +256,7 @@ export function ProcessControlTestTicket({
                   value={outcome}
                   checked={controlOutcome === outcome}
                   onChange={() => setControlOutcome(outcome)}
-                  disabled={readOnly || isSubmitting}
+                  disabled={formReadOnly || isSubmitting}
                 />
                 <span className="capitalize">{outcome}</span>
               </label>
@@ -260,7 +270,7 @@ export function ProcessControlTestTicket({
             id="process-control-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             rows={4}
           />
           <p className="text-xs text-muted-foreground">
@@ -269,7 +279,7 @@ export function ProcessControlTestTicket({
           </p>
         </div>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit control test'}
           </Button>

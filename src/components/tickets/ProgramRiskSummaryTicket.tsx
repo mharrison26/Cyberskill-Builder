@@ -4,6 +4,12 @@ import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  restoredStringArray,
+  restoredStringSet,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -54,7 +60,7 @@ function ratingTone(rating: string): string {
     return 'border-destructive/30 bg-destructive/10 text-destructive';
   }
   if (r === 'moderate' || r === 'medium') {
-    return 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
+    return 'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground';
   }
   return 'border-border bg-muted/40 text-muted-foreground';
 }
@@ -64,6 +70,13 @@ export function ProgramRiskSummaryTicket({
   readOnly = false,
   className,
 }: ProgramRiskSummaryTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -130,13 +143,15 @@ export function ProgramRiskSummaryTicket({
     return map;
   }, [candidateRisks]);
 
-  const [topRiskIds, setTopRiskIds] = useState<string[]>([]);
-  const [themeIds, setThemeIds] = useState<Set<string>>(() => new Set());
-  const [summary, setSummary] = useState('');
+  const [topRiskIds, setTopRiskIds] = useState<string[]>(() =>
+    restoredStringArray(submission, 'topRiskIds')
+  );
+  const [themeIds, setThemeIds] = useState<Set<string>>(() => restoredStringSet(submission, 'themeIds'));
+  const [summary, setSummary] = useState(() => restoredString(submission, 'summary'));
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -147,7 +162,7 @@ export function ProgramRiskSummaryTicket({
   }
 
   function addTopRisk(id: string) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setTopRiskIds((prev) => {
       if (prev.includes(id) || prev.length >= topN) return prev;
@@ -156,13 +171,13 @@ export function ProgramRiskSummaryTicket({
   }
 
   function removeTopRisk(id: string) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setTopRiskIds((prev) => prev.filter((x) => x !== id));
   }
 
   function moveTopRisk(index: number, direction: -1 | 1) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     const nextIndex = index + direction;
     if (nextIndex < 0 || nextIndex >= topRiskIds.length) return;
     clearOutcome();
@@ -176,7 +191,7 @@ export function ProgramRiskSummaryTicket({
   }
 
   function toggleTheme(id: string) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setThemeIds((prev) => {
       const next = new Set(prev);
@@ -188,7 +203,7 @@ export function ProgramRiskSummaryTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
 
     if (topRiskIds.length !== topN) {
@@ -441,7 +456,7 @@ export function ProgramRiskSummaryTicket({
                           variant="outline"
                           size="icon"
                           className="h-7 w-7"
-                          disabled={readOnly || isSubmitting || index === 0}
+                          disabled={formReadOnly || isSubmitting || index === 0}
                           aria-label={`Move ${id} up`}
                           onClick={() => moveTopRisk(index, -1)}
                         >
@@ -473,7 +488,7 @@ export function ProgramRiskSummaryTicket({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 shrink-0"
-                      disabled={readOnly || isSubmitting}
+                      disabled={formReadOnly || isSubmitting}
                       aria-label={`Remove ${id}`}
                       onClick={() => removeTopRisk(id)}
                     >
@@ -499,7 +514,7 @@ export function ProgramRiskSummaryTicket({
                     className="mt-1"
                     checked={themeIds.has(theme.id)}
                     onChange={() => toggleTheme(theme.id)}
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                     aria-label={theme.label}
                   />
                   <span>
@@ -527,7 +542,7 @@ export function ProgramRiskSummaryTicket({
               clearOutcome();
               setSummary(event.target.value);
             }}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             rows={5}
             placeholder="Summarize the top program risks and cross-system themes for leadership…"
           />
@@ -536,7 +551,7 @@ export function ProgramRiskSummaryTicket({
           </p>
         </div>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit program risk summary'}
           </Button>

@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -50,6 +55,60 @@ type ToolRow = {
   families: string;
   rationale: string;
 };
+
+function restoredFamilyRows(
+  submission: Record<string, unknown> | null | undefined,
+  families: string[]
+): FamilyRow[] {
+  const byFamily = new Map<string, FamilyRow>();
+  const raw = submission?.familyCadences;
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (!entry || typeof entry !== 'object') continue;
+      const record = entry as Record<string, unknown>;
+      const family = typeof record.family === 'string' ? record.family : '';
+      if (!family) continue;
+      byFamily.set(family, {
+        family,
+        cadence: typeof record.cadence === 'string' ? record.cadence : '',
+        rationale: typeof record.rationale === 'string' ? record.rationale : '',
+      });
+    }
+  }
+  return families.map(
+    (family) => byFamily.get(family) ?? { family, cadence: '', rationale: '' }
+  );
+}
+
+function restoredToolRows(
+  submission: Record<string, unknown> | null | undefined,
+  tools: string[]
+): ToolRow[] {
+  const byTool = new Map<string, ToolRow>();
+  const raw = submission?.toolCoverage;
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (!entry || typeof entry !== 'object') continue;
+      const record = entry as Record<string, unknown>;
+      const tool = typeof record.tool === 'string' ? record.tool : '';
+      if (!tool) continue;
+      const familiesRaw = record.families;
+      const families = Array.isArray(familiesRaw)
+        ? familiesRaw.filter((item): item is string => typeof item === 'string').join(', ')
+        : typeof familiesRaw === 'string'
+          ? familiesRaw
+          : '';
+      byTool.set(tool, {
+        tool,
+        families,
+        rationale: typeof record.rationale === 'string' ? record.rationale : '',
+      });
+    }
+  }
+  return tools.map(
+    (tool) => byTool.get(tool) ?? { tool, families: '', rationale: '' }
+  );
+}
 
 type FormErrors = {
   families?: string;
@@ -145,6 +204,14 @@ export function ConMonStrategyTicket({
   readOnly = false,
   className,
 }: ConMonStrategyTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const usesStudentProfile = usesStudentConmonSystemProfile(initialState);
@@ -283,16 +350,18 @@ export function ConMonStrategyTicket({
   );
 
   const [familyRows, setFamilyRows] = useState<FamilyRow[]>(() =>
-    families.map((family) => ({ family, cadence: '', rationale: '' }))
+    restoredFamilyRows(restored, families)
   );
   const [toolRows, setToolRows] = useState<ToolRow[]>(() =>
-    tools.map((tool) => ({ tool, families: '', rationale: '' }))
+    restoredToolRows(restored, tools)
   );
-  const [escalationReporting, setEscalationReporting] = useState('');
+  const [escalationReporting, setEscalationReporting] = useState(() =>
+    restoredString(submission, 'escalationReporting')
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -343,7 +412,7 @@ export function ConMonStrategyTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setSubmitError(null);
     setFeedback(null);
@@ -567,7 +636,7 @@ export function ConMonStrategyTicket({
                       setSubmitError(null);
                     }}
                     placeholder="e.g. Continuous automated checks + weekly review"
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                   />
                 </div>
                 <div className="space-y-2">
@@ -590,7 +659,7 @@ export function ConMonStrategyTicket({
                     }}
                     rows={3}
                     placeholder="Tie frequency to volatility, impact level, critical functions, weaknesses, or threat/vulnerability info…"
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                   />
                 </div>
               </div>
@@ -639,7 +708,7 @@ export function ConMonStrategyTicket({
                       setSubmitError(null);
                     }}
                     placeholder="e.g. RA, SI, CA"
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                   />
                 </div>
                 <div className="space-y-2">
@@ -662,7 +731,7 @@ export function ConMonStrategyTicket({
                     }}
                     rows={3}
                     placeholder="What status monitoring or control-effectiveness evidence does this tool provide for those families?"
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                   />
                 </div>
               </div>
@@ -708,7 +777,7 @@ export function ConMonStrategyTicket({
               rows={6}
               placeholder="Weekly status to ISSO/system owner; critical findings escalate to AO within 24h; monthly posture package for ongoing authorization…"
               aria-invalid={errors.escalationReporting ? true : undefined}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
             />
             <p className="text-xs text-muted-foreground">
               Minimum {minEscalationLength} characters. Graded against retrieved
@@ -750,9 +819,11 @@ export function ConMonStrategyTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit system ConMon plan'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit system ConMon plan'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

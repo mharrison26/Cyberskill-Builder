@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -145,6 +149,13 @@ export function VendorRiskRatingTicket({
   readOnly = false,
   className,
 }: VendorRiskRatingTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minJustificationLength = resolveMinJustificationLength(
@@ -193,12 +204,12 @@ export function VendorRiskRatingTicket({
     };
   }, [initialState]);
 
-  const [rating, setRating] = useState<VendorRiskRatingLevel | ''>('');
-  const [justification, setJustification] = useState('');
+  const [rating, setRating] = useState(() => restoredString(submission, 'rating'));
+  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -225,7 +236,7 @@ export function VendorRiskRatingTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate() || !rating) return;
@@ -303,7 +314,7 @@ export function VendorRiskRatingTicket({
         </CardContent>
       </Card>
 
-      <Card className="border-amber-500/40">
+      <Card className="border-status-insufficient-foreground/40">
         <CardHeader>
           <CardTitle className="text-base">
             Access / criticality profile
@@ -461,7 +472,7 @@ export function VendorRiskRatingTicket({
                       name="vendor-risk-rating"
                       value={option}
                       checked={rating === option}
-                      disabled={readOnly || isSubmitting}
+                      disabled={formReadOnly || isSubmitting}
                       onChange={() => {
                         clearOutcome();
                         setRating(option);
@@ -485,7 +496,7 @@ export function VendorRiskRatingTicket({
               <Textarea
                 id="vendor-risk-justification"
                 value={justification}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={(event) => {
                   clearOutcome();
                   setJustification(event.target.value);
@@ -506,7 +517,7 @@ export function VendorRiskRatingTicket({
           </CardContent>
         </Card>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Submit vendor risk rating'}

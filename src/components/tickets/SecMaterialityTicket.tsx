@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -67,6 +72,14 @@ export function SecMaterialityTicket({
   readOnly = false,
   className,
 }: SecMaterialityTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -124,16 +137,24 @@ export function SecMaterialityTicket({
       ? initialState.keyArtifact.trim()
       : null;
 
-  const [determination, setDetermination] = useState<
-    SecMaterialityDetermination | ''
-  >('');
-  const [rationale, setRationale] = useState('');
-  const [factors, setFactors] =
-    useState<Record<SecMaterialityFactorKey, string>>(emptyFactors);
+  const [determination, setDetermination] = useState(() => restoredString(submission, 'determination'));
+  const [rationale, setRationale] = useState(() => restoredString(submission, ['determinationRationale', 'rationale']));
+  const [factors, setFactors] = useState<Record<SecMaterialityFactorKey, string>>(
+    () => {
+      const base = emptyFactors();
+      const raw = restored.factors;
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return base;
+      for (const key of SEC_MATERIALITY_FACTOR_KEYS) {
+        const value = (raw as Record<string, unknown>)[key];
+        if (typeof value === 'string') base[key] = value;
+      }
+      return base;
+    }
+  );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -173,7 +194,7 @@ export function SecMaterialityTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate() || !determination) return;
@@ -337,7 +358,7 @@ export function SecMaterialityTicket({
                         return next;
                       });
                     }}
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                   />
                   Material (Item 1.05 may be required)
                 </label>
@@ -356,7 +377,7 @@ export function SecMaterialityTicket({
                         return next;
                       });
                     }}
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                   />
                   Not material
                 </label>
@@ -389,7 +410,7 @@ export function SecMaterialityTicket({
                 rows={5}
                 placeholder="State when materiality was determined, why the conclusion follows from the factors below, and whether the four-business-day Item 1.05 clock has started…"
                 aria-invalid={errors.rationale ? true : undefined}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
               />
               <p className="text-xs text-muted-foreground">
                 Minimum {minRationaleLength} characters. Clock runs from the
@@ -437,7 +458,7 @@ export function SecMaterialityTicket({
                 rows={4}
                 placeholder="Tie the breach facts to this factor and investor significance…"
                 aria-invalid={errors[key] ? true : undefined}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
               />
               <p className="text-xs text-muted-foreground">
                 Minimum {minFactorLength} characters.
@@ -479,9 +500,11 @@ export function SecMaterialityTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit materiality memo'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit materiality memo'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

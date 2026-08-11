@@ -4,6 +4,11 @@ import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  restoredStringArray,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -59,7 +64,7 @@ function cvssTone(cvss: number): string {
   if (cvss >= 9)
     return 'border-destructive/30 bg-destructive/10 text-destructive';
   if (cvss >= 7)
-    return 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
+    return 'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground';
   if (cvss >= 4) return 'border-border bg-muted/50 text-foreground';
   return 'border-border bg-muted/30 text-muted-foreground';
 }
@@ -69,6 +74,13 @@ export function VulnPrioritizationTicket({
   readOnly = false,
   className,
 }: VulnPrioritizationTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
 
   const vulnerabilities = useMemo(
@@ -82,12 +94,14 @@ export function VulnPrioritizationTicket({
     'Review each vulnerability’s CVSS score, exposed system, and exploit-available flag. Build a patch schedule that remediates the highest-risk findings first.'
   );
 
-  const [orderedIds, setOrderedIds] = useState<string[]>(() =>
-    vulnerabilities.map((v) => v.id)
-  );
+  const [orderedIds, setOrderedIds] = useState(() => {
+    const fromSubmission = restoredStringArray(submission, 'orderedIds');
+    if (fromSubmission.length > 0) return fromSubmission;
+    return vulnerabilities.map((v) => v.id);
+  });
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const byId = useMemo(() => {
@@ -113,7 +127,7 @@ export function VulnPrioritizationTicket({
   }
 
   function moveItem(index: number, direction: -1 | 1) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     const nextIndex = index + direction;
     if (nextIndex < 0 || nextIndex >= orderedIds.length) return;
 
@@ -129,7 +143,7 @@ export function VulnPrioritizationTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
 
@@ -232,7 +246,7 @@ export function VulnPrioritizationTicket({
                           variant="outline"
                           size="icon"
                           className="h-7 w-7"
-                          disabled={readOnly || isSubmitting || index === 0}
+                          disabled={formReadOnly || isSubmitting || index === 0}
                           aria-label={`Move ${vuln.id} up`}
                           onClick={() => moveItem(index, -1)}
                         >
@@ -328,7 +342,7 @@ export function VulnPrioritizationTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
+        <Button type="submit" disabled={formReadOnly || isSubmitting}>
           {isSubmitting ? 'Submitting…' : 'Submit patch schedule'}
         </Button>
       </form>

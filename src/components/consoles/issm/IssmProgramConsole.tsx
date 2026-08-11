@@ -4,13 +4,18 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
-import { TicketRow } from '@/components/tickets/TicketRow';
+import {
+  TicketRow,
+  toTicketRowData,
+} from '@/components/tickets/TicketRow';
 import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSharedSlaClock } from '@/hooks/useTicketSlaCountdown';
 import { useTrackTickets } from '@/hooks/useTrackTickets';
 import { MOCK_ISSM_PORTFOLIO } from '@/lib/mock-data';
+import { needsLiveSlaCountdown } from '@/lib/tickets/sla';
+import { isClosedTicketStatus } from '@/lib/tickets/status';
 import { cn } from '@/lib/utils';
 
 function riskTone(risk: string) {
@@ -45,7 +50,15 @@ export function IssmProgramConsole({
   const [selectedId, setSelectedId] = useState<string | null>(
     () => tickets[0]?.id ?? null
   );
-  const nowMs = useSharedSlaClock(tickets.some((t) => t.startedAt));
+  const nowMs = useSharedSlaClock(
+    tickets.some((t) =>
+      needsLiveSlaCountdown(t.startedAt, {
+        resolvedAt: t.resolvedAt,
+        slaMet: t.slaMet,
+        closed: isClosedTicketStatus(t.status),
+      })
+    )
+  );
   const selected = tickets.find((t) => t.id === selectedId) ?? null;
 
   const escalations = useMemo(
@@ -143,15 +156,7 @@ export function IssmProgramConsole({
                     ) : null}
                   </div>
                   <TicketRow
-                    ticket={{
-                      id: ticket.id,
-                      title: ticket.title,
-                      subtitle: ticket.subtitle,
-                      difficulty: ticket.difficulty,
-                      slaMinutes: ticket.slaMinutes,
-                      startedAt: ticket.startedAt,
-                      status: ticket.status,
-                    }}
+                    ticket={toTicketRowData(ticket)}
                     nowMs={nowMs}
                     className="pointer-events-none"
                   />

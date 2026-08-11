@@ -4,6 +4,11 @@ import { useMemo, useState } from 'react';
 
 import { TrainingFeedbackPanel } from '@/components/feedback/TrainingFeedbackPanel';
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  restoredStringSet,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   extractTrainingFeedback,
@@ -50,6 +55,14 @@ export function SspGapReviewTicket({
   readOnly = false,
   className,
 }: SspGapReviewTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+    lastStructuredResult,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
 
   const excerpt = useMemo(() => parseSspExcerpt(initialState), [initialState]);
@@ -74,15 +87,17 @@ export function SspGapReviewTicket({
     'Review the draft SSP excerpt and select every quality gap you find. Some checklist items are distractors.'
   );
 
-  const [selectedGaps, setSelectedGaps] = useState<Set<string>>(
-    () => new Set()
+  const [selectedGaps, setSelectedGaps] = useState<Set<string>>(() =>
+    restoredStringSet(submission, 'selectedGapIds')
   );
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [trainingFeedback, setTrainingFeedback] =
-    useState<TrainingFeedback | null>(null);
+    useState<TrainingFeedback | null>(() =>
+      extractTrainingFeedback(lastStructuredResult)
+    );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function toggleGap(id: string) {
@@ -96,7 +111,7 @@ export function SspGapReviewTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     setFormError(null);
     setSubmitError(null);
     setFeedback(null);
@@ -261,7 +276,7 @@ export function SspGapReviewTicket({
                     className="mt-1"
                     checked={selectedGaps.has(gap.id)}
                     onChange={() => toggleGap(gap.id)}
-                    disabled={readOnly || isSubmitting}
+                    disabled={formReadOnly || isSubmitting}
                     aria-label={gap.label}
                   />
                   <span>
@@ -283,7 +298,7 @@ export function SspGapReviewTicket({
           </ul>
         </fieldset>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit gap review'}
           </Button>

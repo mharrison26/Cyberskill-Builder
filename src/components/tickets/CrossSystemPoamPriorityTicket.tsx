@@ -4,6 +4,11 @@ import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  restoredStringArray,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -61,7 +66,7 @@ function impactTone(level: Fips199ImpactLevel): string {
     return 'border-destructive/30 bg-destructive/10 text-destructive';
   }
   if (level === 'moderate') {
-    return 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
+    return 'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground';
   }
   return 'border-border bg-muted/40 text-muted-foreground';
 }
@@ -71,7 +76,7 @@ function severityTone(severity: PoamItemSeverity): string {
     return 'border-destructive/40 bg-destructive/15 text-destructive';
   }
   if (severity === 'high') {
-    return 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
+    return 'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground';
   }
   if (severity === 'moderate') {
     return 'border-border bg-muted/50 text-foreground';
@@ -84,6 +89,13 @@ export function CrossSystemPoamPriorityTicket({
   readOnly = false,
   className,
 }: CrossSystemPoamPriorityTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
 
   const systems = useMemo(
@@ -99,12 +111,14 @@ export function CrossSystemPoamPriorityTicket({
     'Review POA&M summaries across systems at different FIPS 199 impact levels. Produce one prioritized cross-system remediation order (highest risk first) using impact × severity.'
   );
 
-  const [orderedIds, setOrderedIds] = useState<string[]>(() =>
-    allItems.map((item) => item.id)
-  );
+  const [orderedIds, setOrderedIds] = useState(() => {
+    const fromSubmission = restoredStringArray(submission, 'orderedIds');
+    if (fromSubmission.length > 0) return fromSubmission;
+    return allItems.map((item) => item.id);
+  });
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const byId = useMemo(() => {
@@ -130,7 +144,7 @@ export function CrossSystemPoamPriorityTicket({
   }
 
   function moveItem(index: number, direction: -1 | 1) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     const nextIndex = index + direction;
     if (nextIndex < 0 || nextIndex >= orderedIds.length) return;
 
@@ -146,7 +160,7 @@ export function CrossSystemPoamPriorityTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
 
@@ -268,7 +282,7 @@ export function CrossSystemPoamPriorityTicket({
                           variant="outline"
                           size="icon"
                           className="h-7 w-7"
-                          disabled={readOnly || isSubmitting || index === 0}
+                          disabled={formReadOnly || isSubmitting || index === 0}
                           aria-label={`Move ${item.id} up`}
                           onClick={() => moveItem(index, -1)}
                         >
@@ -367,7 +381,7 @@ export function CrossSystemPoamPriorityTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
+        <Button type="submit" disabled={formReadOnly || isSubmitting}>
           {isSubmitting ? 'Submitting…' : 'Submit remediation order'}
         </Button>
       </form>

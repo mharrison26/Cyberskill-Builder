@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { FileSystemTree, WebContainer } from '@webcontainer/api';
 import type { FitAddon } from '@xterm/addon-fit';
 import type { Terminal } from '@xterm/xterm';
+import { useTheme } from 'next-themes';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +13,7 @@ import {
   PERMISSIONS_JSHRC,
   PERMISSIONS_LS_JS,
 } from '@/lib/sandbox/permissionsLs';
+import { readTerminalTheme } from '@/lib/terminalTheme';
 import { cn } from '@/lib/utils';
 
 import '@xterm/xterm/css/xterm.css';
@@ -339,6 +341,7 @@ export function CodeSandbox({
   className,
   onSubmitComplete,
 }: CodeSandboxProps) {
+  const { resolvedTheme } = useTheme();
   const terminalHostRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<WebContainer | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
@@ -399,12 +402,7 @@ export function CodeSandbox({
           fontSize: 13,
           fontFamily:
             'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-          theme: {
-            background: '#0f172a',
-            foreground: '#e2e8f0',
-            cursor: '#94a3b8',
-            selectionBackground: '#334155',
-          },
+          theme: readTerminalTheme(),
         });
         terminal.loadAddon(fitAddon);
         terminal.open(terminalHostRef.current);
@@ -511,6 +509,13 @@ export function CodeSandbox({
     // Seed once on mount from the ticket's initial_state.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only boot
   }, [ticketId]);
+
+  useEffect(() => {
+    const terminal = terminalRef.current;
+    if (!terminal) return;
+    terminal.options.theme = readTerminalTheme();
+    terminal.refresh(0, terminal.rows - 1);
+  }, [resolvedTheme]);
 
   async function persistActiveFile(): Promise<void> {
     const container = containerRef.current;

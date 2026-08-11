@@ -4,6 +4,10 @@ import { useMemo, useState } from 'react';
 
 import { TrainingFeedbackPanel } from '@/components/feedback/TrainingFeedbackPanel';
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,6 +53,14 @@ export function AuditPlanningMemoTicket({
   readOnly = false,
   className,
 }: AuditPlanningMemoTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+    lastStructuredResult,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minFieldLength = resolveMinFieldLength(expectedState);
@@ -71,16 +83,18 @@ export function AuditPlanningMemoTicket({
     return parts;
   }, [initialState.engagementScope, initialState.scope]);
 
-  const [objective, setObjective] = useState('');
-  const [scope, setScope] = useState('');
-  const [riskFocus, setRiskFocus] = useState('');
-  const [plannedProcedures, setPlannedProcedures] = useState('');
+  const [objective, setObjective] = useState(() => restoredString(submission, 'objective'));
+  const [scope, setScope] = useState(() => restoredString(submission, 'scope'));
+  const [riskFocus, setRiskFocus] = useState(() => restoredString(submission, 'riskFocus'));
+  const [plannedProcedures, setPlannedProcedures] = useState(() => restoredString(submission, 'plannedProcedures'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [trainingFeedback, setTrainingFeedback] =
-    useState<TrainingFeedback | null>(null);
+    useState<TrainingFeedback | null>(() =>
+      extractTrainingFeedback(lastStructuredResult)
+    );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -105,7 +119,7 @@ export function AuditPlanningMemoTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     setSubmitError(null);
     setFeedback(null);
     setScoreStatus(null);
@@ -199,7 +213,7 @@ export function AuditPlanningMemoTicket({
               id={`planning-${key}`}
               value={value}
               onChange={(e) => setter(e.target.value)}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               rows={4}
               aria-invalid={Boolean(errors[key])}
             />
@@ -213,7 +227,7 @@ export function AuditPlanningMemoTicket({
           </div>
         ))}
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit planning memo'}
           </Button>

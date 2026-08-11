@@ -22,9 +22,10 @@ type TrainingFeedbackPanelProps = {
 
 const VERDICT_BADGE_CLASS: Record<OptionVerdict, string> = {
   true_positive:
-    'border-[color:var(--status-satisfied-border)] bg-[color:var(--status-satisfied-bg)] text-[color:var(--status-satisfied-foreground)]',
+    'border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground',
   false_positive: 'border-destructive/40 bg-destructive/10 text-destructive',
-  false_negative: 'border-amber-500/40 bg-amber-500/10 text-amber-800',
+  false_negative:
+    'border-status-insufficient-foreground/20 bg-status-insufficient text-status-insufficient-foreground',
   true_negative: 'border-border bg-muted/40 text-muted-foreground',
 };
 

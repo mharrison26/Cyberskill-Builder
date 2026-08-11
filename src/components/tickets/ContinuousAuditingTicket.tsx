@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -198,6 +202,13 @@ export function ContinuousAuditingTicket({
   readOnly = false,
   className,
 }: ContinuousAuditingTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -228,24 +239,28 @@ export function ContinuousAuditingTicket({
   );
 
   const [controlArea, setControlArea] = useState(
-    () => fixedControlArea ?? controlAreaOptions[0] ?? ''
+    () =>
+      restoredString(submission, 'controlArea') ||
+      fixedControlArea ||
+      controlAreaOptions[0] ||
+      ''
   );
-  const [frequency, setFrequency] = useState('');
-  const [frequencyNote, setFrequencyNote] = useState('');
-  const [dataSource, setDataSource] = useState('');
-  const [exceptionHandling, setExceptionHandling] = useState('');
+  const [frequency, setFrequency] = useState(() => restoredString(submission, 'frequency'));
+  const [frequencyNote, setFrequencyNote] = useState(() => restoredString(submission, 'frequencyNote'));
+  const [dataSource, setDataSource] = useState(() => restoredString(submission, 'dataSource'));
+  const [exceptionHandling, setExceptionHandling] = useState(() => restoredString(submission, 'exceptionHandling'));
   const [optionalFields, setOptionalFields] = useState<
     Record<OptionalFieldKey, string>
-  >({
-    automationMethod: '',
-    owners: '',
-    escalation: '',
-    falsePositiveHandling: '',
-  });
+  >(() => ({
+    automationMethod: restoredString(submission, 'automationMethod'),
+    owners: restoredString(submission, 'owners'),
+    escalation: restoredString(submission, 'escalation'),
+    falsePositiveHandling: restoredString(submission, 'falsePositiveHandling'),
+  }));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearStatus() {
@@ -288,7 +303,7 @@ export function ContinuousAuditingTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearStatus();
     if (!validate()) return;
@@ -388,7 +403,7 @@ export function ContinuousAuditingTicket({
               id="ca-control-area"
               value={controlArea}
               readOnly
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
             />
           ) : controlAreaOptions.length > 1 || allowSelect ? (
             <select
@@ -406,7 +421,7 @@ export function ContinuousAuditingTicket({
                   });
                 }
               }}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               aria-invalid={errors.controlArea ? true : undefined}
             >
               <option value="">Select a control area…</option>
@@ -425,7 +440,7 @@ export function ContinuousAuditingTicket({
                 clearStatus();
               }}
               placeholder="e.g. Timely access revocation"
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               aria-invalid={errors.controlArea ? true : undefined}
             />
           )}
@@ -454,7 +469,7 @@ export function ContinuousAuditingTicket({
                   });
                 }
               }}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               aria-invalid={errors.frequency ? true : undefined}
             >
               <option value="">Select frequency…</option>
@@ -476,7 +491,7 @@ export function ContinuousAuditingTicket({
               }}
               rows={3}
               placeholder="Why this cadence fits the control risk (vs annual manual testing)…"
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
             />
             <p className="text-xs text-muted-foreground">
               Frequency + rationale must total at least {minFieldLength}{' '}
@@ -508,7 +523,7 @@ export function ContinuousAuditingTicket({
             }}
             rows={4}
             placeholder="Name systems, fields, and how the population is obtained (API, export, log join)…"
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             aria-invalid={errors.dataSource ? true : undefined}
           />
           <p className="text-xs text-muted-foreground">
@@ -541,7 +556,7 @@ export function ContinuousAuditingTicket({
             }}
             rows={6}
             placeholder="Who receives exceptions, triage SLAs, investigation steps, remediation evidence, and closure…"
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             aria-invalid={errors.exceptionHandling ? true : undefined}
           />
           <p className="text-xs text-muted-foreground">
@@ -578,7 +593,7 @@ export function ContinuousAuditingTicket({
                 }}
                 rows={field.rows}
                 placeholder={field.placeholder}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
               />
             </div>
           ))}
@@ -612,9 +627,11 @@ export function ContinuousAuditingTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit continuous auditing design'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit continuous auditing design'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

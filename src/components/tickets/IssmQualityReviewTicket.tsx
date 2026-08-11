@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  restoredStringSet,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -59,6 +64,13 @@ export function IssmQualityReviewTicket({
   readOnly = false,
   className,
 }: IssmQualityReviewTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -105,14 +117,14 @@ export function IssmQualityReviewTicket({
   const issoName = readString(isso, ['name'], 'ISSO');
   const issoTitle = readString(isso, ['title'], 'ISSO');
 
-  const [selectedIssues, setSelectedIssues] = useState<Set<string>>(
-    () => new Set()
+  const [selectedIssues, setSelectedIssues] = useState<Set<string>>(() =>
+    restoredStringSet(submission, 'issueIds')
   );
-  const [feedback, setFeedbackDraft] = useState('');
+  const [feedback, setFeedbackDraft] = useState(() => restoredString(submission, ['feedback']));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [scoreFeedback, setScoreFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [scoreFeedback, setScoreFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -150,7 +162,7 @@ export function IssmQualityReviewTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -319,7 +331,7 @@ export function IssmQualityReviewTicket({
                         className="mt-1"
                         checked={selectedIssues.has(issue.id)}
                         onChange={() => toggleIssue(issue.id)}
-                        disabled={readOnly || isSubmitting}
+                        disabled={formReadOnly || isSubmitting}
                         aria-label={issue.label}
                       />
                       <span>
@@ -361,7 +373,7 @@ export function IssmQualityReviewTicket({
             <Textarea
               id="issm-quality-feedback"
               value={feedback}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               onChange={(event) => {
                 clearOutcome();
                 setFeedbackDraft(event.target.value);
@@ -380,7 +392,7 @@ export function IssmQualityReviewTicket({
           </CardContent>
         </Card>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Submit quality review'}

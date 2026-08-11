@@ -6,6 +6,10 @@ import { CCCERForm } from '@/components/CCCERForm';
 import { EvidenceCodeBlock } from '@/components/EvidenceCodeBlock';
 import { Badge } from '@/components/ui/badge';
 import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
+import {
   Card,
   CardContent,
   CardDescription,
@@ -82,6 +86,13 @@ export function CccerExceptionTicket({
   readOnly = false,
   className,
 }: CccerExceptionTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minFieldLength = resolveMinFieldLength(expectedState);
@@ -99,6 +110,16 @@ export function CccerExceptionTicket({
         ? initialState.related_ticket_code.trim()
         : 'AUD-05';
 
+  const cccerInitialValues = useMemo(
+    () => ({
+      condition: restoredString(submission, 'condition'),
+      criteria: restoredString(submission, 'criteria'),
+      cause: restoredString(submission, 'cause'),
+      effect: restoredString(submission, 'effect'),
+      recommendation: restoredString(submission, 'recommendation'),
+    }),
+    [submission]
+  );
   const prompt =
     typeof initialState.prompt === 'string' && initialState.prompt.trim()
       ? initialState.prompt.trim()
@@ -106,11 +127,11 @@ export function CccerExceptionTicket({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
 
   async function handleSubmit(values: CCCERValues) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -193,6 +214,7 @@ export function CccerExceptionTicket({
             </p>
           ) : (
             <CCCERForm
+              initialValues={cccerInitialValues}
               onSubmit={handleSubmit}
               isSubmitting={isSubmitting}
               submitError={submitError}

@@ -3,8 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { TrainingFeedbackPanel } from '@/components/feedback/TrainingFeedbackPanel';
-import { useOptionalTicketWorkbench } from '@/components/tickets/TicketWorkbenchProvider';
 import { Button } from '@/components/ui/button';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { parseControlMappingInitialState } from '@/lib/control-mappings/parseInitialState';
@@ -80,7 +83,14 @@ export function ControlMappingWorkArea({
   readOnly = false,
   className,
 }: ControlMappingWorkAreaProps) {
-  const workbench = useOptionalTicketWorkbench();
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+    lastStructuredResult,
+  } = useTicketWorkbenchForm(readOnly);
   const prompt = useMemo(
     () => parseControlMappingInitialState(ticket.initial_state),
     [ticket.initial_state]
@@ -109,30 +119,24 @@ export function ControlMappingWorkArea({
     return CONTROL_MAPPING_MIN_OVERLAP_NARRATIVE_LENGTH;
   }, [ticket.expected_state]);
 
-  const restoredSubmission = workbench?.submission ?? null;
-  const formReadOnly = readOnly || Boolean(workbench?.answersReadOnly);
-
   const [selected, setSelected] = useState(() =>
-    selectionFromSubmission(restoredSubmission, prompt?.targets)
+    selectionFromSubmission(submission, prompt?.targets)
   );
-  const [overlapNarrative, setOverlapNarrative] = useState(() => {
-    const value = restoredSubmission?.overlapNarrative;
-    return typeof value === 'string' ? value : '';
-  });
+  const [overlapNarrative, setOverlapNarrative] = useState(() =>
+    restoredString(submission, 'overlapNarrative')
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(
-    () => workbench?.lastFeedback ?? null
-  );
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(() =>
-    workbench?.lastScoreStatus === 'resolved'
+    lastScoreStatus === 'resolved'
       ? 'ok'
-      : workbench?.lastScoreStatus === 'needs_revision'
+      : lastScoreStatus === 'needs_revision'
         ? 'error'
         : null
   );
   const [trainingFeedback, setTrainingFeedback] =
     useState<TrainingFeedback | null>(() =>
-      extractTrainingFeedback(workbench?.lastStructuredResult ?? null)
+      extractTrainingFeedback(lastStructuredResult)
     );
 
   if (!prompt) {
@@ -222,7 +226,7 @@ export function ControlMappingWorkArea({
     }
   }
 
-  const showSubmit = !formReadOnly && workbench?.status !== 'resolved';
+  const showSubmit = !hideSubmit;
 
   return (
     <section
@@ -348,7 +352,7 @@ export function ControlMappingWorkArea({
             {isSubmitting ? 'Scoring…' : 'Submit mapping'}
           </Button>
         ) : null}
-        {readOnly && !workbench ? (
+        {formReadOnly && !submission && readOnly ? (
           <p className="text-sm text-muted-foreground">Preview mode</p>
         ) : null}
       </div>

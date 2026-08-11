@@ -3,6 +3,12 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  restoredStringSet,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -66,6 +72,14 @@ export function Soc2ChangeManagementTestTicket({
   readOnly = false,
   className,
 }: Soc2ChangeManagementTestTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
 
   const criterion = useMemo(
@@ -93,13 +107,23 @@ export function Soc2ChangeManagementTestTicket({
 
   const populationSize = changeTickets.length;
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
-  const [exceptionCount, setExceptionCount] = useState('');
-  const [exceptionRate, setExceptionRate] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => restoredStringSet(submission, 'exceptionIds'));
+  const [exceptionCount, setExceptionCount] = useState(() => {
+    const value = restored.exceptionCount;
+    return typeof value === 'number' || typeof value === 'string'
+      ? String(value)
+      : '';
+  });
+  const [exceptionRate, setExceptionRate] = useState(() => {
+    const value = restored.exceptionRate;
+    return typeof value === 'number' || typeof value === 'string'
+      ? String(value)
+      : '';
+  });
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -110,7 +134,7 @@ export function Soc2ChangeManagementTestTicket({
   }
 
   function toggleException(id: string) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -121,7 +145,7 @@ export function Soc2ChangeManagementTestTicket({
   }
 
   function syncCountFromSelection() {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     const count = selectedIds.size;
     setExceptionCount(String(count));
@@ -154,7 +178,7 @@ export function Soc2ChangeManagementTestTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -303,7 +327,7 @@ export function Soc2ChangeManagementTestTicket({
                             type="checkbox"
                             className="h-4 w-4 accent-foreground"
                             checked={checked}
-                            disabled={readOnly || isSubmitting}
+                            disabled={formReadOnly || isSubmitting}
                             aria-label={`Mark ${change.id} as exception`}
                             onChange={() => toggleException(change.id)}
                           />
@@ -365,7 +389,7 @@ export function Soc2ChangeManagementTestTicket({
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={readOnly || isSubmitting || selectedIds.size === 0}
+                disabled={formReadOnly || isSubmitting || selectedIds.size === 0}
                 onClick={syncCountFromSelection}
               >
                 Fill count &amp; rate from selection ({selectedIds.size})
@@ -379,7 +403,7 @@ export function Soc2ChangeManagementTestTicket({
                   id="soc2-exception-count"
                   inputMode="numeric"
                   value={exceptionCount}
-                  disabled={readOnly || isSubmitting}
+                  disabled={formReadOnly || isSubmitting}
                   onChange={(event) => {
                     clearOutcome();
                     setExceptionCount(event.target.value);
@@ -393,7 +417,7 @@ export function Soc2ChangeManagementTestTicket({
                   id="soc2-exception-rate"
                   inputMode="decimal"
                   value={exceptionRate}
-                  disabled={readOnly || isSubmitting}
+                  disabled={formReadOnly || isSubmitting}
                   onChange={(event) => {
                     clearOutcome();
                     setExceptionRate(event.target.value);
@@ -412,7 +436,7 @@ export function Soc2ChangeManagementTestTicket({
         </Card>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={readOnly || isSubmitting}>
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit test results'}
           </Button>
           {scoreStatus ? (
@@ -432,7 +456,7 @@ export function Soc2ChangeManagementTestTicket({
             className={cn(
               'rounded-md border px-3 py-2 text-sm',
               scoreStatus === 'resolved'
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-foreground'
+                ? 'border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground'
                 : 'border-border bg-muted/40 text-muted-foreground'
             )}
             role="status"

@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -83,11 +88,31 @@ function seedFindingsFromTicket(
   }));
 }
 
+function parseStoredQuestions(raw: unknown): AcQuestion[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+    .map((item) => ({
+      id: typeof item.id === 'string' ? item.id : '',
+      prompt: typeof item.prompt === 'string' ? item.prompt : '',
+      focus: typeof item.focus === 'string' ? item.focus : undefined,
+    }))
+    .filter((item) => item.id && item.prompt);
+}
+
 export function AuditCommitteeBriefTicket({
   ticket,
   readOnly = false,
   className,
 }: AuditCommitteeBriefTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
+  const storedQuestions = parseStoredQuestions(restored.questions);
   const expectedState = asRecord(ticket.expected_state);
   const initialState = asRecord(ticket.initial_state);
   const minSummaryLength = resolveMinLength(
@@ -100,22 +125,24 @@ export function AuditCommitteeBriefTicket({
       ? initialState.prompt
       : 'Compile your AUD-06 findings into a short executive summary, then generate audit-committee questions grounded in that summary.';
 
-  const [phase, setPhase] = useState<'summary' | 'questions'>('summary');
-  const [executiveSummary, setExecutiveSummary] = useState('');
+  const [phase, setPhase] = useState<'summary' | 'questions'>(() =>
+    storedQuestions.length > 0 ? 'questions' : 'summary'
+  );
+  const [executiveSummary, setExecutiveSummary] = useState(() => restoredString(submission, 'executiveSummary'));
   const [priorFindings, setPriorFindings] = useState<PriorFinding[]>(() =>
     seedFindingsFromTicket(initialState)
   );
   const [priorFindingsSource, setPriorFindingsSource] = useState<
     'prior_submission' | 'seed' | 'empty'
   >('seed');
-  const [priorFindingsNarrative, setPriorFindingsNarrative] = useState('');
-  const [questions, setQuestions] = useState<AcQuestion[]>([]);
+  const [priorFindingsNarrative, setPriorFindingsNarrative] = useState(() => restoredString(submission, 'priorFindingsNarrative'));
+  const [questions, setQuestions] = useState<AcQuestion[]>(() => storedQuestions);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [meta, setMeta] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
   const [isFlagship, setIsFlagship] = useState(false);
 
@@ -239,7 +266,7 @@ export function AuditCommitteeBriefTicket({
   }
 
   async function handleSubmit() {
-    if (readOnly || isSubmitting) return;
+    if (formReadOnly || hideSubmit || isSubmitting) return;
     setIsSubmitting(true);
     setFeedback(null);
     setFeedbackTone(null);
@@ -358,7 +385,7 @@ export function AuditCommitteeBriefTicket({
         <Textarea
           id="ac-exec-summary"
           value={executiveSummary}
-          disabled={readOnly}
+          disabled={formReadOnly}
           rows={10}
           placeholder={`Compile the prior findings into a short committee-ready summary (min ${minSummaryLength} characters). Cover severity, root-cause themes, remediation posture, and residual risk…`}
           onChange={(event) => setExecutiveSummary(event.target.value)}
@@ -429,7 +456,7 @@ export function AuditCommitteeBriefTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-emerald-800' : 'text-destructive'
+            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
           )}
           role="status"
         >

@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  restoredStringArray,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -71,6 +76,13 @@ export function ItgcAccessRevocationTicket({
   readOnly = false,
   className,
 }: ItgcAccessRevocationTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
 
   const users = useMemo(
@@ -95,15 +107,16 @@ export function ItgcAccessRevocationTicket({
   );
 
   const [controlOutcome, setControlOutcome] = useState<ItgcControlOutcome | ''>(
-    ''
+    () =>
+      (restoredString(submission, 'controlOutcome') as ItgcControlOutcome) || ''
   );
   const [selectedExceptionIds, setSelectedExceptionIds] = useState<string[]>(
-    []
+    () => restoredStringArray(submission, 'exceptionUserIds')
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedSet = useMemo(
@@ -118,7 +131,7 @@ export function ItgcAccessRevocationTicket({
   }
 
   function toggleException(userId: string) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setSelectedExceptionIds((prev) =>
       prev.includes(userId)
@@ -146,7 +159,7 @@ export function ItgcAccessRevocationTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate() || !controlOutcome) return;
@@ -298,7 +311,7 @@ export function ItgcAccessRevocationTicket({
                               type="checkbox"
                               className="size-4 accent-primary"
                               checked={checked}
-                              disabled={readOnly}
+                              disabled={formReadOnly}
                               onChange={() => toggleException(user.id)}
                             />
                             <span className="sr-only">
@@ -355,7 +368,7 @@ export function ItgcAccessRevocationTicket({
           </CardHeader>
           <CardContent className="space-y-3">
             <fieldset
-              disabled={readOnly}
+              disabled={formReadOnly}
               className="space-y-2"
               aria-describedby={
                 errors.controlOutcome ? 'itgc-control-outcome-error' : undefined
@@ -385,7 +398,7 @@ export function ItgcAccessRevocationTicket({
                         name={`${ticket.id}-control-outcome`}
                         className="size-4 accent-primary"
                         checked={controlOutcome === outcome}
-                        disabled={readOnly}
+                        disabled={formReadOnly}
                         onChange={() => {
                           clearOutcome();
                           setControlOutcome(outcome);
@@ -419,7 +432,7 @@ export function ItgcAccessRevocationTicket({
         </Card>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={readOnly || isSubmitting}>
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit test conclusion'}
           </Button>
           {scoreStatus ? (
@@ -439,7 +452,7 @@ export function ItgcAccessRevocationTicket({
             className={cn(
               'rounded-md border px-3 py-2 text-sm',
               scoreStatus === 'resolved'
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-foreground'
+                ? 'border-status-satisfied-foreground/20 bg-status-satisfied text-status-satisfied-foreground'
                 : 'border-border bg-muted/40 text-muted-foreground'
             )}
             role="status"

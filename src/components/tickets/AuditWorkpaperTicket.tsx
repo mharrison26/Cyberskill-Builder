@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -193,6 +197,13 @@ export function AuditWorkpaperTicket({
   readOnly = false,
   className,
 }: AuditWorkpaperTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -226,16 +237,16 @@ export function AuditWorkpaperTicket({
     [initialState]
   );
 
-  const [objective, setObjective] = useState('');
-  const [procedurePerformed, setProcedurePerformed] = useState('');
-  const [evidenceObtained, setEvidenceObtained] = useState('');
-  const [conclusion, setConclusion] = useState('');
-  const [preparer, setPreparer] = useState('');
-  const [reviewer, setReviewer] = useState('');
+  const [objective, setObjective] = useState(() => restoredString(submission, 'objective'));
+  const [procedurePerformed, setProcedurePerformed] = useState(() => restoredString(submission, 'procedurePerformed'));
+  const [evidenceObtained, setEvidenceObtained] = useState(() => restoredString(submission, 'evidenceObtained'));
+  const [conclusion, setConclusion] = useState(() => restoredString(submission, 'conclusion'));
+  const [preparer, setPreparer] = useState(() => restoredString(submission, 'preparer'));
+  const [reviewer, setReviewer] = useState(() => restoredString(submission, 'reviewer'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const narrativeValues: Record<NarrativeFieldKey, string> = {
@@ -285,7 +296,7 @@ export function AuditWorkpaperTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setSubmitError(null);
     setFeedback(null);
@@ -394,7 +405,7 @@ export function AuditWorkpaperTicket({
                 onChange={(event) =>
                   narrativeSetters[meta.key](event.target.value)
                 }
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={errors[meta.key] ? true : undefined}
                 placeholder={meta.placeholder}
               />
@@ -419,7 +430,7 @@ export function AuditWorkpaperTicket({
               name="preparer"
               value={preparer}
               onChange={(event) => setPreparer(event.target.value)}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               aria-invalid={errors.preparer ? true : undefined}
               placeholder="Your name"
               autoComplete="name"
@@ -442,7 +453,7 @@ export function AuditWorkpaperTicket({
               name="reviewer"
               value={reviewer}
               onChange={(event) => setReviewer(event.target.value)}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               aria-invalid={errors.reviewer ? true : undefined}
               placeholder="Reviewer name"
               autoComplete="off"
@@ -484,7 +495,7 @@ export function AuditWorkpaperTicket({
 
         <Button
           type="submit"
-          disabled={readOnly || isSubmitting || !statedTestObjective}
+          disabled={formReadOnly || isSubmitting || !statedTestObjective}
         >
           {isSubmitting ? 'Submitting…' : 'Submit workpaper'}
         </Button>

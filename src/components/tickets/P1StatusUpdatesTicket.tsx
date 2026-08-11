@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -192,11 +197,39 @@ function parseStakeholderSeed(
   return messages;
 }
 
+function restoredPostedUpdates(raw: unknown): PostedUpdate[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+    .map((item, index) => ({
+      id: typeof item.id === 'string' ? item.id : `restored-${index}`,
+      postedAtSimMinutes:
+        typeof item.postedAtSimMinutes === 'number'
+          ? item.postedAtSimMinutes
+          : 0,
+      impact: typeof item.impact === 'string' ? item.impact : '',
+      eta: typeof item.eta === 'string' ? item.eta : '',
+      nextUpdateAtSimMinutes:
+        typeof item.nextUpdateAtSimMinutes === 'number'
+          ? item.nextUpdateAtSimMinutes
+          : 0,
+    }))
+    .filter((item) => item.impact.trim() && item.eta.trim());
+}
+
 export function P1StatusUpdatesTicket({
   ticket,
   readOnly = false,
   className,
 }: P1StatusUpdatesTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const outage = asRecord(initialState.outage ?? initialState.incident);
@@ -244,14 +277,16 @@ export function P1StatusUpdatesTicket({
   const seedMessages = useMemo(() => parseStakeholderSeed(channel), [channel]);
 
   const [simMinutes, setSimMinutes] = useState(startSimMinutes);
-  const [updates, setUpdates] = useState<PostedUpdate[]>([]);
-  const [impact, setImpact] = useState('');
-  const [eta, setEta] = useState('');
+  const [updates, setUpdates] = useState<PostedUpdate[]>(() =>
+    restoredPostedUpdates(restored.updates)
+  );
+  const [impact, setImpact] = useState(() => restoredString(submission, 'impact'));
+  const [eta, setEta] = useState(() => restoredString(submission, 'eta'));
   const [nextUpdateAtSimMinutes, setNextUpdateAtSimMinutes] = useState('');
   const [draftErrors, setDraftErrors] = useState<DraftErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const channelMessages = useMemo((): ChannelMessage[] => {
@@ -289,7 +324,7 @@ export function P1StatusUpdatesTicket({
   }
 
   function advanceClock(byMinutes: number) {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     setSimMinutes((prev) => Math.min(maxSimMinutes, prev + byMinutes));
   }
@@ -327,7 +362,7 @@ export function P1StatusUpdatesTicket({
 
   function handlePostUpdate(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     if (!validateDraft()) return;
 
@@ -359,7 +394,7 @@ export function P1StatusUpdatesTicket({
   }
 
   async function handleSubmitForScoring() {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
 
     if (updates.length === 0) {
@@ -494,7 +529,7 @@ export function P1StatusUpdatesTicket({
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={readOnly || simMinutes >= maxSimMinutes}
+                  disabled={formReadOnly || simMinutes >= maxSimMinutes}
                   onClick={() => advanceClock(step)}
                 >
                   +{step}m
@@ -504,9 +539,9 @@ export function P1StatusUpdatesTicket({
                 type="button"
                 variant="ghost"
                 size="sm"
-                disabled={readOnly || simMinutes === startSimMinutes}
+                disabled={formReadOnly || simMinutes === startSimMinutes}
                 onClick={() => {
-                  if (readOnly) return;
+                  if (formReadOnly || hideSubmit) return;
                   clearOutcome();
                   setSimMinutes(startSimMinutes);
                 }}
@@ -585,7 +620,7 @@ export function P1StatusUpdatesTicket({
               <Textarea
                 id="p1-impact"
                 value={impact}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={draftErrors.impact ? true : undefined}
                 placeholder="Who/what is affected and how (use the known impact facts)…"
                 rows={3}
@@ -606,7 +641,7 @@ export function P1StatusUpdatesTicket({
               <Textarea
                 id="p1-eta"
                 value={eta}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={draftErrors.eta ? true : undefined}
                 placeholder="Current best estimate for mitigation or restoration…"
                 rows={2}
@@ -632,7 +667,7 @@ export function P1StatusUpdatesTicket({
                 min={simMinutes + 1}
                 step={1}
                 value={nextUpdateAtSimMinutes}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={
                   draftErrors.nextUpdateAtSimMinutes ? true : undefined
                 }
@@ -657,17 +692,19 @@ export function P1StatusUpdatesTicket({
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Button type="submit" disabled={readOnly || isSubmitting}>
+              <Button type="submit" disabled={formReadOnly || isSubmitting}>
                 Post to {channelName} at {formatSimClock(simMinutes)}
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={readOnly || isSubmitting || updates.length === 0}
-                onClick={() => void handleSubmitForScoring()}
-              >
-                {isSubmitting ? 'Submitting…' : 'Submit for scoring'}
-              </Button>
+              {!hideSubmit ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={formReadOnly || isSubmitting || updates.length === 0}
+                  onClick={() => void handleSubmitForScoring()}
+                >
+                  {isSubmitting ? 'Submitting…' : 'Submit for scoring'}
+                </Button>
+              ) : null}
             </div>
           </form>
 
@@ -681,8 +718,8 @@ export function P1StatusUpdatesTicket({
               className={cn(
                 'mt-4 rounded-md border px-3 py-2 text-sm',
                 scoreStatus === 'resolved'
-                  ? 'border-emerald-500/40 bg-emerald-500/10'
-                  : 'border-amber-500/40 bg-amber-500/10'
+                  ? 'border-status-satisfied-foreground/20 bg-status-satisfied'
+                  : 'border-status-insufficient-foreground/20 bg-status-insufficient'
               )}
               role="status"
             >

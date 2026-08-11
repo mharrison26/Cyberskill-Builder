@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -144,11 +148,49 @@ function newDraft(partial?: Partial<AlertDraft>): AlertDraft {
 const selectClassName =
   'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50';
 
+function restoredAlerts(
+  submission: Record<string, unknown> | null | undefined
+): AlertDraft[] {
+  const raw = submission?.alerts;
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return [newDraft(), newDraft(), newDraft()];
+  }
+  return raw.map((entry, index) => {
+    if (!entry || typeof entry !== 'object') return newDraft();
+    const record = entry as Record<string, unknown>;
+    return newDraft({
+      key: `restored-${index}`,
+      alertType:
+        typeof record.alertType === 'string'
+          ? (record.alertType as AlertDraft['alertType'])
+          : '',
+      threshold:
+        typeof record.threshold === 'number'
+          ? String(record.threshold)
+          : typeof record.threshold === 'string'
+            ? record.threshold
+            : '',
+      route:
+        typeof record.route === 'string'
+          ? (record.route as AlertDraft['route'])
+          : '',
+    });
+  });
+}
+
 export function MonitoringConfigTicket({
   ticket,
   readOnly = false,
   className,
 }: MonitoringConfigTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
 
   const systemName = readString(
@@ -172,15 +214,11 @@ export function MonitoringConfigTicket({
     [initialState]
   );
 
-  const [alerts, setAlerts] = useState<AlertDraft[]>(() => [
-    newDraft(),
-    newDraft(),
-    newDraft(),
-  ]);
+  const [alerts, setAlerts] = useState<AlertDraft[]>(() => restoredAlerts(restored));
   const [formError, setFormError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -232,7 +270,7 @@ export function MonitoringConfigTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate()) return;
@@ -364,7 +402,7 @@ export function MonitoringConfigTicket({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      disabled={readOnly || isSubmitting || alerts.length <= 1}
+                      disabled={formReadOnly || isSubmitting || alerts.length <= 1}
                       onClick={() => removeAlert(row.key)}
                     >
                       Remove
@@ -379,7 +417,7 @@ export function MonitoringConfigTicket({
                       <select
                         id={`alert-type-${row.key}`}
                         value={row.alertType}
-                        disabled={readOnly || isSubmitting}
+                        disabled={formReadOnly || isSubmitting}
                         className={selectClassName}
                         onChange={(event) =>
                           updateAlert(row.key, {
@@ -406,7 +444,7 @@ export function MonitoringConfigTicket({
                         type="number"
                         inputMode="decimal"
                         value={row.threshold}
-                        disabled={readOnly || isSubmitting}
+                        disabled={formReadOnly || isSubmitting}
                         placeholder="e.g. 90"
                         onChange={(event) =>
                           updateAlert(row.key, {
@@ -422,7 +460,7 @@ export function MonitoringConfigTicket({
                       <select
                         id={`alert-route-${row.key}`}
                         value={row.route}
-                        disabled={readOnly || isSubmitting}
+                        disabled={formReadOnly || isSubmitting}
                         className={selectClassName}
                         onChange={(event) =>
                           updateAlert(row.key, {
@@ -447,7 +485,7 @@ export function MonitoringConfigTicket({
             <Button
               type="button"
               variant="outline"
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               onClick={addAlert}
             >
               Add alert
@@ -489,9 +527,11 @@ export function MonitoringConfigTicket({
           </p>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting}>
-          {isSubmitting ? 'Submitting…' : 'Submit monitoring config'}
-        </Button>
+        {!hideSubmit ? (
+          <Button type="submit" disabled={formReadOnly || isSubmitting}>
+            {isSubmitting ? 'Submitting…' : 'Submit monitoring config'}
+          </Button>
+        ) : null}
       </form>
     </section>
   );

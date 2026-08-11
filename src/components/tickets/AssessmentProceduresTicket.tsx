@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,6 +62,13 @@ export function AssessmentProceduresTicket({
   readOnly = false,
   className,
 }: AssessmentProceduresTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const controlId = useMemo(
@@ -71,13 +82,13 @@ export function AssessmentProceduresTicket({
       ? initialState.prompt.trim()
       : 'Write SP 800-53A assessment procedures for the assigned control using Examine, Interview, and Test methods.';
 
-  const [examine, setExamine] = useState('');
-  const [interview, setInterview] = useState('');
-  const [test, setTest] = useState('');
+  const [examine, setExamine] = useState(() => restoredString(submission, 'examine'));
+  const [interview, setInterview] = useState(() => restoredString(submission, 'interview'));
+  const [test, setTest] = useState(() => restoredString(submission, 'test'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -105,7 +116,7 @@ export function AssessmentProceduresTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setSubmitError(null);
     setFeedback(null);
@@ -185,7 +196,7 @@ export function AssessmentProceduresTicket({
             rows={5}
             value={examine}
             onChange={(event) => setExamine(event.target.value)}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             aria-invalid={errors.examine ? true : undefined}
             placeholder="Describe what artifacts, configurations, or records you would examine…"
           />
@@ -209,7 +220,7 @@ export function AssessmentProceduresTicket({
             rows={5}
             value={interview}
             onChange={(event) => setInterview(event.target.value)}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             aria-invalid={errors.interview ? true : undefined}
             placeholder="Describe who you would interview and what questions you would ask…"
           />
@@ -233,7 +244,7 @@ export function AssessmentProceduresTicket({
             rows={5}
             value={test}
             onChange={(event) => setTest(event.target.value)}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             aria-invalid={errors.test ? true : undefined}
             placeholder="Describe how you would test mechanisms or processes that implement the control…"
           />
@@ -271,7 +282,7 @@ export function AssessmentProceduresTicket({
           </div>
         ) : null}
 
-        <Button type="submit" disabled={readOnly || isSubmitting || !controlId}>
+        <Button type="submit" disabled={formReadOnly || isSubmitting || !controlId}>
           {isSubmitting ? 'Submitting…' : 'Submit procedures'}
         </Button>
       </form>

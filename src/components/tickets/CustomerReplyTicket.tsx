@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -103,6 +107,13 @@ export function CustomerReplyTicket({
   readOnly = false,
   className,
 }: CustomerReplyTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const email = useMemo(() => parseCustomerEmail(initialState), [initialState]);
@@ -113,11 +124,11 @@ export function CustomerReplyTicket({
       ? initialState.prompt.trim()
       : "Draft a professional reply that acknowledges the customer's frustration, states clear next steps in plain language, and keeps a calm tone.";
 
-  const [reply, setReply] = useState('');
+  const [reply, setReply] = useState(() => restoredString(submission, 'reply'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -134,7 +145,7 @@ export function CustomerReplyTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     setSubmitError(null);
     setFeedback(null);
@@ -249,7 +260,7 @@ export function CustomerReplyTicket({
                 id="customer-reply-body"
                 value={reply}
                 onChange={(event) => setReply(event.target.value)}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 rows={10}
                 placeholder="Hi Jordan — I'm sorry you've been locked out…"
                 aria-invalid={Boolean(errors.reply)}
@@ -264,7 +275,7 @@ export function CustomerReplyTicket({
               </div>
             </div>
 
-            {!readOnly ? (
+            {!hideSubmit ? (
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? 'Submitting…' : 'Submit reply'}
               </Button>
@@ -285,8 +296,8 @@ export function CustomerReplyTicket({
                 className={cn(
                   'rounded-md border px-3 py-2 text-sm',
                   scoreStatus === 'resolved'
-                    ? 'border-emerald-500/40 bg-emerald-500/10'
-                    : 'border-amber-500/40 bg-amber-500/10'
+                    ? 'border-status-satisfied-foreground/20 bg-status-satisfied'
+                    : 'border-status-insufficient-foreground/20 bg-status-insufficient'
                 )}
                 role="status"
               >

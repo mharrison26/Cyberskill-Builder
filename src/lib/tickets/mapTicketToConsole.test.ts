@@ -64,4 +64,21 @@ describe('mapTicketToConsoleTicket', () => {
 
     expect(mapped.severity).toBeUndefined();
   });
+
+  it('maps SLA freeze fields from progress', () => {
+    const mapped = mapTicketToConsoleTicket({
+      ticket: makeTicket(),
+      trackSlug: 'grc',
+      status: 'resolved',
+      startedAt: '2026-01-01T00:00:00.000Z',
+      resolvedAt: '2026-01-01T00:12:00.000Z',
+      slaDueAt: '2026-01-01T00:45:00.000Z',
+      slaMet: true,
+    });
+
+    expect(mapped.status).toBe('resolved');
+    expect(mapped.resolvedAt).toBe('2026-01-01T00:12:00.000Z');
+    expect(mapped.slaDueAt).toBe('2026-01-01T00:45:00.000Z');
+    expect(mapped.slaMet).toBe(true);
+  });
 });

@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
-import { TicketRow } from '@/components/tickets/TicketRow';
+import {
+  TicketRow,
+  toTicketRowData,
+} from '@/components/tickets/TicketRow';
 import { TicketStatusControl } from '@/components/tickets/TicketStatusControl';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +19,8 @@ import {
 } from '@/components/ui/sheet';
 import { useSharedSlaClock } from '@/hooks/useTicketSlaCountdown';
 import { useTrackTickets } from '@/hooks/useTrackTickets';
+import { needsLiveSlaCountdown } from '@/lib/tickets/sla';
+import { isClosedTicketStatus } from '@/lib/tickets/status';
 import type { MockTrackTicket } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -46,7 +51,15 @@ export function HelpdeskConsole({
   });
   const [tab, setTab] = useState<QueueTab>('my_queue');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const nowMs = useSharedSlaClock(tickets.some((t) => t.startedAt));
+  const nowMs = useSharedSlaClock(
+    tickets.some((t) =>
+      needsLiveSlaCountdown(t.startedAt, {
+        resolvedAt: t.resolvedAt,
+        slaMet: t.slaMet,
+        closed: isClosedTicketStatus(t.status),
+      })
+    )
+  );
 
   const filtered = useMemo(
     () => tickets.filter((t) => (t.queueBucket ?? 'my_queue') === tab),
@@ -128,17 +141,11 @@ export function HelpdeskConsole({
               onClick={() => setSelectedId(ticket.id)}
             >
               <TicketRow
-                ticket={{
-                  id: ticket.id,
-                  title: ticket.title,
+                ticket={toTicketRowData(ticket, {
                   subtitle: ticket.requester
                     ? `Requester · ${ticket.requester}`
                     : ticket.subtitle,
-                  difficulty: ticket.difficulty,
-                  slaMinutes: ticket.slaMinutes,
-                  startedAt: ticket.startedAt,
-                  status: ticket.status,
-                }}
+                })}
                 nowMs={nowMs}
                 className="pointer-events-none"
               />
@@ -172,15 +179,10 @@ export function HelpdeskConsole({
               </SheetHeader>
               <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
                 <TicketRow
-                  ticket={{
-                    id: selected.id,
+                  ticket={toTicketRowData(selected, {
                     title: selected.subtitle ?? selected.ticketType,
                     subtitle: null,
-                    difficulty: selected.difficulty,
-                    slaMinutes: selected.slaMinutes,
-                    startedAt: selected.startedAt,
-                    status: selected.status,
-                  }}
+                  })}
                   nowMs={nowMs}
                 />
                 <TicketStatusControl

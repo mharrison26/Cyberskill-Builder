@@ -7,6 +7,10 @@ import {
   useCompiledPackage,
 } from '@/components/tickets/CompiledPackagePanel';
 import { Button } from '@/components/ui/button';
+import {
+  asSubmissionRecord,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { cn } from '@/lib/utils';
 import type { Ticket } from '@/types';
 
@@ -35,14 +39,21 @@ export function AuthorizationPackageTicket({
   readOnly = false,
   className,
 }: AuthorizationPackageTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const { pkg, loading, loadError } = useCompiledPackage(ticket.id);
-  const [acknowledged, setAcknowledged] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(() => restored.acknowledged === true || restored.acknowledge === true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
 
   async function handleSubmit() {
-    if (readOnly || isSubmitting) return;
+    if (formReadOnly || hideSubmit || isSubmitting) return;
     setIsSubmitting(true);
     setFeedback(null);
     setFeedbackTone(null);
@@ -108,25 +119,27 @@ export function AuthorizationPackageTicket({
           <input
             type="checkbox"
             checked={acknowledged}
-            disabled={readOnly || !pkg?.complete}
+            disabled={formReadOnly || !pkg?.complete}
             onChange={(event) => setAcknowledged(event.target.checked)}
           />
           I have reviewed the compiled authorization package
         </label>
-        <Button
-          type="button"
-          disabled={readOnly || !acknowledged || !pkg?.complete || isSubmitting}
-          onClick={() => void handleSubmit()}
-        >
-          {isSubmitting ? 'Submitting…' : 'Submit package review'}
-        </Button>
+        {!hideSubmit ? (
+          <Button
+            type="button"
+            disabled={formReadOnly || !acknowledged || !pkg?.complete || isSubmitting}
+            onClick={() => void handleSubmit()}
+          >
+            {isSubmitting ? 'Submitting…' : 'Submit package review'}
+          </Button>
+        ) : null}
       </div>
 
       {feedback ? (
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-emerald-800' : 'text-destructive'
+            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
           )}
           role="status"
         >

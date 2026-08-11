@@ -44,9 +44,9 @@ export function EngagementFlowCard({
             <StatusDot
               className={
                 progressPct >= 100
-                  ? 'bg-emerald-700'
+                  ? 'bg-status-satisfied-foreground'
                   : progressPct > 0
-                    ? 'bg-amber-700'
+                    ? 'bg-status-insufficient-foreground'
                     : 'bg-muted-foreground/45'
               }
               pulse={progressPct > 0 && progressPct < 100}

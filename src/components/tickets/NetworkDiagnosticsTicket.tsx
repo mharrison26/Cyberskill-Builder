@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -152,6 +156,13 @@ export function NetworkDiagnosticsTicket({
   readOnly = false,
   className,
 }: NetworkDiagnosticsTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -186,12 +197,12 @@ export function NetworkDiagnosticsTicket({
   );
 
   const [step, setStep] = useState<1 | 2>(1);
-  const [faultType, setFaultType] = useState('');
-  const [nextDiagnosticStep, setNextDiagnosticStep] = useState('');
+  const [faultType, setFaultType] = useState(() => restoredString(submission, 'faultType'));
+  const [nextDiagnosticStep, setNextDiagnosticStep] = useState(() => restoredString(submission, 'nextDiagnosticStep'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -212,7 +223,7 @@ export function NetworkDiagnosticsTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
 
@@ -313,7 +324,7 @@ export function NetworkDiagnosticsTicket({
                 id="network-fault-type"
                 name="faultType"
                 value={faultType}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={errors.faultType ? true : undefined}
                 aria-describedby={
                   errors.faultType ? 'network-fault-type-error' : undefined
@@ -353,7 +364,7 @@ export function NetworkDiagnosticsTicket({
               <div className="pt-2">
                 <Button
                   type="button"
-                  disabled={readOnly || isSubmitting}
+                  disabled={formReadOnly || isSubmitting}
                   onClick={goToStep2}
                 >
                   Continue to next step
@@ -381,7 +392,7 @@ export function NetworkDiagnosticsTicket({
                 id="network-next-step"
                 name="nextDiagnosticStep"
                 value={nextDiagnosticStep}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={errors.nextDiagnosticStep ? true : undefined}
                 aria-describedby={
                   errors.nextDiagnosticStep
@@ -424,7 +435,7 @@ export function NetworkDiagnosticsTicket({
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={readOnly || isSubmitting}
+                  disabled={formReadOnly || isSubmitting}
                   onClick={() => {
                     clearOutcome();
                     setStep(1);
@@ -432,7 +443,7 @@ export function NetworkDiagnosticsTicket({
                 >
                   Back
                 </Button>
-                <Button type="submit" disabled={readOnly || isSubmitting}>
+                <Button type="submit" disabled={formReadOnly || isSubmitting}>
                   {isSubmitting ? 'Submitting…' : 'Submit diagnosis'}
                 </Button>
               </div>

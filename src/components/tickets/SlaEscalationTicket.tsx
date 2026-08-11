@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -122,6 +126,13 @@ export function SlaEscalationTicket({
   readOnly = false,
   className,
 }: SlaEscalationTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
   const minJustificationLength = resolveMinJustificationLength(expectedState);
@@ -167,12 +178,12 @@ export function SlaEscalationTicket({
     };
   }, [initialState]);
 
-  const [decision, setDecision] = useState<SlaEscalationDecision | ''>('');
-  const [justification, setJustification] = useState('');
+  const [decision, setDecision] = useState(() => restoredString(submission, 'decision'));
+  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -202,7 +213,7 @@ export function SlaEscalationTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
     if (!validate() || !decision) return;
@@ -377,7 +388,7 @@ export function SlaEscalationTicket({
                       name="sla-decision"
                       value={option}
                       checked={decision === option}
-                      disabled={readOnly || isSubmitting}
+                      disabled={formReadOnly || isSubmitting}
                       onChange={() => {
                         clearOutcome();
                         setDecision(option);
@@ -399,7 +410,7 @@ export function SlaEscalationTicket({
               <Textarea
                 id="sla-justification"
                 value={justification}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={(event) => {
                   clearOutcome();
                   setJustification(event.target.value);
@@ -420,7 +431,7 @@ export function SlaEscalationTicket({
           </CardContent>
         </Card>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Submit decision'}

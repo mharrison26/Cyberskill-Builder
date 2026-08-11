@@ -9,6 +9,11 @@ import {
 } from '@/components/DefenseRecorder';
 import { CompiledPackagePanel } from '@/components/tickets/CompiledPackagePanel';
 import { Button } from '@/components/ui/button';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { AO_REVIEW_MIN_ANSWER_LENGTH } from '@/lib/scoring/ticketUi';
@@ -57,6 +62,18 @@ function toPlaybackRecording(
   };
 }
 
+function restoredAnswerMap(
+  submission: Record<string, unknown> | null | undefined
+): Record<string, string> {
+  const raw = submission?.answers;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof value === 'string') out[key] = value;
+  }
+  return out;
+}
+
 function writtenAnswersComplete(
   questions: AoQuestion[],
   answers: Record<string, string>
@@ -80,17 +97,25 @@ export function AoReviewTicket({
   readOnly = false,
   className,
 }: AoReviewTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
+  const savedAnswers = restoredAnswerMap(restored);
   const [questions, setQuestions] = useState<AoQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>(() => savedAnswers);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [meta, setMeta] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
   const [feedbackTone, setFeedbackTone] = useState<'ok' | 'error' | null>(null);
   const [defense, setDefense] = useState<MockDefenseRecording | null>(null);
   const [showWritten, setShowWritten] = useState(false);
-  const [reflection, setReflection] = useState('');
+  const [reflection, setReflection] = useState(() => restoredString(submission, 'reflection'));
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +139,7 @@ export function AoReviewTicket({
         if (!cancelled) {
           setQuestions(data.questions ?? []);
           setAnswers((prev) => {
-            const next = { ...prev };
+            const next = { ...savedAnswers, ...prev };
             for (const q of data.questions ?? []) {
               if (next[q.id] === undefined) next[q.id] = '';
             }
@@ -154,7 +179,7 @@ export function AoReviewTicket({
   }
 
   async function handleSubmit() {
-    if (readOnly || isSubmitting) return;
+    if (formReadOnly || hideSubmit || isSubmitting) return;
     setIsSubmitting(true);
     setFeedback(null);
     setFeedbackTone(null);
@@ -258,7 +283,7 @@ export function AoReviewTicket({
                   )
                 }
               />
-              {!readOnly ? (
+              {!hideSubmit ? (
                 <Button
                   type="button"
                   size="sm"
@@ -312,7 +337,7 @@ export function AoReviewTicket({
               <Textarea
                 id="ao-reflection"
                 value={reflection}
-                disabled={readOnly}
+                disabled={formReadOnly}
                 rows={3}
                 placeholder="Optional notes for graders or your portfolio…"
                 onChange={(event) => setReflection(event.target.value)}
@@ -331,7 +356,7 @@ export function AoReviewTicket({
                   <Textarea
                     id={`ao-${question.id}`}
                     value={answers[question.id] ?? ''}
-                    disabled={readOnly}
+                    disabled={formReadOnly}
                     rows={4}
                     placeholder={`Written answer (min ${AO_REVIEW_MIN_ANSWER_LENGTH} characters if used without a recording)…`}
                     onChange={(event) =>
@@ -373,7 +398,7 @@ export function AoReviewTicket({
         <p
           className={cn(
             'text-sm whitespace-pre-wrap',
-            feedbackTone === 'ok' ? 'text-emerald-800' : 'text-destructive'
+            feedbackTone === 'ok' ? 'text-status-satisfied-foreground' : 'text-destructive'
           )}
           role="status"
         >

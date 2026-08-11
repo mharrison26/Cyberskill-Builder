@@ -6,6 +6,11 @@ import { PriorityBadge } from '@/components/tickets/PriorityBadge';
 import { SlaCountdown } from '@/components/tickets/SlaCountdown';
 import { TicketStatusBadge } from '@/components/tickets/TicketStatusBadge';
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -98,11 +103,47 @@ function itemStatus(
   return 'in_progress';
 }
 
+function restoredQueueWork(
+  submission: Record<string, unknown> | null | undefined,
+  items: SlaQueueSimItem[]
+): Record<string, ItemWork> {
+  const base = buildInitialWork(items);
+  const raw = submission?.items;
+  if (!Array.isArray(raw)) return base;
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const record = entry as Record<string, unknown>;
+    const id = typeof record.id === 'string' ? record.id : '';
+    if (!id || !base[id]) continue;
+    const priority = record.priority;
+    base[id] = {
+      priority:
+        typeof priority === 'string' &&
+        (TRIAGE_PRIORITIES as readonly string[]).includes(priority)
+          ? (priority as TriagePriority)
+          : '',
+      category: typeof record.category === 'string' ? record.category : '',
+      resolution: typeof record.resolution === 'string' ? record.resolution : '',
+      resolvedAt:
+        typeof record.resolvedAt === 'string' ? record.resolvedAt : null,
+    };
+  }
+  return base;
+}
+
 export function SlaQueueSimTicket({
   ticket,
   readOnly = false,
   className,
 }: SlaQueueSimTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const items = useMemo(
     () => parseSlaQueueSimItems(asRecord(ticket.initial_state)),
@@ -115,18 +156,21 @@ export function SlaQueueSimTicket({
       : 'Several tickets just opened at once. Start the simulation, work the queue by priority and SLA, then submit the batch.';
 
   const [simulationStartedAt, setSimulationStartedAt] = useState<string | null>(
-    null
+    () => {
+      const value = restoredString(submission, 'simulationStartedAt');
+      return value || null;
+    }
   );
   const [workById, setWorkById] = useState<Record<string, ItemWork>>(() =>
-    buildInitialWork(items)
+    restoredQueueWork(restored, items)
   );
   const [selectedId, setSelectedId] = useState<string | null>(
     items[0]?.id ?? null
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -202,7 +246,7 @@ export function SlaQueueSimTicket({
   }
 
   async function handleSubmit() {
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
 
     if (!simulationStartedAt) {
@@ -311,7 +355,7 @@ export function SlaQueueSimTicket({
             {resolvedCount}/{items.length} resolved
           </span>
           {!simulationStartedAt ? (
-            <Button type="button" onClick={startSimulation} disabled={readOnly}>
+            <Button type="button" onClick={startSimulation} disabled={formReadOnly}>
               Start simulation
             </Button>
           ) : (
@@ -592,13 +636,15 @@ export function SlaQueueSimTicket({
         </p>
       ) : null}
 
-      <Button
-        type="button"
-        onClick={handleSubmit}
-        disabled={readOnly || isSubmitting || !simulationStartedAt}
-      >
-        {isSubmitting ? 'Submitting…' : 'Submit queue batch'}
-      </Button>
+      {!hideSubmit ? (
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={formReadOnly || isSubmitting || !simulationStartedAt}
+        >
+          {isSubmitting ? 'Submitting…' : 'Submit queue batch'}
+        </Button>
+      ) : null}
     </section>
   );
 }

@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -176,6 +180,13 @@ export function NetworkTopologyFaultTicket({
   readOnly = false,
   className,
 }: NetworkTopologyFaultTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -207,12 +218,12 @@ export function NetworkTopologyFaultTicket({
 
   const minJustificationLength = resolveMinJustificationLength(expectedState);
 
-  const [faultLocation, setFaultLocation] = useState('');
-  const [justification, setJustification] = useState('');
+  const [faultLocation, setFaultLocation] = useState(() => restoredString(submission, 'faultLocation'));
+  const [justification, setJustification] = useState(() => restoredString(submission, 'justification'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearOutcome() {
@@ -223,7 +234,7 @@ export function NetworkTopologyFaultTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
 
     clearOutcome();
 
@@ -339,7 +350,7 @@ export function NetworkTopologyFaultTicket({
                 id="network-topology-fault-location"
                 name="faultLocation"
                 value={faultLocation}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 aria-invalid={errors.faultLocation ? true : undefined}
                 aria-describedby={
                   errors.faultLocation
@@ -388,7 +399,7 @@ export function NetworkTopologyFaultTicket({
                 id="network-topology-justification"
                 name="justification"
                 value={justification}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 rows={6}
                 placeholder="Explain which addressing/routing evidence points to this device or subnet…"
                 aria-invalid={errors.justification ? true : undefined}
@@ -428,7 +439,7 @@ export function NetworkTopologyFaultTicket({
               ) : null}
             </div>
 
-            <Button type="submit" disabled={readOnly || isSubmitting}>
+            <Button type="submit" disabled={formReadOnly || isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Submit diagnosis'}
             </Button>
           </CardContent>

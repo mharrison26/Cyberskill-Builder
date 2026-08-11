@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,6 +39,13 @@ export function FindingsSummaryTicket({
   readOnly = false,
   className,
 }: FindingsSummaryTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -86,13 +97,13 @@ export function FindingsSummaryTicket({
       );
   }, [initialState]);
 
-  const [executiveSummary, setExecutiveSummary] = useState('');
-  const [findingsDetail, setFindingsDetail] = useState('');
-  const [recommendations, setRecommendations] = useState('');
+  const [executiveSummary, setExecutiveSummary] = useState(() => restoredString(submission, 'executiveSummary'));
+  const [findingsDetail, setFindingsDetail] = useState(() => restoredString(submission, 'findingsDetail'));
+  const [recommendations, setRecommendations] = useState(() => restoredString(submission, 'recommendations'));
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function validate(): boolean {
@@ -115,7 +126,7 @@ export function FindingsSummaryTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     setSubmitError(null);
     setFeedback(null);
     setScoreStatus(null);
@@ -217,7 +228,7 @@ export function FindingsSummaryTicket({
               id={`findings-${key}`}
               value={value}
               onChange={(e) => setter(e.target.value)}
-              disabled={readOnly || isSubmitting}
+              disabled={formReadOnly || isSubmitting}
               rows={4}
               aria-invalid={Boolean(errors[key])}
             />
@@ -231,7 +242,7 @@ export function FindingsSummaryTicket({
           </div>
         ))}
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit findings summary'}
           </Button>

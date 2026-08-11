@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import {
   formatSlaCountdown,
   getSlaState,
+  needsLiveSlaCountdown,
+  type GetSlaStateOptions,
   type SlaState,
 } from '@/lib/tickets/sla';
 
@@ -18,20 +20,26 @@ export type TicketSlaCountdown = SlaState & {
 /**
  * Live SLA countdown from sla_minutes + started_at.
  * Layout-agnostic — every track console can reuse this clock.
+ * Pass resolvedAt / slaMet to freeze after resolve (workbench parity).
  */
 export function useTicketSlaCountdown(
   slaMinutes: number,
-  startedAt: string | null | undefined
+  startedAt: string | null | undefined,
+  options: GetSlaStateOptions = {}
 ): TicketSlaCountdown {
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const live = needsLiveSlaCountdown(startedAt, {
+    resolvedAt: options.resolvedAt,
+    slaMet: options.slaMet,
+  });
 
   useEffect(() => {
-    if (!startedAt) return;
+    if (!live) return;
     const id = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(id);
-  }, [startedAt]);
+  }, [live]);
 
-  const state = getSlaState(slaMinutes, startedAt, nowMs);
+  const state = getSlaState(slaMinutes, startedAt, nowMs, options);
 
   return {
     ...state,

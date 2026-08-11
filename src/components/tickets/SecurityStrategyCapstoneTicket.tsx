@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import {
+  asSubmissionRecord,
+  restoredString,
+  useTicketWorkbenchForm,
+} from '@/hooks/useTicketWorkbenchForm';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -93,11 +98,59 @@ function formatMoney(value: unknown): string | null {
   return null;
 }
 
+function restoredPriorityRows(
+  submission: Record<string, unknown> | null | undefined,
+  minPriorities: number
+): PriorityRow[] {
+  const raw = submission?.priorities;
+  const rows: PriorityRow[] = [];
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (!entry || typeof entry !== 'object') continue;
+      const record = entry as Record<string, unknown>;
+      rows.push({
+        title: typeof record.title === 'string' ? record.title : '',
+        rationale: typeof record.rationale === 'string' ? record.rationale : '',
+      });
+    }
+  }
+  while (rows.length < minPriorities) rows.push({ title: '', rationale: '' });
+  return rows;
+}
+
+function restoredOutcomeRows(
+  submission: Record<string, unknown> | null | undefined,
+  minOutcomes: number
+): OutcomeRow[] {
+  const raw = submission?.expectedOutcomes;
+  const rows: OutcomeRow[] = [];
+  if (Array.isArray(raw)) {
+    for (const entry of raw) {
+      if (!entry || typeof entry !== 'object') continue;
+      const record = entry as Record<string, unknown>;
+      rows.push({
+        title: typeof record.title === 'string' ? record.title : '',
+        metric: typeof record.metric === 'string' ? record.metric : '',
+      });
+    }
+  }
+  while (rows.length < minOutcomes) rows.push({ title: '', metric: '' });
+  return rows;
+}
+
 export function SecurityStrategyCapstoneTicket({
   ticket,
   readOnly = false,
   className,
 }: SecurityStrategyCapstoneTicketProps) {
+  const {
+    submission,
+    formReadOnly,
+    hideSubmit,
+    lastFeedback,
+    lastScoreStatus,
+  } = useTicketWorkbenchForm(readOnly);
+  const restored = asSubmissionRecord(submission);
   const initialState = asRecord(ticket.initial_state);
   const expectedState = asRecord(ticket.expected_state);
 
@@ -209,16 +262,18 @@ export function SecurityStrategyCapstoneTicket({
   }, [initialState.priorFindings, initialState.prior_findings]);
 
   const [priorities, setPriorities] = useState<PriorityRow[]>(() =>
-    Array.from({ length: minPriorities }, () => ({ title: '', rationale: '' }))
+    restoredPriorityRows(restored, minPriorities)
   );
-  const [resourcing, setResourcing] = useState('');
+  const [resourcing, setResourcing] = useState(() =>
+    restoredString(submission, 'resourcing')
+  );
   const [outcomes, setOutcomes] = useState<OutcomeRow[]>(() =>
-    Array.from({ length: minOutcomes }, () => ({ title: '', metric: '' }))
+    restoredOutcomeRows(restored, minOutcomes)
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [scoreStatus, setScoreStatus] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(() => lastFeedback);
+  const [scoreStatus, setScoreStatus] = useState<string | null>(() => lastScoreStatus);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const memoPreview = useMemo(() => {
@@ -306,7 +361,7 @@ export function SecurityStrategyCapstoneTicket({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (readOnly) return;
+    if (formReadOnly || hideSubmit) return;
     clearOutcome();
     if (!validate()) return;
 
@@ -499,7 +554,7 @@ export function SecurityStrategyCapstoneTicket({
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Label>Top priorities (ranked)</Label>
-            {!readOnly ? (
+            {!hideSubmit ? (
               <Button
                 type="button"
                 variant="outline"
@@ -544,7 +599,7 @@ export function SecurityStrategyCapstoneTicket({
               <Input
                 value={row.title}
                 placeholder="Priority title"
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={(e) => {
                   clearOutcome();
                   const value = e.target.value;
@@ -559,7 +614,7 @@ export function SecurityStrategyCapstoneTicket({
                 value={row.rationale}
                 placeholder="Why this ranks here (tie to risk / findings)"
                 rows={3}
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={(e) => {
                   clearOutcome();
                   const value = e.target.value;
@@ -591,7 +646,7 @@ export function SecurityStrategyCapstoneTicket({
               clearOutcome();
               setResourcing(e.target.value);
             }}
-            disabled={readOnly || isSubmitting}
+            disabled={formReadOnly || isSubmitting}
             rows={6}
             placeholder="Map the FY envelope and people to your priorities. Honor must-fund items and hard constraints."
             aria-invalid={Boolean(errors.resourcing)}
@@ -608,7 +663,7 @@ export function SecurityStrategyCapstoneTicket({
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Label>Expected outcomes</Label>
-            {!readOnly ? (
+            {!hideSubmit ? (
               <Button
                 type="button"
                 variant="outline"
@@ -648,7 +703,7 @@ export function SecurityStrategyCapstoneTicket({
               <Input
                 value={row.title}
                 placeholder="Outcome"
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={(e) => {
                   clearOutcome();
                   const value = e.target.value;
@@ -662,7 +717,7 @@ export function SecurityStrategyCapstoneTicket({
               <Input
                 value={row.metric}
                 placeholder="Measurable target within the year"
-                disabled={readOnly || isSubmitting}
+                disabled={formReadOnly || isSubmitting}
                 onChange={(e) => {
                   clearOutcome();
                   const value = e.target.value;
@@ -706,7 +761,7 @@ export function SecurityStrategyCapstoneTicket({
           </CardContent>
         </Card>
 
-        {!readOnly ? (
+        {!hideSubmit ? (
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting…' : 'Submit strategy memo'}
           </Button>

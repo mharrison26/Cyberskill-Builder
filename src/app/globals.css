@@ -17,6 +17,9 @@
  * - Status not-started #374151 on #F3F4F6: 9.1:1 ✓
  * - Muted foreground #4B5563 on white: 7.0:1 ✓
  * - Body foreground #1F2937 on white: 14.7:1 ✓
+ * - Terminal fg #1F2937 on #EEF1F5: ~10.5:1 ✓
+ * - Terminal muted #4B5563 on #EEF1F5: ~5.5:1 ✓
+ * - Terminal accent #166534 on #EEF1F5: ~5.8:1 ✓
  */
 
 /*
@@ -103,11 +106,12 @@
     --sidebar-accent-foreground: #1f2937;
     --sidebar-border: #d1d9e3;
     --sidebar-ring: #1f4e78;
-    /* Intentional always-dark terminal chrome (sandboxes / mock shells) */
-    --terminal: #0f1419;
-    --terminal-foreground: #d6deeb;
-    --terminal-muted: #94a3b8;
-    --terminal-accent: #c3e88d;
+    /* Terminal / sandbox chrome — light surfaces; .dark overrides below */
+    --terminal: #eef1f5;
+    --terminal-foreground: #1f2937;
+    --terminal-muted: #4b5563;
+    --terminal-accent: #166534;
+    --terminal-selection: #c5d0dc;
     --status-satisfied: #dcfce7;
     --status-satisfied-foreground: #14532d;
     --status-insufficient: #fef3c7;
@@ -159,6 +163,7 @@
     --terminal-foreground: #d6deeb;
     --terminal-muted: #94a3b8;
     --terminal-accent: #c3e88d;
+    --terminal-selection: #334155;
     --status-satisfied: #14532d;
     --status-satisfied-foreground: #bbf7d0;
     --status-insufficient: #78350f;
@@ -209,10 +214,11 @@
     --sidebar-accent-foreground: #1f2937;
     --sidebar-border: #d1d9e3;
     --sidebar-ring: #1f4e78;
-    --terminal: #0f1419;
-    --terminal-foreground: #d6deeb;
-    --terminal-muted: #94a3b8;
-    --terminal-accent: #c3e88d;
+    --terminal: #eef1f5;
+    --terminal-foreground: #1f2937;
+    --terminal-muted: #4b5563;
+    --terminal-accent: #166534;
+    --terminal-selection: #c5d0dc;
     --status-satisfied: #dcfce7;
     --status-satisfied-foreground: #14532d;
     --status-insufficient: #fef3c7;
