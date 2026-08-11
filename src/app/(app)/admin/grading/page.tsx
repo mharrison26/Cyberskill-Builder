@@ -203,9 +203,13 @@ export default async function AdminGradingPage() {
         typeof row.grading_error === 'string' && row.grading_error.trim()
           ? row.grading_error.trim()
           : null;
+      // Generated Supabase types may lag the grading_job_status column.
+      const rowJob = row as typeof row & {
+        grading_job_status?: string | null;
+      };
       const gradingJobStatus =
-        typeof row.grading_job_status === 'string'
-          ? row.grading_job_status
+        typeof rowJob.grading_job_status === 'string'
+          ? rowJob.grading_job_status
           : null;
       const feedback = gradingError
         ? gradingError

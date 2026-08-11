@@ -60,9 +60,7 @@ const columns: DataTableColumn<AdminGradingRow>[] = [
     key: 'lessonId',
     header: 'Actions',
     render: (row) =>
-      row.rowKind === 'pending_submission' &&
-      row.lessonId &&
-      row.studentId ? (
+      row.rowKind === 'pending_submission' && row.lessonId && row.studentId ? (
         <AdminRerunGradingButton
           lessonId={row.lessonId}
           studentId={row.studentId}
