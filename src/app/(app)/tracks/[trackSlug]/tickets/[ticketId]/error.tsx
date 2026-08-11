@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { PageShell } from '@/components/layout/PageContainers';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 type TicketRouteErrorProps = {
   error: Error & { digest?: string };
@@ -24,19 +24,21 @@ export default function TicketRouteError({
   }, [error]);
 
   return (
-    <PageShell width="default">
+    <div className="mx-auto w-full max-w-7xl py-8">
       <div
         role="alert"
-        className="mx-auto max-w-lg space-y-4 rounded-xl border border-border bg-surface p-6 shadow-xs"
+        className="mx-auto max-w-lg space-y-4 rounded-xl border border-border bg-card p-6"
       >
         <div className="space-y-2">
-          <h1 className="text-h2 font-heading">Could not open this ticket</h1>
-          <p className="text-body text-muted-foreground">
+          <h1 className="text-lg font-semibold tracking-tight">
+            Could not open this ticket
+          </h1>
+          <p className="text-sm text-muted-foreground">
             Something went wrong while loading the workbench. Your progress is
             safe — try again, or return to the track console.
           </p>
           {error.digest ? (
-            <p className="font-mono text-meta text-muted-foreground">
+            <p className="font-mono text-xs text-muted-foreground">
               Ref: {error.digest}
             </p>
           ) : null}
@@ -45,14 +47,20 @@ export default function TicketRouteError({
           <Button type="button" onClick={reset}>
             Try again
           </Button>
-          <Button render={<Link href="/tracks/grc/console" />} variant="outline">
+          <Link
+            href="/tracks/grc/console"
+            className={cn(buttonVariants({ variant: 'outline' }))}
+          >
             Back to GRC console
-          </Button>
-          <Button render={<Link href="/dashboard" />} variant="ghost">
+          </Link>
+          <Link
+            href="/dashboard"
+            className={cn(buttonVariants({ variant: 'ghost' }))}
+          >
             Dashboard
-          </Button>
+          </Link>
         </div>
       </div>
-    </PageShell>
+    </div>
   );
 }
