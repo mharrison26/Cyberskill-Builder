@@ -20,10 +20,7 @@ describe('isAdminRerunJobStatus', () => {
 });
 
 describe('shouldIncludePendingSubmission', () => {
-  const findingKeys = new Set([
-    'student-a:lesson-1',
-    'student-b:lesson-2',
-  ]);
+  const findingKeys = new Set(['student-a:lesson-1', 'student-b:lesson-2']);
 
   it('includes stuck jobs even when an older finding exists', () => {
     expect(
