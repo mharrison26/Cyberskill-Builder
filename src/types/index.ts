@@ -326,6 +326,11 @@ export interface AdminGradingRow {
   /** Finding rows are reviewable; pending_submission rows await AI grading. */
   rowKind?: 'finding' | 'pending_submission';
   gradingError?: string | null;
+  /** Present for pending_submission rows — used by admin re-run grading. */
+  progressId?: string | null;
+  lessonId?: string | null;
+  studentId?: string | null;
+  gradingJobStatus?: string | null;
 }
 
 export interface CCCERValues {

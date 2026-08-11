@@ -202,9 +202,15 @@ export default async function AdminGradingPage() {
         typeof row.grading_error === 'string' && row.grading_error.trim()
           ? row.grading_error.trim()
           : null;
+      const gradingJobStatus =
+        typeof row.grading_job_status === 'string'
+          ? row.grading_job_status
+          : null;
       const feedback = gradingError
         ? gradingError
-        : 'AI grading has not completed yet.';
+        : gradingJobStatus === 'failed'
+          ? 'AI grading failed. Re-run from the row details.'
+          : 'AI grading has not completed yet.';
 
       return {
         id: `progress:${row.id}`,
@@ -216,7 +222,9 @@ export default async function AdminGradingPage() {
           typeof lesson?.lesson_type === 'string'
             ? lesson.lesson_type
             : 'pending',
-        findingState: gradingError ? 'not_satisfied' : 'submitted',
+        findingState: gradingError || gradingJobStatus === 'failed'
+          ? 'not_satisfied'
+          : 'submitted',
         aiFeedback: feedback,
         aiFeedbackPreview: truncate(feedback),
         submissionPreview: truncate(submission),

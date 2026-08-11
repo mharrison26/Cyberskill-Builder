@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   extractMemoFromSubmission,
+  resolveDisplayedGradingError,
   resolveLessonGradingPhase,
 } from '@/lib/grading/lessonGradingStatus';
+import { GRADING_TIMEOUT_USER_MESSAGE } from '@/lib/grading/gradingJob';
 
 describe('resolveLessonGradingPhase', () => {
   it('returns completed when progress is reviewed', () => {
@@ -20,8 +22,19 @@ describe('resolveLessonGradingPhase', () => {
     expect(
       resolveLessonGradingPhase({
         status: 'submitted',
-        gradingError: 'Grading failed, your answer is saved. You can retry.',
+        gradingError: 'Grading failed — your answer is saved. You can retry.',
         hasFinding: false,
+      })
+    ).toBe('failed');
+  });
+
+  it('returns failed when job status is failed', () => {
+    expect(
+      resolveLessonGradingPhase({
+        status: 'submitted',
+        gradingError: null,
+        hasFinding: false,
+        gradingJobStatus: 'failed',
       })
     ).toBe('failed');
   });
@@ -32,6 +45,34 @@ describe('resolveLessonGradingPhase', () => {
         status: 'submitted',
         gradingError: null,
         hasFinding: false,
+        gradingJobStatus: 'queued',
+      })
+    ).toBe('pending');
+  });
+
+  it('returns failed when a running job exceeds the timeout', () => {
+    const now = new Date('2026-08-11T12:00:00.000Z');
+    expect(
+      resolveLessonGradingPhase({
+        status: 'submitted',
+        gradingError: null,
+        hasFinding: false,
+        gradingJobStatus: 'running',
+        gradingStartedAt: '2026-08-11T11:50:00.000Z',
+        now,
+      })
+    ).toBe('failed');
+  });
+
+  it('keeps long-queued jobs pending so workers can still claim them', () => {
+    const now = new Date('2026-08-11T12:00:00.000Z');
+    expect(
+      resolveLessonGradingPhase({
+        status: 'submitted',
+        gradingError: null,
+        hasFinding: false,
+        gradingJobStatus: 'queued',
+        now,
       })
     ).toBe('pending');
   });
@@ -44,6 +85,17 @@ describe('resolveLessonGradingPhase', () => {
         hasFinding: false,
       })
     ).toBe('not_submitted');
+  });
+});
+
+describe('resolveDisplayedGradingError', () => {
+  it('returns timeout copy when failed without a stored error', () => {
+    expect(
+      resolveDisplayedGradingError({
+        phase: 'failed',
+        gradingError: null,
+      })
+    ).toBe(GRADING_TIMEOUT_USER_MESSAGE);
   });
 });
 

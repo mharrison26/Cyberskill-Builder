@@ -1,6 +1,7 @@
 'use client';
 
 import { GradingReviewForm } from '@/app/(app)/admin/grading/GradingReviewForm';
+import { AdminRerunGradingButton } from '@/components/admin/AdminRerunGradingButton';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
@@ -111,13 +112,28 @@ export function AdminGradingTable({ rows }: AdminGradingTableProps) {
 
           <div className="rounded-lg border border-border bg-muted/20 p-4">
             {row.rowKind === 'pending_submission' ? (
-              <div className="space-y-2 text-sm">
-                <h3 className="text-sm font-medium">Pending AI grading</h3>
-                <p className="text-muted-foreground">
-                  This free-text submission is saved on lesson progress but does
-                  not have an OSCAL finding yet. Ask the student to retry
-                  grading, or wait for the AI job to complete.
-                </p>
+              <div className="space-y-3 text-sm">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">
+                    {row.gradingError
+                      ? 'AI grading failed'
+                      : 'Pending AI grading'}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    This free-text submission is saved on lesson progress but
+                    does not have an OSCAL finding yet.
+                    {row.gradingJobStatus
+                      ? ` Job status: ${row.gradingJobStatus}.`
+                      : ''}{' '}
+                    Re-run grading below, or ask the student to retry.
+                  </p>
+                </div>
+                {row.lessonId && row.studentId ? (
+                  <AdminRerunGradingButton
+                    lessonId={row.lessonId}
+                    studentId={row.studentId}
+                  />
+                ) : null}
               </div>
             ) : (
               <>

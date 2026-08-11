@@ -14,6 +14,11 @@ vi.mock('@/lib/grading/gradeSubmission', () => {
   };
 });
 
+vi.mock('@/lib/observability/sentry', () => ({
+  captureFeatureException: vi.fn(),
+  captureFeatureMessage: vi.fn(),
+}));
+
 import {
   gradeSubmission,
   MissingAnthropicApiKeyError,
@@ -67,6 +72,7 @@ describe('triggerGrading', () => {
       lessonId: 'lesson-1',
       trackId: 'track-1',
       dcwfCode: null,
+      attemptCount: 1,
       submission: {
         type: 'conceptual',
         memo: 'a'.repeat(120),
@@ -75,10 +81,16 @@ describe('triggerGrading', () => {
     });
 
     expect(result.status).toBe('failed');
-    expect(result.error).toContain('your answer is saved');
-    expect(updates.some((call) => call.values.grading_error != null)).toBe(
-      true
-    );
+    expect(result.jobStatus).toBe('failed');
+    expect(result.willRetry).toBe(true);
+    expect(result.error).toMatch(/answer is saved/i);
+    expect(
+      updates.some(
+        (call) =>
+          call.values.grading_job_status === 'failed' &&
+          call.values.grading_error != null
+      )
+    ).toBe(true);
   });
 
   it('records a clear failure when the API key is missing', async () => {
@@ -103,6 +115,7 @@ describe('triggerGrading', () => {
     });
 
     expect(result.status).toBe('failed');
+    expect(result.willRetry).toBe(false);
     expect(result.error).toMatch(/not configured|answer is saved/i);
     expect(
       updates.some(
@@ -137,14 +150,46 @@ describe('triggerGrading', () => {
 
     expect(result).toEqual({
       status: 'completed',
+      jobStatus: 'succeeded',
       findingId: 'finding-1',
       aiFindingState: 'satisfied',
     });
     expect(
       updates.some(
         (call) =>
+          call.values.grading_job_status === 'succeeded' &&
           call.values.grading_error === null &&
           typeof call.values.graded_at === 'string'
+      )
+    ).toBe(true);
+  });
+
+  it('marks terminal failure after max attempts', async () => {
+    vi.mocked(gradeSubmission).mockRejectedValue(new Error('still broken'));
+    const { supabase, updates } = createSupabaseMock();
+
+    const result = await triggerGrading({
+      supabase: supabase as never,
+      progressId: 'progress-1',
+      studentId: 'student-1',
+      tenantId: 'tenant-1',
+      lessonId: 'lesson-1',
+      trackId: 'track-1',
+      dcwfCode: null,
+      attemptCount: 3,
+      submission: {
+        type: 'conceptual',
+        memo: 'a'.repeat(120),
+        submittedAt: '2026-08-10T00:00:00.000Z',
+      },
+    });
+
+    expect(result.willRetry).toBe(false);
+    expect(
+      updates.some(
+        (call) =>
+          call.values.grading_job_status === 'failed' &&
+          call.values.grading_next_retry_at === null
       )
     ).toBe(true);
   });

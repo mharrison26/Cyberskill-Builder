@@ -183,7 +183,7 @@ export function ConceptualLesson({
           setPhase('failed');
           setGradingError(
             payload.gradingError ??
-              'Grading failed, your answer is saved. You can retry.'
+              'Grading failed — your answer is saved. You can retry.'
           );
         }
       } catch {
@@ -247,7 +247,7 @@ export function ConceptualLesson({
         error?: string;
         success?: boolean;
         grading?: {
-          status?: 'completed' | 'failed';
+          status?: 'completed' | 'failed' | 'queued';
           error?: string | null;
           findingId?: string | null;
           aiFindingState?: string | null;
@@ -274,7 +274,7 @@ export function ConceptualLesson({
         setPhase('failed');
         setGradingError(
           payload.grading.error ??
-            'Grading failed, your answer is saved. You can retry.'
+            'Grading failed — your answer is saved. You can retry.'
         );
         return;
       }
@@ -316,20 +316,35 @@ export function ConceptualLesson({
         setGradingError(
           payload.error ??
             payload.grading?.error ??
-            'Grading failed, your answer is saved. You can retry.'
+            'Grading failed — your answer is saved. You can retry.'
         );
         return;
       }
 
-      setPhase('completed');
-      setGradingError(null);
-      router.refresh();
+      if (payload.grading?.status === 'completed') {
+        setPhase('completed');
+        setGradingError(null);
+        router.refresh();
+        return;
+      }
+
+      if (payload.grading?.status === 'failed') {
+        setPhase('failed');
+        setGradingError(
+          payload.grading.error ??
+            'Grading failed — your answer is saved. You can retry.'
+        );
+        return;
+      }
+
+      // queued (background worker) or unknown — poll /status for completion.
+      setPhase('pending');
     } catch (error) {
       setPhase('failed');
       setGradingError(
         error instanceof Error
           ? error.message
-          : 'Grading failed, your answer is saved. You can retry.'
+          : 'Grading failed — your answer is saved. You can retry.'
       );
     } finally {
       setIsRetrying(false);
@@ -469,7 +484,7 @@ export function ConceptualLesson({
                   </p>
                   <p className="mt-1 text-muted-foreground">
                     {gradingError ??
-                      'Grading failed, your answer is saved. You can retry.'}
+                      'Grading failed — your answer is saved. You can retry.'}
                   </p>
                 </div>
                 <Button

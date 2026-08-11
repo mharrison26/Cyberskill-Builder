@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 
-import { triggerGrading } from '@/lib/grading/triggerGrading';
-import type { CatalogLabSubmission } from '@/lib/lessons/catalogLabValidation';
-import type { ConceptualSubmission } from '@/lib/lessons/conceptualValidation';
-import type { ToolWalkthroughSubmission } from '@/lib/lessons/toolWalkthroughValidation';
+import { enqueueGrading } from '@/lib/grading/enqueueGrading';
+import { processGradingJobs } from '@/lib/grading/processGradingJobs';
+import { scheduleGradingWorker } from '@/lib/grading/scheduleGradingWorker';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-import type { CCCERValues } from '@/types';
 
-/** Allow enough time for synchronous AI grading retries. */
-export const maxDuration = 60;
+/**
+ * Re-queue AI grading for a submitted lesson. The worker performs the LLM
+ * call so this route does not block on model latency.
+ */
+export const maxDuration = 30;
 
 type RouteContext = {
   params: { lessonId: string };
@@ -16,13 +18,9 @@ type RouteContext = {
 
 type GradeRequestBody = {
   studentId?: string;
+  /** When true (admin only), process the job inline in this request. */
+  inline?: boolean;
 };
-
-type StoredLessonSubmission =
-  | CCCERValues
-  | ToolWalkthroughSubmission
-  | CatalogLabSubmission
-  | ConceptualSubmission;
 
 export async function POST(request: Request, { params }: RouteContext) {
   const { lessonId } = params;
@@ -129,60 +127,78 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  const grading = await triggerGrading({
+  const grading = await enqueueGrading({
     supabase,
     progressId: progress.id,
     studentId: targetStudentId,
-    tenantId: targetUser.tenant_id,
     lessonId,
-    trackId: lesson.track_id,
-    dcwfCode: lesson.dcwf_code,
-    submission: progress.submission as StoredLessonSubmission,
+    resetAttempts: true,
   });
 
-  if (grading.status === 'failed') {
-    const isMissingKey =
-      grading.error?.includes('not configured') ||
-      grading.error?.includes('ANTHROPIC_API_KEY');
-    return NextResponse.json(
-      {
-        error:
-          grading.error ??
-          (isMissingKey
-            ? 'Grading service unavailable: ANTHROPIC_API_KEY is not configured'
-            : 'Failed to grade submission'),
-        grading: {
-          status: grading.status,
-          error: grading.error ?? null,
+  const runInline =
+    process.env.GRADING_PROCESS_INLINE === '1' ||
+    (body.inline === true && appUser.is_admin === true);
+
+  if (runInline) {
+    try {
+      const admin = createAdminClient();
+      const result = await processGradingJobs(admin, {
+        progressId: progress.id,
+        limit: 1,
+      });
+      if (result.succeeded > 0) {
+        return NextResponse.json(
+          {
+            grading: { status: 'completed' as const, error: null },
+            worker: result,
+          },
+          { status: 201 }
+        );
+      }
+      if (result.failed > 0) {
+        const { data: failedProgress } = await supabase
+          .from('lesson_progress')
+          .select('grading_error')
+          .eq('id', progress.id)
+          .maybeSingle();
+        return NextResponse.json(
+          {
+            error:
+              failedProgress?.grading_error ??
+              'Failed to grade submission',
+            grading: {
+              status: 'failed' as const,
+              error: failedProgress?.grading_error ?? null,
+            },
+            worker: result,
+          },
+          { status: 500 }
+        );
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to grade submission';
+      return NextResponse.json(
+        {
+          error: message,
+          grading: { status: 'failed' as const, error: message },
         },
-      },
-      { status: isMissingKey ? 503 : 500 }
-    );
-  }
-
-  const { data: finding } = await supabase
-    .from('oscal_findings')
-    .select(
-      'id, tenant_id, student_id, track_id, lesson_id, control_id, catalog_source, finding_state, observation, student_narrative, dcwf_code, created_at'
-    )
-    .eq('id', grading.findingId!)
-    .maybeSingle();
-
-  if (!finding) {
-    return NextResponse.json(
-      {
-        findingId: grading.findingId,
-        aiFindingState: grading.aiFindingState,
-      },
-      { status: 201 }
-    );
+        { status: 500 }
+      );
+    }
+  } else {
+    await scheduleGradingWorker(progress.id);
   }
 
   return NextResponse.json(
     {
-      finding,
-      aiFindingState: grading.aiFindingState,
+      success: true,
+      progressId: progress.id,
+      grading: {
+        status: grading.status,
+        error: null,
+      },
     },
-    { status: 201 }
+    { status: 202 }
   );
 }

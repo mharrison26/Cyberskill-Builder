@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { scanStoredLessonSubmission } from '@/lib/compliance/scanStoredLessonSubmission';
-import { triggerGrading } from '@/lib/grading/triggerGrading';
+import { enqueueGrading } from '@/lib/grading/enqueueGrading';
+import { scheduleGradingWorker } from '@/lib/grading/scheduleGradingWorker';
 import { validateCatalogLabSubmission } from '@/lib/lessons/catalogLabValidation';
 import { validateCCCER } from '@/lib/lessons/cccerValidation';
 import { validateConceptualSubmission } from '@/lib/lessons/conceptualValidation';
@@ -14,8 +15,11 @@ import {
 import { validateToolWalkthroughSubmission } from '@/lib/lessons/toolWalkthroughValidation';
 import { createClient } from '@/lib/supabase/server';
 
-/** Allow enough time for synchronous AI grading after persist. */
-export const maxDuration = 60;
+/**
+ * Persist submission quickly. AI grading runs in the background worker
+ * (`/api/cron/process-grading`) so this route stays under serverless limits.
+ */
+export const maxDuration = 30;
 
 type RouteContext = {
   params: { lessonId: string };
@@ -51,7 +55,7 @@ function isConceptualBody(
   );
 }
 
-async function persistThenGrade(
+async function persistThenEnqueue(
   context: SubmitLessonContext,
   lessonId: string,
   submission: LessonSubmissionPayload
@@ -70,18 +74,17 @@ async function persistThenGrade(
     );
   }
 
-  // Submission is durable before grading runs. Grading failures must not
-  // roll back or hide the saved answer.
-  const grading = await triggerGrading({
+  // Submission is durable before grading is scheduled. Grading failures must
+  // not roll back or hide the saved answer.
+  const grading = await enqueueGrading({
     supabase: context.supabase,
     progressId: progress.id,
     studentId: context.appUser.id,
-    tenantId: context.appUser.tenant_id,
     lessonId: context.lesson.id,
-    trackId: context.lesson.track_id,
-    dcwfCode: context.lesson.dcwf_code,
-    submission,
+    resetAttempts: true,
   });
+
+  await scheduleGradingWorker(progress.id);
 
   return NextResponse.json(
     {
@@ -89,9 +92,9 @@ async function persistThenGrade(
       progressId: progress.id,
       grading: {
         status: grading.status,
-        findingId: grading.findingId ?? null,
-        aiFindingState: grading.aiFindingState ?? null,
-        error: grading.error ?? null,
+        findingId: null,
+        aiFindingState: null,
+        error: null,
       },
     },
     { status: 201 }
@@ -136,7 +139,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: scanResult.error }, { status: 422 });
     }
 
-    return persistThenGrade(context, lessonId, validation.data);
+    return persistThenEnqueue(context, lessonId, validation.data);
   }
 
   if (isCatalogLabBody(body)) {
@@ -145,7 +148,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    return persistThenGrade(context, lessonId, validation.data);
+    return persistThenEnqueue(context, lessonId, validation.data);
   }
 
   if (isConceptualBody(body)) {
@@ -154,7 +157,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    return persistThenGrade(context, lessonId, validation.data);
+    return persistThenEnqueue(context, lessonId, validation.data);
   }
 
   const validation = validateCCCER(body);
@@ -162,5 +165,5 @@ export async function POST(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
-  return persistThenGrade(context, lessonId, validation.data);
+  return persistThenEnqueue(context, lessonId, validation.data);
 }
