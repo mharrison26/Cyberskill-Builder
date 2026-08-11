@@ -94,7 +94,7 @@ Artifact lab submissions are graded against NIST SP 800-53 control statement tex
 ANTHROPIC_API_KEY=<your-anthropic-api-key>
 ```
 
-Optional: set `ANTHROPIC_MODEL` to override the default (`claude-sonnet-4-20250514`).
+Optional: set `ANTHROPIC_MODEL` to override the default (`claude-sonnet-5`).
 
 Grading runs automatically after `POST /api/lessons/[lessonId]/submit`, or can be invoked directly via `POST /api/lessons/[lessonId]/grade` (students grade their own submission; admins may pass `{ "studentId": "<uuid>" }`).
 
@@ -119,10 +119,12 @@ Supabase → **Settings** → **Database** → **Connection string** → URI (`p
 `npm run a11y-check` builds the app, starts the production server, and runs [axe-core](https://github.com/dequelabs/axe-core) (via `@axe-core/playwright`) against:
 
 - `/` — landing page (no auth)
+- `/sign-in` — sign-in form (no auth)
 - `/dashboard` — authenticated dashboard
+- `/tracks/grc/console` — GRC console (or `A11Y_GRC_CONSOLE_URL`)
 - A GRC lesson page — first `/lessons/` link on the dashboard, or `A11Y_LESSON_URL`
 
-The check fails on any WCAG 2.2 AA violation (tags: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`).
+The check fails on any WCAG 2.2 AA violation (tags: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`). See [docs/accessibility.md](./docs/accessibility.md) for VPAT-oriented notes.
 
 **Local:**
 
@@ -198,7 +200,7 @@ In the Vercel project → **Settings** → **Environment Variables**, set the va
 | `NEXT_PUBLIC_SUPABASE_URL`      | Yes      | Supabase project URL (`https://oyexzmucngsoyxlxhofy.supabase.co`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes      | Supabase anon/public key (Settings → API)                         |
 | `ANTHROPIC_API_KEY`             | Yes      | Server-side Anthropic key for AI lesson grading                   |
-| `ANTHROPIC_MODEL`               | No       | Override Claude model (default: `claude-sonnet-4-20250514`)       |
+| `ANTHROPIC_MODEL`               | No       | Override Claude model (default: `claude-sonnet-5`)                |
 
 > `NEXT_PUBLIC_*` variables are embedded in client bundles. They are safe to expose — Supabase Row Level Security protects data. Never add the **service role** key to Vercel.
 
@@ -288,7 +290,27 @@ See **[Deploying to Vercel](#deploying-to-vercel)** for connect steps, automatic
 | GitHub → Vercel auto-deploy                       | Done                                                                          |
 | `gh` CLI installed & authenticated                | Optional — `brew install gh` + `gh auth login`                                |
 
-## Observability (Sentry + uptime)
+## Observability (PostHog + Sentry + uptime)
+
+### PostHog (product analytics)
+
+`posthog-js` + `posthog-node` power funnels, session replay, and feature flags. Capture **no-ops when the key is missing**. In development, events only send when `NEXT_PUBLIC_ANALYTICS_DEBUG=1`.
+
+| Variable                         | Purpose                                      |
+| -------------------------------- | -------------------------------------------- |
+| `NEXT_PUBLIC_POSTHOG_KEY`        | Project API key                              |
+| `NEXT_PUBLIC_POSTHOG_HOST`       | Default `https://us.i.posthog.com`           |
+| `NEXT_PUBLIC_ANALYTICS_DEBUG`    | `1` to enable capture + debug in development |
+| `NEXT_PUBLIC_POSTHOG_PROXY`      | `1` to use same-origin `/ingest` rewrite     |
+| `NEXT_PUBLIC_POSTHOG_PROJECT_ID` | Deep-link from `/admin/analytics`            |
+
+- Provider: `src/components/analytics/PostHogProvider.tsx` (session replay on, inputs masked)
+- Identify / reset: `PostHogIdentify` on app shell; `resetAnalytics()` on sign-out
+- Typed events: signup/sign-in actions; lesson open/grade; ticket start/submit/grade; grading-stuck worker alerts; and credential issuance for track completion. Funnel events are `signup`, `first_lesson_opened`, `first_scenario_submitted`, `first_scenario_graded`, `second_session`, and `track_completed`.
+- Feature flags: `useFeatureFlag` in `src/lib/analytics/featureFlags.ts`
+- Funnel/retention recipe: `src/lib/analytics/DASHBOARD.md`
+- Admin stub: `/admin/analytics` (DB counts + PostHog link)
+- Privacy: browser DNT/GPC respected; no in-app analytics toggle yet (`email_marketing` is email-only)
 
 ### Sentry (error monitoring)
 
@@ -301,7 +323,7 @@ See **[Deploying to Vercel](#deploying-to-vercel)** for connect steps, automatic
 | `SENTRY_AUTH_TOKEN`             | Build only (optional)           | Source map upload — **never commit**     |
 | `SENTRY_ORG` / `SENTRY_PROJECT` | Build only (optional)           | Required with auth token for source maps |
 
-Config files: `src/instrumentation-client.ts`, `src/sentry.server.config.ts`, `src/sentry.edge.config.ts`, `src/instrumentation.ts`. Next config is wrapped with `withSentryConfig` in `next.config.mjs`.
+Config files: `src/instrumentation-client.ts`, `src/sentry.server.config.ts`, `src/sentry.edge.config.ts`, `src/instrumentation.ts`. `onRequestError` captures server-render and Server Component failures (including digest errors); `global-error.tsx` captures the client error boundary. Next config is wrapped with `withSentryConfig`, source maps upload when build credentials are present, and client events use the `/monitoring` tunnel.
 
 Explicit captures for ticket pipelines use tags `feature` + `pi`:
 
@@ -314,6 +336,7 @@ Filter in Sentry with e.g. `feature:scoring` or `pi:PI-05`. Helpers live in `src
 
 - Health: `GET /api/health` → `200` `{ ok: true, status: "healthy" }`
 - Workflow: `.github/workflows/uptime.yml` (hourly cron + manual dispatch)
+- Authenticated route synthetic: `npm run smoke:uptime` loads `/dashboard`, one enrolled lesson, and one live GRC ticket workbench. On failure it reports to Sentry and PostHog when those optional GitHub secrets are configured.
 
 **Required GitHub repository variable** (Settings → Secrets and variables → Actions → Variables):
 
@@ -322,6 +345,8 @@ Filter in Sentry with e.g. `feature:scoring` or `pi:PI-05`. Helpers live in `src
 | `UPTIME_URL` | `https://cyberskill-builder.vercel.app/api/health` |
 
 You may instead store the same value as a repository **secret** named `UPTIME_URL` (the workflow accepts either). The job fails on any non-200 response.
+
+For the authenticated route smoke, add these GitHub Actions settings for a dedicated enrolled GRC learner (not Vercel environment variables): repository variable `UPTIME_SMOKE_URL` (production origin); secrets `UPTIME_TEST_EMAIL` and `UPTIME_TEST_PASSWORD`. Optional failure telemetry uses `SENTRY_DSN` and `POSTHOG_PROJECT_API_KEY` secrets. Configure a GitHub Actions failed-workflow notification or webhook to page; Sentry can also alert on `synthetic:uptime`.
 
 ## Static analysis (Semgrep)
 

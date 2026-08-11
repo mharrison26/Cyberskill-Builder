@@ -3,6 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import {
+  captureUserSignedIn,
+  captureUserSignedUp,
+} from '@/lib/analytics/capture';
 import { createClient } from '@/lib/supabase/server';
 import { validateEmail, validatePassword } from '@/lib/auth/validation';
 
@@ -22,9 +26,16 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
   if (passwordError) return { error: passwordError };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) return { error: error.message };
+
+  if (data.user?.id) {
+    void captureUserSignedIn(data.user.id, { via: 'password' });
+  }
 
   revalidatePath('/', 'layout');
   redirect('/dashboard');
@@ -52,13 +63,19 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: Object.keys(metadata).length > 0 ? { data: metadata } : undefined,
   });
 
   if (error) return { error: error.message };
+
+  if (data.user?.id) {
+    await captureUserSignedUp(data.user.id, {
+      has_cohort_code: Boolean(cohortCode),
+    });
+  }
 
   revalidatePath('/', 'layout');
   redirect('/dashboard');

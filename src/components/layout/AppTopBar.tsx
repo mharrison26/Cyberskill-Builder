@@ -5,6 +5,7 @@ import { LogOut, Menu, Settings, User } from 'lucide-react';
 import { Suspense, useEffect, useState, useTransition } from 'react';
 
 import { signOut } from '@/app/(auth)/actions';
+import { resetAnalytics } from '@/lib/analytics/events';
 
 import { AppBreadcrumb } from '@/components/layout/AppBreadcrumb';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -175,7 +176,12 @@ export function AppTopBar({
             <DropdownMenuGroup>
               <DropdownMenuItem
                 disabled={isSigningOut}
-                onClick={() => startSignOut(() => signOut())}
+                onClick={() =>
+                  startSignOut(async () => {
+                    await resetAnalytics();
+                    await signOut();
+                  })
+                }
               >
                 <LogOut className="size-4" aria-hidden="true" />
                 {isSigningOut ? 'Signing out…' : 'Sign Out'}

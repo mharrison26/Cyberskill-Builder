@@ -48,3 +48,25 @@ jobs:
             exit 1
           fi
           echo "Health check OK"
+
+  route-smoke:
+    needs: health-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Load authenticated production routes
+        env:
+          UPTIME_SMOKE_URL: ${{ vars.UPTIME_SMOKE_URL }}
+          UPTIME_TEST_EMAIL: ${{ secrets.UPTIME_TEST_EMAIL }}
+          UPTIME_TEST_PASSWORD: ${{ secrets.UPTIME_TEST_PASSWORD }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.POSTHOG_PROJECT_API_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
+        run: npm run smoke:uptime

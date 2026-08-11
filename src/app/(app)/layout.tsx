@@ -1,3 +1,4 @@
+import { PostHogIdentify } from '@/components/analytics/PostHogIdentify';
 import { AppHeaderErrorBoundary } from '@/components/layout/AppHeaderErrorBoundary';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { AppTopBar } from '@/components/layout/AppTopBar';
@@ -27,6 +28,9 @@ export default async function AppLayout({
         />
       </div>
       <div className="flex min-h-screen flex-1 flex-col">
+        {user ? (
+          <PostHogIdentify userId={user.id} isAdmin={user.isAdmin} />
+        ) : null}
         {user ? (
           <AppHeaderErrorBoundary>
             <AppTopBar

@@ -15,6 +15,14 @@ import {
 import { isAuditCommitteeBriefTicketType } from '@/lib/grc/ticketCodes';
 import { isFlagshipEligibleTicketType } from '@/lib/helpdesk/ticketCodes';
 import { isInfraDesignCapstoneTicketType } from '@/lib/infra/ticketCodes';
+import {
+  captureScenarioGraded,
+  captureScenarioSubmitted,
+} from '@/lib/analytics/capture';
+import {
+  durationSeconds,
+  scenarioPropsFromTicket,
+} from '@/lib/analytics/events';
 import { captureFeatureException } from '@/lib/observability/sentry';
 import { persistPoamItems } from '@/lib/poam/persistPoamItems';
 import { enrichTrainingFeedback } from '@/lib/feedback';
@@ -578,6 +586,47 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   // Reported only — overdue never blocks submission.
   const withinSla = slaMet;
+
+  const structured = scoreResult.structuredResult as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const rawScore = structured?.score;
+  const scorePercent =
+    typeof rawScore === 'number'
+      ? rawScore
+      : scoreResult.status === 'resolved'
+        ? 100
+        : null;
+
+  const { count: priorGraded } = await context.supabase
+    .from('ticket_attempts')
+    .select('id', { count: 'exact', head: true })
+    .eq('student_id', context.appUser.id)
+    .neq('ticket_id', ticketId);
+
+  const scenarioProps = scenarioPropsFromTicket({
+    id: ticketId,
+    ticket_type: context.ticket.ticket_type,
+    tier: context.ticket.tier,
+    track_id: context.ticket.track_id,
+    initial_state: context.ticket.initial_state,
+    expected_state: context.ticket.expected_state,
+  });
+  const isFirstGraded = priorAttemptCount === 0 && (priorGraded ?? 0) === 0;
+
+  void captureScenarioSubmitted(context.appUser.id, {
+    ...scenarioProps,
+    is_first: priorAttemptCount === 0,
+  });
+  void captureScenarioGraded(context.appUser.id, {
+    ...scenarioProps,
+    score: scorePercent,
+    duration_seconds: durationSeconds(startedAt, resolvedAt ?? now),
+    sla_met: slaMet,
+    score_status: scoreResult.status,
+    is_first_graded: isFirstGraded,
+  });
 
   const { data: attemptRows } = await context.supabase
     .from('ticket_attempts')

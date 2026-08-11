@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 
 import './globals.css';
+import { PostHogProvider } from '@/components/analytics/PostHogProvider';
 import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { cn } from '@/lib/utils';
 
@@ -38,7 +39,9 @@ export default function RootLayout({
       className={cn(inter.variable, jetbrainsMono.variable)}
     >
       <body className="min-h-screen font-sans antialiased">
-        <ThemeProvider>{children}</ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

@@ -17,6 +17,7 @@ import {
   captureFeatureException,
   captureFeatureMessage,
 } from '@/lib/observability/sentry';
+import { captureGradingStuck } from '@/lib/analytics/capture';
 import type { CCCERValues } from '@/types';
 
 type StoredLessonSubmission =
@@ -218,6 +219,12 @@ async function alertStuckJobs(
         submittedAt: row.submitted_at,
         gradingStartedAt: row.grading_started_at,
       },
+    });
+    void captureGradingStuck(row.student_id as string, {
+      progress_id: id,
+      lesson_id: row.lesson_id as string,
+      job_status: (row.grading_job_status as string | null) ?? null,
+      attempt_count: (row.grading_attempt_count as number | null) ?? null,
     });
 
     await supabase

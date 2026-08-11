@@ -38,9 +38,27 @@ const nextConfig = {
       },
     ];
   },
+  /**
+   * Optional PostHog reverse proxy. Enable with NEXT_PUBLIC_POSTHOG_PROXY=1
+   * and set posthog api_host to `/ingest` (see PostHogProvider).
+   */
+  async rewrites() {
+    return [
+      {
+        source: '/ingest/static/:path*',
+        destination: 'https://us-assets.i.posthog.com/static/:path*',
+      },
+      {
+        source: '/ingest/:path*',
+        destination: 'https://us.i.posthog.com/:path*',
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {
+  // Same-origin endpoint avoids client-side ad-blocker interference.
+  tunnelRoute: '/monitoring',
   // Optional source-map upload (skipped when SENTRY_AUTH_TOKEN is unset).
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,

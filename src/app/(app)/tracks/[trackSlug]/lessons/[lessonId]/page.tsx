@@ -8,11 +8,13 @@ import { CatalogLabLesson } from '@/components/lessons/CatalogLabLesson';
 import { ConceptualLesson } from '@/components/lessons/ConceptualLesson';
 import { ToolWalkthroughLesson } from '@/components/lessons/ToolWalkthroughLesson';
 import { SimulatedDataBanner } from '@/components/SimulatedDataBanner';
+import { captureLessonOpened } from '@/lib/analytics/capture';
 import { requireEnrollment } from '@/lib/auth/requireEnrollment';
 import {
   extractMemoFromSubmission,
   resolveLessonGradingPhase,
 } from '@/lib/grading/lessonGradingStatus';
+import { controlFamilyFromId } from '@/lib/progress/controlFamily';
 import { isDodAdjacentTenant } from '@/lib/tenants/isDodAdjacentTenant';
 import { isLessonGradedStatus } from '@/lib/status';
 import { createClient } from '@/lib/supabase/server';
@@ -66,6 +68,27 @@ export default async function LessonPage({ params }: LessonPageProps) {
   }
 
   const lessonType = lesson.lesson_type as LessonType;
+
+  const { count: priorLessonCount } = await supabase
+    .from('lesson_progress')
+    .select('id', { count: 'exact', head: true })
+    .eq('student_id', user.id)
+    .neq('status', 'not_started');
+
+  const controlId =
+    typeof lesson.content?.control_id === 'string'
+      ? lesson.content.control_id
+      : null;
+
+  void captureLessonOpened(user.id, {
+    lesson_id: lesson.id,
+    lesson_type: lesson.lesson_type,
+    tier: lesson.tier,
+    track_id: track.id,
+    track_slug: trackSlug,
+    control_family: controlFamilyFromId(controlId),
+    is_first: (priorLessonCount ?? 0) === 0,
+  });
 
   const { data: progress } = await supabase
     .from('lesson_progress')

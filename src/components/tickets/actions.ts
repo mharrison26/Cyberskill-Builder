@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { captureScenarioStarted } from '@/lib/analytics/capture';
+import { scenarioPropsFromTicket } from '@/lib/analytics/events';
 import {
   requireEnrollment,
   type AppUser,
@@ -28,6 +30,10 @@ type LoadedTicketContext = {
   ticketId: string;
   slaMinutes: number;
   maxAttempts: number | null;
+  ticketType: string;
+  tier: number | string;
+  initialState: Record<string, unknown> | null;
+  expectedState: Record<string, unknown> | null;
 };
 
 async function loadTicketForStudent(
@@ -44,7 +50,9 @@ async function loadTicketForStudent(
 
   const { data: ticket, error: ticketError } = await supabase
     .from('tickets')
-    .select('id, track_id, sla_minutes, max_attempts')
+    .select(
+      'id, track_id, sla_minutes, max_attempts, ticket_type, tier, initial_state, expected_state'
+    )
     .eq('id', ticketId)
     .maybeSingle();
 
@@ -59,6 +67,11 @@ async function loadTicketForStudent(
     ticketId: ticket.id,
     slaMinutes: ticket.sla_minutes as number,
     maxAttempts: (ticket.max_attempts as number | null) ?? null,
+    ticketType: ticket.ticket_type as string,
+    tier: ticket.tier as number | string,
+    initialState: (ticket.initial_state as Record<string, unknown> | null) ?? null,
+    expectedState:
+      (ticket.expected_state as Record<string, unknown> | null) ?? null,
   };
 }
 
@@ -75,6 +88,15 @@ export async function startTicket(
   const { supabase, user, track, slaMinutes } = loaded;
   const now = new Date().toISOString();
   const slaDueAt = computeSlaDueAt(now, slaMinutes);
+  const scenarioProps = scenarioPropsFromTicket({
+    id: ticketId,
+    ticket_type: loaded.ticketType,
+    tier: loaded.tier,
+    track_id: track.id,
+    track_slug: track.slug,
+    initial_state: loaded.initialState,
+    expected_state: loaded.expectedState,
+  });
 
   const { data: existing } = await supabase
     .from('ticket_progress')
@@ -99,6 +121,8 @@ export async function startTicket(
       .single();
 
     if (error) return { error: error.message };
+
+    void captureScenarioStarted(user.id, scenarioProps);
 
     revalidatePath(`/tracks/${track.slug}/console`);
     revalidatePath(returnTo);
@@ -125,6 +149,8 @@ export async function startTicket(
       .single();
 
     if (error) return { error: error.message };
+
+    void captureScenarioStarted(user.id, scenarioProps);
 
     revalidatePath(`/tracks/${track.slug}/console`);
     revalidatePath(returnTo);
