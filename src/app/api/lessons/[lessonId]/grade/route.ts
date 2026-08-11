@@ -133,8 +133,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     appUser.is_admin === true &&
     (body.inline === true || targetStudentId !== appUser.id);
 
-  const runInline =
-    process.env.GRADING_PROCESS_INLINE === '1' || isAdminRerun;
+  const runInline = process.env.GRADING_PROCESS_INLINE === '1' || isAdminRerun;
 
   let enqueueClient = supabase;
   if (isAdminRerun) {
